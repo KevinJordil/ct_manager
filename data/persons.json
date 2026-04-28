@@ -1,0 +1,145 @@
+[
+  {
+    "grade": "Sgt",
+    "nom": "Müller",
+    "prenom": "Andreas",
+    "permis": ["930", "930E"],
+    "notes": "",
+    "id": "2001001",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sgt",
+    "nom": "Favre",
+    "prenom": "Caroline",
+    "permis": ["930E", "920E"],
+    "notes": "",
+    "id": "2001002",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sgt",
+    "nom": "Rossier",
+    "prenom": "Marc",
+    "permis": ["931", "930E"],
+    "notes": "",
+    "id": "2001003",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Dubois",
+    "prenom": "Pierre",
+    "permis": ["920", "920E"],
+    "notes": "",
+    "id": "2001004",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Martin",
+    "prenom": "Sophie",
+    "permis": ["920"],
+    "notes": "",
+    "id": "2001005",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Leroy",
+    "prenom": "Thomas",
+    "permis": ["921", "920"],
+    "notes": "",
+    "id": "2001006",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Bonvin",
+    "prenom": "Lucie",
+    "permis": ["920E"],
+    "notes": "",
+    "id": "2001007",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Fontana",
+    "prenom": "Roberto",
+    "permis": ["930"],
+    "notes": "",
+    "id": "2001008",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Jacquemoud",
+    "prenom": "Florian",
+    "permis": ["921E", "921"],
+    "notes": "",
+    "id": "2001009",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Michaud",
+    "prenom": "Élise",
+    "permis": ["920"],
+    "notes": "",
+    "id": "2001010",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Tornare",
+    "prenom": "Baptiste",
+    "permis": ["920", "921"],
+    "notes": "",
+    "id": "2001011",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Magnin",
+    "prenom": "Nathalie",
+    "permis": ["920E", "921E"],
+    "notes": "",
+    "id": "2001012",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  },
+  {
+    "grade": "Sdt",
+    "nom": "Blanchard",
+    "prenom": "Sébastien",
+    "permis": ["930", "920"],
+    "notes": "",
+    "id": "2001013",
+    "conges": [],
+    "indisponible": false,
+    "commentaireIndisponible": ""
+  }
+]

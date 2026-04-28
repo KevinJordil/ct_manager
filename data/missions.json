@@ -1,0 +1,310 @@
+[
+  {
+    "id": "4001001",
+    "titre": "Exercice de tir",
+    "description": "Exercice de tir à la cible au stand de Thoune. Évaluation des qualifications annuelles.",
+    "dateDebut": "2026-04-10T08:00",
+    "dateFin": "2026-04-10T17:00",
+    "notes": "Munitions fournies par l'intendance. Gilets de protection obligatoires.",
+    "vehicules": [
+      {
+        "id": "0.11537897044158252",
+        "vehiculeId": "3001001",
+        "chauffeurId": "2001001",
+        "avecRemorque": false
+      },
+      {
+        "id": "0.4263903190438726",
+        "vehiculeId": "3001017",
+        "chauffeurId": "2001011",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001004",
+      "2001005",
+      "2001006",
+      "2001010"
+    ]
+  },
+  {
+    "id": "4001002",
+    "titre": "Transport de matériel logistique",
+    "description": "Transfert de matériel lourd depuis le dépôt de Berne vers la place d'armes de Frauenfeld.",
+    "dateDebut": "2026-04-15T07:00",
+    "dateFin": "2026-04-17T18:00",
+    "notes": "Remorque chargée à 80%. Vérifier l'arrimage avant départ.",
+    "vehicules": [
+      {
+        "id": "r4001002a",
+        "vehiculeId": "3001002",
+        "chauffeurId": "2001002",
+        "avecRemorque": true
+      },
+      {
+        "id": "r4001002b",
+        "vehiculeId": "3001009",
+        "chauffeurId": "2001003",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001007",
+      "2001008",
+      "2001009",
+      "2001013"
+    ]
+  },
+  {
+    "id": "4001003",
+    "titre": "Reconnaissance de terrain",
+    "description": "Reconnaissance du secteur Vallée de Conches en vue de la manœuvre de mai. Relevés topographiques.",
+    "dateDebut": "2026-04-20T08:00",
+    "dateFin": "2026-04-22T17:00",
+    "notes": "Équipement cartographique à embarquer. Contact avec l'état-major local.",
+    "vehicules": [
+      {
+        "id": "r4001003a",
+        "vehiculeId": "3001013",
+        "chauffeurId": "2001004",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001003b",
+        "vehiculeId": "3001014",
+        "chauffeurId": "2001012",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001001",
+      "2001005"
+    ]
+  },
+  {
+    "id": "4001004",
+    "titre": "Patrouille de sécurité périmètre",
+    "description": "Surveillance du périmètre de la place d'armes suite à l'alerte de sécurité du secteur.",
+    "dateDebut": "2026-04-25T06:00",
+    "dateFin": "2026-04-25T14:00",
+    "notes": "Liaison radio toutes les 30 minutes avec le PC.",
+    "vehicules": [
+      {
+        "id": "r4001004a",
+        "vehiculeId": "3001018",
+        "chauffeurId": "2001006",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001004b",
+        "vehiculeId": "3001019",
+        "chauffeurId": "2001009",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001010",
+      "2001011"
+    ]
+  },
+  {
+    "id": "4001005",
+    "titre": "Soutien logistique Secteur Nord",
+    "description": "Ravitaillement et soutien des unités déployées dans le secteur nord. Rotation sur 4 jours.",
+    "dateDebut": "2026-04-27T08:00",
+    "dateFin": "2026-04-30T17:00",
+    "notes": "Poste de commandement avancé à Andermatt. Ravitaillement en carburant tous les soirs.",
+    "vehicules": [
+      {
+        "id": "r4001005a",
+        "vehiculeId": "3001005",
+        "chauffeurId": "2001001",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001005b",
+        "vehiculeId": "3001003",
+        "chauffeurId": "2001008",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001004",
+      "2001005",
+      "2001007",
+      "2001009"
+    ]
+  },
+  {
+    "id": "4001006",
+    "titre": "Escorte convoi médical",
+    "description": "Escorte d'un convoi de matériel médical entre l'hôpital militaire de Berne et le poste avancé.",
+    "dateDebut": "2026-04-28T06:00",
+    "dateFin": "2026-04-28T20:00",
+    "notes": "Priorité absolue sur les axes routiers. Coordination avec la police militaire.",
+    "vehicules": [
+      {
+        "id": "r4001006a",
+        "vehiculeId": "3001020",
+        "chauffeurId": "2001012",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001006b",
+        "vehiculeId": "3001016",
+        "chauffeurId": "2001002",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001003",
+      "2001006"
+    ]
+  },
+  {
+    "id": "4001007",
+    "titre": "Transfert de troupes Frauenfeld",
+    "description": "Déplacement de l'ensemble du personnel vers la place d'armes de Frauenfeld pour l'exercice interarmes.",
+    "dateDebut": "2026-05-05T07:00",
+    "dateFin": "2026-05-07T18:00",
+    "notes": "Convoi en colonne. Vitesse maximale 80 km/h. Pause obligatoire à Winterthour.",
+    "vehicules": [
+      {
+        "id": "r4001007a",
+        "vehiculeId": "3001006",
+        "chauffeurId": "2001001",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001007b",
+        "vehiculeId": "3001007",
+        "chauffeurId": "2001008",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001007c",
+        "vehiculeId": "3001010",
+        "chauffeurId": "2001002",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001004",
+      "2001005",
+      "2001006",
+      "2001007",
+      "2001009",
+      "2001010",
+      "2001011"
+    ]
+  },
+  {
+    "id": "4001008",
+    "titre": "Exercice NBC",
+    "description": "Exercice de décontamination et de protection contre les risques nucléaires, biologiques et chimiques.",
+    "dateDebut": "2026-05-10T08:00",
+    "dateFin": "2026-05-10T17:00",
+    "notes": "Combinaisons NBC obligatoires. Médecin de bataillon présent sur place.",
+    "vehicules": [
+      {
+        "id": "r4001008a",
+        "vehiculeId": "3001015",
+        "chauffeurId": "2001013",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001008b",
+        "vehiculeId": "3001017",
+        "chauffeurId": "2001011",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001003",
+      "2001012"
+    ]
+  },
+  {
+    "id": "4001009",
+    "titre": "Manœuvre de grande envergure",
+    "description": "Exercice tactique multi-jours impliquant l'ensemble de l'unité. Simulation d'opérations en zone urbaine et montagne.",
+    "dateDebut": "2026-05-15T07:00",
+    "dateFin": "2026-05-20T18:00",
+    "notes": "Engagement total de l'unité. Bivouac les nuits du 16 et 18. Ravitaillement assuré par l'intendance.",
+    "vehicules": [
+      {
+        "id": "r4001009a",
+        "vehiculeId": "3001004",
+        "chauffeurId": "2001001",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001009b",
+        "vehiculeId": "3001008",
+        "chauffeurId": "2001002",
+        "avecRemorque": true
+      },
+      {
+        "id": "r4001009c",
+        "vehiculeId": "3001011",
+        "chauffeurId": "2001003",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001009d",
+        "vehiculeId": "3001012",
+        "chauffeurId": "2001008",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001009e",
+        "vehiculeId": "3001013",
+        "chauffeurId": "2001004",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001009f",
+        "vehiculeId": "3001014",
+        "chauffeurId": "2001013",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001005",
+      "2001006",
+      "2001007",
+      "2001009",
+      "2001010",
+      "2001011",
+      "2001012"
+    ]
+  },
+  {
+    "id": "4001010",
+    "titre": "Exercice de commandement",
+    "description": "Exercice de poste de commandement pour les cadres. Simulation de gestion de crise et prise de décision en temps limité.",
+    "dateDebut": "2026-06-01T08:00",
+    "dateFin": "2026-06-05T17:00",
+    "notes": "Accès réservé aux gradés et soldats sélectionnés. Matériel de communication cryptée requis.",
+    "vehicules": [
+      {
+        "id": "r4001010a",
+        "vehiculeId": "3001016",
+        "chauffeurId": "2001012",
+        "avecRemorque": false
+      },
+      {
+        "id": "r4001010b",
+        "vehiculeId": "3001018",
+        "chauffeurId": "2001006",
+        "avecRemorque": false
+      }
+    ],
+    "personnes": [
+      "2001001",
+      "2001002",
+      "2001003",
+      "2001005"
+    ]
+  }
+]

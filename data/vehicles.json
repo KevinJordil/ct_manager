@@ -1,0 +1,182 @@
+[
+  {
+    "nom": "Camion 4x4",
+    "immatriculation": "M12346",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 38,
+    "id": "3001001"
+  },
+  {
+    "nom": "Camion 4x4",
+    "immatriculation": "M23478",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 38,
+    "id": "3001002"
+  },
+  {
+    "nom": "Camion 4x4",
+    "immatriculation": "M34521",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 38,
+    "id": "3001003"
+  },
+  {
+    "nom": "Camion 4x4",
+    "immatriculation": "M45632",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 38,
+    "id": "3001004"
+  },
+  {
+    "nom": "Camion 6x6",
+    "immatriculation": "M56741",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 46,
+    "id": "3001005"
+  },
+  {
+    "nom": "Camion 6x6",
+    "immatriculation": "M67852",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 46,
+    "id": "3001006"
+  },
+  {
+    "nom": "Camion 6x6",
+    "immatriculation": "M78963",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 46,
+    "id": "3001007"
+  },
+  {
+    "nom": "Camion 6x6",
+    "immatriculation": "M89074",
+    "categorie": "lourd",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 46,
+    "id": "3001008"
+  },
+  {
+    "nom": "Duro",
+    "immatriculation": "M90183",
+    "categorie": "moyen",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 13,
+    "id": "3001009"
+  },
+  {
+    "nom": "Duro",
+    "immatriculation": "M10294",
+    "categorie": "moyen",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 13,
+    "id": "3001010"
+  },
+  {
+    "nom": "Duro",
+    "immatriculation": "M11305",
+    "categorie": "moyen",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 13,
+    "id": "3001011"
+  },
+  {
+    "nom": "Duro",
+    "immatriculation": "M22416",
+    "categorie": "moyen",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 13,
+    "id": "3001012"
+  },
+  {
+    "nom": "Class G",
+    "immatriculation": "M33527",
+    "categorie": "léger-tt",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 3,
+    "id": "3001013"
+  },
+  {
+    "nom": "Class G",
+    "immatriculation": "M44638",
+    "categorie": "léger-tt",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 3,
+    "id": "3001014"
+  },
+  {
+    "nom": "Class G",
+    "immatriculation": "M55749",
+    "categorie": "léger-tt",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 3,
+    "id": "3001015"
+  },
+  {
+    "nom": "Class G",
+    "immatriculation": "M66850",
+    "categorie": "léger-tt",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 3,
+    "id": "3001016"
+  },
+  {
+    "nom": "Renault Mégane",
+    "immatriculation": "M77961",
+    "categorie": "léger-route",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 4,
+    "id": "3001017"
+  },
+  {
+    "nom": "Renault Mégane",
+    "immatriculation": "M88072",
+    "categorie": "léger-route",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 4,
+    "id": "3001018"
+  },
+  {
+    "nom": "Renault Mégane",
+    "immatriculation": "M99183",
+    "categorie": "léger-route",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 4,
+    "id": "3001019"
+  },
+  {
+    "nom": "Renault Mégane",
+    "immatriculation": "M89309",
+    "categorie": "léger-route",
+    "statut": "libre",
+    "commentairePret": "",
+    "places": 4,
+    "id": "3001020"
+  }
+]
