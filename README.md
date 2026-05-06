@@ -2,6 +2,8 @@
 
 Application web de gestion des ressources d'une compagnie de transport (CT) : personnels, véhicules et missions, avec calendrier intégré.
 
+Auteur: Kévin Jordil
+
 ## Fonctionnalités
 
 ### Personnes
