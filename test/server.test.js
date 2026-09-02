@@ -376,3 +376,98 @@ describe('request management', () => {
     expect(res.status).toBe(401)
   })
 })
+
+// ── Vehicle park ──
+
+const PNG_DATA_URL = 'data:image/png;base64,' + Buffer.from('fake-png-bytes').toString('base64')
+
+function parkRequest(path, options = {}) {
+  return fetch(`${BASE}/api/parc${path}`, {
+    ...options,
+    headers: { ...auth(), ...(options.headers ?? {}) },
+  })
+}
+
+describe('vehicle park', () => {
+  it('starts from an empty layout', async () => {
+    const layout = await (await parkRequest('')).json()
+    expect(layout).toEqual({ hasImage: false, zones: [], colorLabels: {} })
+  })
+
+  it('requires a session everywhere', async () => {
+    expect((await fetch(`${BASE}/api/parc`)).status).toBe(401)
+    expect((await fetch(`${BASE}/api/parc/image`)).status).toBe(401)
+  })
+
+  it('stores and reads back a layout', async () => {
+    const layout = {
+      hasImage: false,
+      zones: [{ id: 'z1', x: 0.1, y: 0.2, w: 0.3, h: 0.15, angle: 90, color: '#ef4444' }],
+      colorLabels: { '#ef4444': 'Trucks' },
+    }
+    const res = await parkRequest('', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(layout),
+    })
+    expect(res.status).toBe(200)
+    expect(await (await parkRequest('')).json()).toEqual(layout)
+  })
+
+  it('rejects a zone outside the image', async () => {
+    const res = await parkRequest('', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zones: [{ id: 'z1', x: 5, y: 0, w: 0.1, h: 0.1 }] }),
+    })
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('validation.invalidField')
+  })
+
+  it('answers 404 while no plan has been uploaded', async () => {
+    const res = await parkRequest('/image')
+    expect(res.status).toBe(404)
+    expect((await res.json()).code).toBe('noImage')
+  })
+
+  it('stores a plan and serves it back with its media type', async () => {
+    const put = await parkRequest('/image', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: PNG_DATA_URL }),
+    })
+    expect(put.status).toBe(200)
+
+    const get = await parkRequest('/image')
+    expect(get.status).toBe(200)
+    expect(get.headers.get('content-type')).toContain('image/png')
+    expect(Buffer.from(await get.arrayBuffer()).toString()).toBe('fake-png-bytes')
+  })
+
+  it('keeps a single plan when the format changes', async () => {
+    await parkRequest('/image', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: 'data:image/webp;base64,' + Buffer.from('webp').toString('base64') }),
+    })
+    const files = await fs.readdir(dataDir)
+    expect(files.filter(name => name.startsWith('parc-image.'))).toEqual(['parc-image.webp'])
+  })
+
+  it('rejects a payload that is not an image', async () => {
+    const res = await parkRequest('/image', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: 'data:text/html;base64,AAAA' }),
+    })
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('validation.invalidImage')
+  })
+
+  it('deletes the plan', async () => {
+    expect((await parkRequest('/image', { method: 'DELETE' })).status).toBe(200)
+    expect((await parkRequest('/image')).status).toBe(404)
+    const files = await fs.readdir(dataDir)
+    expect(files.filter(name => name.startsWith('parc-image.'))).toEqual([])
+  })
+})

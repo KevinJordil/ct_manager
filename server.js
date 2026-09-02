@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import {
   ENTITIES, validateCollection,
   validateRequestSubmission, sanitizeRequestSubmission, isValidRequestStatus,
+  validateParkLayout, sanitizeParkLayout, decodeImageDataUrl, IMAGE_EXTENSIONS,
 } from './validation.js'
 import { reanchor } from './seed.js'
 import { createAuth, resolvePassword } from './auth.js'
@@ -22,6 +23,9 @@ const auth = createAuth({ password: ADMIN_PASSWORD })
 
 const app = express()
 app.disable('x-powered-by')
+// The site plan travels as a data URL and is far larger than any collection,
+// so it gets its own, wider limit.
+app.use('/api/parc/image', express.json({ limit: '16mb' }))
 app.use(express.json({ limit: '4mb' }))
 
 /**
@@ -282,6 +286,104 @@ for (const entity of ENTITIES) {
     }
   })
 }
+
+// ── Vehicle park ──
+// The layout holds zones drawn over the site plan; the plan itself is a
+// separate file, since a binary has no place inside a JSON collection.
+
+const PARK_LAYOUT = 'parc'
+
+function parkImagePath(extension) {
+  return path.join(DATA_DIR, `parc-image.${extension}`)
+}
+
+/** @returns {{extension: string, path: string}|null} */
+async function findParkImage() {
+  for (const extension of IMAGE_EXTENSIONS) {
+    const candidate = parkImagePath(extension)
+    try {
+      await fs.access(candidate)
+      return { extension, path: candidate }
+    } catch { /* try the next extension */ }
+  }
+  return null
+}
+
+async function removeParkImages() {
+  for (const extension of IMAGE_EXTENSIONS) {
+    try {
+      await fs.unlink(parkImagePath(extension))
+    } catch { /* nothing to remove */ }
+  }
+}
+
+app.get('/api/parc', async (_req, res, next) => {
+  try {
+    const raw = await readRaw(PARK_LAYOUT)
+    // readRaw defaults to an empty array; the layout is an object.
+    res.type('application/json').send(raw === '[]' ? '{"hasImage":false,"zones":[],"colorLabels":{}}' : raw)
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.put('/api/parc', async (req, res, next) => {
+  const invalid = validateParkLayout(req.body)
+  if (invalid) {
+    return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid layout')
+  }
+  try {
+    await withLock(PARK_LAYOUT, async () => {
+      await write(PARK_LAYOUT, JSON.stringify(sanitizeParkLayout(req.body), null, 2))
+      res.json({ ok: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * The plan is served behind the session like everything else. The browser
+ * therefore fetches it in JavaScript, since an <img> tag cannot carry an
+ * Authorization header.
+ */
+app.get('/api/parc/image', async (_req, res, next) => {
+  try {
+    const found = await findParkImage()
+    if (!found) return fail(res, 404, 'noImage', {}, 'No park image')
+    res.type(found.extension === 'jpg' ? 'image/jpeg' : `image/${found.extension}`)
+    res.set('Cache-Control', 'no-cache')
+    res.send(await fs.readFile(found.path))
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.put('/api/parc/image', async (req, res, next) => {
+  const decoded = decodeImageDataUrl(req.body?.image)
+  if (decoded.code) return fail(res, 400, `validation.${decoded.code}`, decoded.params, 'Invalid image')
+  try {
+    await withLock('parc-image', async () => {
+      // Only one plan at a time, whatever its format.
+      await removeParkImages()
+      await fs.writeFile(parkImagePath(decoded.extension), decoded.buffer)
+      res.json({ ok: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.delete('/api/parc/image', async (_req, res, next) => {
+  try {
+    await withLock('parc-image', async () => {
+      await removeParkImages()
+      res.json({ ok: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
 
 // An unknown /api route must answer in JSON, not serve the application.
 app.use('/api', (_req, res) => fail(res, 404, 'notFound', {}, 'Unknown route'))

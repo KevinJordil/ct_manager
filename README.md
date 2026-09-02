@@ -70,6 +70,12 @@ mois du calendrier.
 - **File de traitement** côté gestion : filtrage par statut, détail dépliable, compteur des demandes en attente dans la barre latérale
 - **Approuver crée la mission** : le formulaire de mission s'ouvre pré-rempli depuis la demande (titre, contact, dates, point de rendez-vous et véhicules en notes) ; la demande ne passe à *approuvée* qu'une fois la mission enregistrée
 
+### Vue de parc
+- Plan du parc **téléversé depuis le navigateur** (JPEG, PNG ou WebP), redimensionné et recompressé côté client avant l'envoi
+- **Zones dessinées sur le plan** au cliquer-glisser, déplaçables, redimensionnables par les coins et inclinables à la poignée
+- Chaque zone porte une couleur ; l'**étiquette est attachée à la couleur**, ce qui donne une légende automatique (Camions, Véhicules légers…)
+- Les zones sont enregistrées en **fractions de l'image**, donc indépendantes de sa résolution et de la taille d'affichage
+
 ### Tableau de bord
 - Vue synthétique : disponibilités personnes et véhicules, missions en cours
 - Alertes automatiques (chauffeur en congé pendant une mission, véhicule en prêt sur une mission active, etc.)
@@ -218,6 +224,11 @@ L'application est protégée par un **mot de passe unique**. À la première
 visite, l'utilisateur arrive sur `/login` ; toutes les autres pages et toutes
 les routes de l'API lui sont fermées tant qu'il n'est pas connecté.
 
+Le plan du parc ne fait pas exception : il est servi derrière la session et
+récupéré en JavaScript, une balise `<img>` ne pouvant pas porter d'en-tête
+d'authentification. Le format SVG est refusé à l'envoi, car il peut contenir
+du script.
+
 Deux pages échappent à cette règle, par nécessité : l'écran de connexion et
 le formulaire public de demande de véhicule. Ce dernier est la seule écriture
 ouverte sans session, il est donc le plus strictement encadré — validation
@@ -289,7 +300,8 @@ ct_manager/
 │   │   ├── CalendarView.vue
 │   │   ├── LoginView.vue      # publique
 │   │   ├── RequestView.vue    # publique : formulaire de demande
-│   │   └── RequestsView.vue   # file de traitement
+│   │   ├── RequestsView.vue   # file de traitement
+│   │   └── ParkView.vue       # plan du parc et zones
 │   └── __tests__/         # Tests unitaires et de composants
 ├── test/                  # Tests d'intégration du serveur
 ├── server.js              # Serveur Express

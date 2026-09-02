@@ -12,7 +12,8 @@
     "vehicles": "Fahrzeuge",
     "missions": "Einsätze",
     "calendar": "Kalender",
-    "requests": "Anfragen"
+    "requests": "Anfragen",
+    "park": "Parkübersicht"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -256,10 +257,13 @@
       "invalidNested": "Eintrag {index}: {list}, Position {position}, Feld «{field}» ungültig",
       "invalidDates": "Eintrag {index}: ungültige Daten",
       "unknownValue": "Eintrag {index}: unbekannter Wert für «{field}»",
-      "endBeforeStart": "Das Enddatum liegt vor dem Startdatum"
+      "endBeforeStart": "Das Enddatum liegt vor dem Startdatum",
+      "invalidImage": "Ungültiges Bild. Verwenden Sie JPEG, PNG oder WebP.",
+      "imageTooLarge": "Bild zu gross (maximal {max} MB)."
     },
     "tooManyRequests": "Zu viele Anfragen gesendet. Versuchen Sie es in einigen Minuten erneut.",
-    "requestsFull": "Die Anfrageliste ist voll. Wenden Sie sich an die Verwaltung."
+    "requestsFull": "Die Anfrageliste ist voll. Wenden Sie sich an die Verwaltung.",
+    "noImage": "Kein Plan gespeichert"
   },
   "auth": {
     "title": "Anmeldung",
@@ -328,6 +332,41 @@
       "truck-personnel": "Lastwagen — Personen",
       "truck-cargo": "Lastwagen — Material",
       "other": "Andere (in der Bemerkung angeben)"
+    }
+  },
+  "park": {
+    "title": "Parkübersicht",
+    "noImage": "Kein Parkplan",
+    "dropHint": "Ziehen Sie ein Bild hierher oder wählen Sie eine Datei",
+    "choose": "Bild auswählen",
+    "change": "Bild ersetzen",
+    "uploading": "Wird geladen…",
+    "deleteImage": "Plan löschen",
+    "deleteImageConfirm": "Plan und alle Zonen löschen?",
+    "editZones": "Zonen bearbeiten",
+    "done": "Fertig",
+    "zones": "{count} Zone | {count} Zone | {count} Zonen",
+    "selectedZone": "Ausgewählte Zone",
+    "deleteZone": "Zone löschen",
+    "label": "Bezeichnung",
+    "labelHint": "(gilt für alle Zonen dieser Farbe)",
+    "labelPlaceholder": "z. B. Panzer, Lastwagen, leichte Fahrzeuge…",
+    "color": "Farbe",
+    "nextZoneColor": "Farbe der nächsten Zone:",
+    "rotation": "Drehung",
+    "loadFailed": "Parkplan konnte nicht geladen werden: {reason}",
+    "saveFailed": "Parkplan konnte nicht gespeichert werden: {reason}",
+    "unsupportedFormat": "Format nicht unterstützt. Verwenden Sie JPEG, PNG oder WebP.",
+    "fileTooLarge": "Datei zu gross (maximal {max} MB).",
+    "readFailed": "Die Datei konnte nicht gelesen werden.",
+    "invalidImage": "Ungültiges oder beschädigtes Bild.",
+    "help": {
+      "draw": "Zeichnen: klicken und ziehen",
+      "square": "Quadrat: Umschalt",
+      "move": "Verschieben: Zone ziehen",
+      "resize": "Grösse ändern: Ecken",
+      "rotate": "Drehen: runder Griff",
+      "delete": "Löschen: Entf"
     }
   }
 }

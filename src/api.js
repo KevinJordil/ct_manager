@@ -107,6 +107,47 @@ export const api = {
     }
   },
 
+  // ── Vehicle park ──
+
+  async loadParkLayout() {
+    return (await request(`${BASE}/parc`)).json()
+  },
+
+  async saveParkLayout(layout) {
+    await request(`${BASE}/parc`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(layout),
+    })
+  },
+
+  /**
+   * The plan sits behind the session, so it is fetched here rather than by an
+   * <img src>: only this path can attach the Authorization header.
+   * @returns {Blob|null} null when no plan has been uploaded
+   */
+  async loadParkImage() {
+    try {
+      const res = await request(`${BASE}/parc/image`)
+      return await res.blob()
+    } catch (error) {
+      if (error.status === 404) return null
+      throw error
+    }
+  },
+
+  async saveParkImage(dataUrl) {
+    await request(`${BASE}/parc/image`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl }),
+    })
+  },
+
+  async deleteParkImage() {
+    await request(`${BASE}/parc/image`, { method: 'DELETE' })
+  },
+
   // ── Vehicle requests ──
   // Submission is public; everything else needs a session.
 

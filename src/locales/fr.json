@@ -12,7 +12,8 @@
     "vehicles": "Véhicules",
     "missions": "Missions",
     "calendar": "Calendrier",
-    "requests": "Demandes"
+    "requests": "Demandes",
+    "park": "Vue de parc"
   },
   "actions": {
     "add": "Ajouter",
@@ -256,10 +257,13 @@
       "invalidNested": "Élément {index} : {list}, entrée {position}, champ « {field} » invalide",
       "invalidDates": "Élément {index} : dates invalides",
       "unknownValue": "Élément {index} : valeur inconnue pour « {field} »",
-      "endBeforeStart": "La date de fin précède la date de début"
+      "endBeforeStart": "La date de fin précède la date de début",
+      "invalidImage": "Image invalide. Utilisez JPEG, PNG ou WebP.",
+      "imageTooLarge": "Image trop volumineuse (maximum {max} Mo)."
     },
     "tooManyRequests": "Trop de demandes envoyées. Réessayez dans quelques minutes.",
-    "requestsFull": "La file de demandes est pleine. Contactez l'administration."
+    "requestsFull": "La file de demandes est pleine. Contactez l'administration.",
+    "noImage": "Aucun plan enregistré"
   },
   "auth": {
     "title": "Connexion",
@@ -328,6 +332,41 @@
       "truck-personnel": "Camion — personnes",
       "truck-cargo": "Camion — matériel",
       "other": "Autre (préciser en commentaire)"
+    }
+  },
+  "park": {
+    "title": "Vue de parc",
+    "noImage": "Aucun plan de parc",
+    "dropHint": "Glissez une image ici, ou choisissez un fichier",
+    "choose": "Choisir une image",
+    "change": "Changer l'image",
+    "uploading": "Chargement…",
+    "deleteImage": "Supprimer le plan",
+    "deleteImageConfirm": "Supprimer le plan et toutes les zones ?",
+    "editZones": "Éditer les zones",
+    "done": "Terminer",
+    "zones": "{count} zone | {count} zone | {count} zones",
+    "selectedZone": "Zone sélectionnée",
+    "deleteZone": "Supprimer la zone",
+    "label": "Étiquette",
+    "labelHint": "(partagée par toutes les zones de cette couleur)",
+    "labelPlaceholder": "Ex : Chars, Camions, Véhicules légers…",
+    "color": "Couleur",
+    "nextZoneColor": "Couleur de la prochaine zone :",
+    "rotation": "Rotation",
+    "loadFailed": "Chargement du parc impossible : {reason}",
+    "saveFailed": "Enregistrement du parc impossible : {reason}",
+    "unsupportedFormat": "Format non supporté. Utilisez JPEG, PNG ou WebP.",
+    "fileTooLarge": "Fichier trop volumineux (maximum {max} Mo).",
+    "readFailed": "Impossible de lire le fichier.",
+    "invalidImage": "Image invalide ou corrompue.",
+    "help": {
+      "draw": "Dessiner : cliquer-glisser",
+      "square": "Carré : Maj",
+      "move": "Déplacer : glisser la zone",
+      "resize": "Redimensionner : coins",
+      "rotate": "Incliner : poignée ronde",
+      "delete": "Supprimer : Suppr"
     }
   }
 }

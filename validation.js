@@ -224,3 +224,96 @@ export function validateCollection(entity, data) {
   }
   return null
 }
+
+// ── Vehicle park layout ──
+
+const MAX_ZONES = 500
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
+const isFraction = v => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1
+
+/**
+ * Validates the park layout: zones drawn over the site plan, expressed as
+ * fractions of the image so they survive any resize, plus the label given to
+ * each colour.
+ *
+ * @returns {{code: string, params: object}|null}
+ */
+export function validateParkLayout(body) {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return { code: 'notAnObject', params: {} }
+  }
+  if (!isOptionalBoolean(body.hasImage)) return invalidField('hasImage')
+
+  const zones = body.zones ?? []
+  if (!Array.isArray(zones)) return invalidField('zones')
+  if (zones.length > MAX_ZONES) return { code: 'tooManyItems', params: { max: MAX_ZONES } }
+
+  const seen = new Set()
+  for (const [index, zone] of zones.entries()) {
+    if (zone === null || typeof zone !== 'object') return { code: 'notAnObject', params: { index } }
+    if (!isText(zone.id) || zone.id === '') return { code: 'missingId', params: { index } }
+    if (seen.has(zone.id)) return { code: 'duplicateId', params: { index, id: zone.id } }
+    seen.add(zone.id)
+
+    for (const field of ['x', 'y', 'w', 'h']) {
+      if (!isFraction(zone[field])) return { code: 'invalidField', params: { index, field } }
+    }
+    if (zone.angle !== undefined &&
+        (typeof zone.angle !== 'number' || !Number.isFinite(zone.angle) || zone.angle < 0 || zone.angle >= 360)) {
+      return { code: 'invalidField', params: { index, field: 'angle' } }
+    }
+    if (zone.color !== undefined && !HEX_COLOR.test(zone.color)) {
+      return { code: 'invalidField', params: { index, field: 'color' } }
+    }
+  }
+
+  const labels = body.colorLabels ?? {}
+  if (labels === null || typeof labels !== 'object' || Array.isArray(labels)) {
+    return invalidField('colorLabels')
+  }
+  for (const [color, label] of Object.entries(labels)) {
+    if (!HEX_COLOR.test(color) || !isText(label)) return invalidField('colorLabels')
+  }
+  return null
+}
+
+/** Keeps only the known fields of the layout. */
+export function sanitizeParkLayout(body) {
+  return {
+    hasImage: Boolean(body.hasImage),
+    zones: (body.zones ?? []).map(zone => ({
+      id: zone.id,
+      x: zone.x,
+      y: zone.y,
+      w: zone.w,
+      h: zone.h,
+      angle: zone.angle ?? 0,
+      color: zone.color ?? '#6366f1',
+    })),
+    colorLabels: { ...(body.colorLabels ?? {}) },
+  }
+}
+
+// ── Park image ──
+
+const IMAGE_TYPES = { jpeg: 'jpg', png: 'png', webp: 'webp' }
+const MAX_IMAGE_BYTES = 12 * 1024 * 1024
+
+/**
+ * Accepts a data URL and returns the bytes to write.
+ * @returns {{extension: string, buffer: Buffer}|{code: string, params: object}}
+ */
+export function decodeImageDataUrl(dataUrl) {
+  if (typeof dataUrl !== 'string') return { code: 'invalidImage', params: {} }
+  const match = dataUrl.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/)
+  if (!match) return { code: 'invalidImage', params: {} }
+
+  const buffer = Buffer.from(match[2], 'base64')
+  if (buffer.length === 0) return { code: 'invalidImage', params: {} }
+  if (buffer.length > MAX_IMAGE_BYTES) {
+    return { code: 'imageTooLarge', params: { max: Math.round(MAX_IMAGE_BYTES / 1024 / 1024) } }
+  }
+  return { extension: IMAGE_TYPES[match[1]], buffer }
+}
+
+export const IMAGE_EXTENSIONS = Object.values(IMAGE_TYPES)
