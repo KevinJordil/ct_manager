@@ -1,86 +1,81 @@
 /**
- * Amorçage des données de démonstration.
+ * Demonstration data seeding.
  *
- * Le jeu d'exemple est daté une fois pour toutes ; sans recalage, une
- * installation faite six mois plus tard n'afficherait que des missions
- * terminées — tableau de bord vide, calendrier vide. On décale donc toutes
- * les dates d'un nombre entier de jours pour que la période couverte
- * enjambe le jour de l'installation, en conservant les heures.
+ * The sample set is dated once and for all; without re-anchoring, an install
+ * done six months later would show nothing but completed missions — an empty
+ * dashboard and an empty calendar. Every date is therefore shifted by a whole
+ * number of days so the covered period straddles the installation day, while
+ * times of day are preserved.
  */
 
-const JOUR_MS = 24 * 60 * 60 * 1000
-const MOTIF_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+const DAY_MS = 24 * 60 * 60 * 1000
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
 
 const pad = n => String(n).padStart(2, '0')
 
-function versDate(str) {
-  const [date, heure] = str.split('T')
+function toDate(str) {
+  const [date, time] = str.split('T')
   const [y, m, d] = date.split('-').map(Number)
-  const [hh, mm] = heure.split(':').map(Number)
+  const [hh, mm] = time.split(':').map(Number)
   return new Date(y, m - 1, d, hh, mm)
 }
 
-function versChaine(d) {
+function toString_(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
     `T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-/** Toutes les dates "YYYY-MM-DDTHH:mm" présentes dans une structure */
-function collecterDates(valeur, acc = []) {
-  if (typeof valeur === 'string') {
-    if (MOTIF_DATE.test(valeur)) acc.push(valeur)
-  } else if (Array.isArray(valeur)) {
-    for (const v of valeur) collecterDates(v, acc)
-  } else if (valeur && typeof valeur === 'object') {
-    for (const v of Object.values(valeur)) collecterDates(v, acc)
+/** Every "YYYY-MM-DDTHH:mm" string found anywhere in a structure */
+function collectDates(value, acc = []) {
+  if (typeof value === 'string') {
+    if (DATE_PATTERN.test(value)) acc.push(value)
+  } else if (Array.isArray(value)) {
+    for (const v of value) collectDates(v, acc)
+  } else if (value && typeof value === 'object') {
+    for (const v of Object.values(value)) collectDates(v, acc)
   }
   return acc
 }
 
-/** Recopie la structure en décalant chaque date de `jours` jours */
-function decaler(valeur, jours) {
-  if (typeof valeur === 'string') {
-    if (!MOTIF_DATE.test(valeur)) return valeur
-    const d = versDate(valeur)
-    d.setDate(d.getDate() + jours)
-    return versChaine(d)
+/** Deep copy with every date shifted by `days` days */
+function shift(value, days) {
+  if (typeof value === 'string') {
+    if (!DATE_PATTERN.test(value)) return value
+    const d = toDate(value)
+    d.setDate(d.getDate() + days)
+    return toString_(d)
   }
-  if (Array.isArray(valeur)) return valeur.map(v => decaler(v, jours))
-  if (valeur && typeof valeur === 'object') {
-    return Object.fromEntries(Object.entries(valeur).map(([k, v]) => [k, decaler(v, jours)]))
+  if (Array.isArray(value)) return value.map(v => shift(v, days))
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, shift(v, days)]))
   }
-  return valeur
+  return value
 }
 
 /**
- * Décalage à appliquer pour que le milieu de la période couverte par les
- * données tombe sur `reference`.
- * @returns {number} nombre entier de jours (0 si aucune date)
+ * Shift needed for the midpoint of the covered period to land on `reference`.
+ * @returns {number} whole number of days, 0 when there is no date at all
  */
-export function calculerDecalage(collections, reference = new Date()) {
-  const dates = collectionsVersDates(collections)
+export function computeShift(collections, reference = new Date()) {
+  const dates = Object.values(collections).flatMap(c => collectDates(c))
   if (!dates.length) return 0
 
-  const bornes = dates.map(d => versDate(d).getTime())
-  const milieu = new Date((Math.min(...bornes) + Math.max(...bornes)) / 2)
+  const bounds = dates.map(d => toDate(d).getTime())
+  const midpoint = new Date((Math.min(...bounds) + Math.max(...bounds)) / 2)
 
-  const jour = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
-  return Math.round((jour(reference) - jour(milieu)) / JOUR_MS)
-}
-
-function collectionsVersDates(collections) {
-  return Object.values(collections).flatMap(c => collecterDates(c))
+  const atMidnight = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  return Math.round((atMidnight(reference) - atMidnight(midpoint)) / DAY_MS)
 }
 
 /**
- * Recale un ensemble de collections sur la date de référence.
- * @param collections {{[entite: string]: Array}}
- * @returns {{[entite: string]: Array}} nouvelles collections
+ * Re-anchors a set of collections on the reference date.
+ * @param collections {{[entity: string]: Array}}
+ * @returns {{[entity: string]: Array}} new collections
  */
-export function recaler(collections, reference = new Date()) {
-  const jours = calculerDecalage(collections, reference)
-  if (jours === 0) return collections
+export function reanchor(collections, reference = new Date()) {
+  const days = computeShift(collections, reference)
+  if (days === 0) return collections
   return Object.fromEntries(
-    Object.entries(collections).map(([nom, données]) => [nom, decaler(données, jours)]),
+    Object.entries(collections).map(([name, data]) => [name, shift(data, days)]),
   )
 }

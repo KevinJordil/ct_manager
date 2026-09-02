@@ -1,29 +1,28 @@
 /**
- * Helpers de date en **heure locale**.
+ * Local-time date helpers.
  *
- * Toute l'application stocke ses dates sous forme de chaînes naïves locales
- * ("YYYY-MM-DD" ou "YYYY-MM-DDTHH:mm"), exactement le format produit par les
- * <input type="date"> et <input type="datetime-local">. Ces chaînes se
- * comparent directement avec `<` et `>`.
+ * The whole application stores dates as naive local strings ("YYYY-MM-DD" or
+ * "YYYY-MM-DDTHH:mm"), exactly the format produced by <input type="date"> and
+ * <input type="datetime-local">. Such strings compare correctly with < and >.
  *
- * `Date.prototype.toISOString()` convertit en UTC : l'utiliser pour produire
- * une de ces chaînes décale le résultat d'une à deux heures — et donc parfois
- * d'un jour entier. Aucun helper d'ici ne l'utilise.
+ * `Date.prototype.toISOString()` converts to UTC: using it to build one of
+ * these strings shifts the result by one or two hours — and therefore
+ * sometimes by a whole day. No helper here uses it.
  */
 
 const pad = n => String(n).padStart(2, '0')
 
 /** Date → "YYYY-MM-DD" (local) */
-export function toDateStr(d) {
+export function toDateString(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 /** Date → "YYYY-MM-DDTHH:mm" (local) */
-export function toDateTimeStr(d) {
-  return `${toDateStr(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+export function toDateTimeString(d) {
+  return `${toDateString(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-/** "YYYY-MM-DD" ou "YYYY-MM-DDTHH:mm" → Date (interprétée en local) */
+/** "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm" → Date, read as local time */
 export function parseLocal(str) {
   const [date, time = '00:00'] = str.split('T')
   const [y, m, d] = date.split('-').map(Number)
@@ -31,61 +30,66 @@ export function parseLocal(str) {
   return new Date(y, m - 1, d, hh, mm)
 }
 
-/** Aujourd'hui, "YYYY-MM-DD" */
-export function todayStr() {
-  return toDateStr(new Date())
+/** Today, as "YYYY-MM-DD" */
+export function todayString() {
+  return toDateString(new Date())
 }
 
-/** Maintenant, "YYYY-MM-DDTHH:mm" — à comparer aux dates saisies dans l'app */
-export function nowStr() {
-  return toDateTimeStr(new Date())
+/** Now, as "YYYY-MM-DDTHH:mm" — comparable with the dates entered in the app */
+export function nowString() {
+  return toDateTimeString(new Date())
 }
 
-/** Ajoute N jours à une date "YYYY-MM-DD" */
+/** Adds N days to a "YYYY-MM-DD" date */
 export function addDays(dateStr, n) {
   const d = parseLocal(dateStr)
   d.setDate(d.getDate() + n)
-  return toDateStr(d)
+  return toDateString(d)
 }
 
 /**
- * Ajoute N mois à une date "YYYY-MM-DD", en bornant au dernier jour du mois
- * cible (31 janvier + 1 mois → 28 février, et non 3 mars).
+ * Adds N months to a "YYYY-MM-DD" date, clamping to the last day of the
+ * target month (31 January + 1 month → 28 February, not 3 March).
  */
 export function addMonths(dateStr, n) {
   const d = parseLocal(dateStr)
-  const jour = d.getDate()
+  const dayOfMonth = d.getDate()
   d.setDate(1)
   d.setMonth(d.getMonth() + n)
-  const dernierJour = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
-  d.setDate(Math.min(jour, dernierJour))
-  return toDateStr(d)
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+  d.setDate(Math.min(dayOfMonth, lastDay))
+  return toDateString(d)
 }
 
-/** Lundi de la semaine contenant la date "YYYY-MM-DD" */
+/** Monday of the week containing the "YYYY-MM-DD" date */
 export function mondayOf(dateStr) {
   const d = parseLocal(dateStr)
   const dow = d.getDay()
   d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1))
-  return toDateStr(d)
+  return toDateString(d)
 }
 
-/** Deux intervalles [début, fin] se chevauchent-ils ? (bornes incluses) */
-export function overlaps(aDebut, aFin, bDebut, bFin) {
-  if (!aDebut || !aFin || !bDebut || !bFin) return false
-  return aDebut <= bFin && bDebut <= aFin
+/** Do two [start, end] ranges overlap? Bounds are inclusive. */
+export function overlaps(aStart, aEnd, bStart, bEnd) {
+  if (!aStart || !aEnd || !bStart || !bEnd) return false
+  return aStart <= bEnd && bStart <= aEnd
 }
 
-/** "2026-04-28T09:00" → "28.04.2026 09:00" */
-export function formatDT(dt) {
+/**
+ * "2026-04-28T09:00" → "28.04.2026 09:00"
+ *
+ * Day-first with dots is the common written form in all three supported
+ * languages, so it needs no locale switch.
+ */
+export function formatDateTime(dt) {
   if (!dt) return '—'
   const [date, time] = dt.split('T')
   const [y, m, d] = date.split('-')
   return time ? `${d}.${m}.${y} ${time}` : `${d}.${m}.${y}`
 }
 
-/** Ajoute "T<defaultTime>" si l'heure est absente */
-export function addTimeIfMissing(dt, defaultTime = '00:00') {
+/** Appends "T<defaultTime>" when the time part is missing */
+export function withDefaultTime(dt, defaultTime = '00:00') {
   if (!dt) return dt
   return dt.includes('T') ? dt : `${dt}T${defaultTime}`
 }

@@ -1,43 +1,52 @@
 import { ref, readonly } from 'vue'
 
 /**
- * État de synchronisation avec le serveur, partagé par toute l'application.
+ * Synchronisation state with the server, shared by the whole application.
  *
- * Les sauvegardes partent en arrière-plan : sans ce canal, un échec (serveur
- * arrêté, requête rejetée, conflit avec un autre onglet) resterait invisible
- * et l'utilisateur perdrait son travail sans le savoir.
+ * Saves happen in the background: without this channel a failure (server
+ * down, request rejected, conflict with another tab) would stay invisible
+ * and the user would lose work without noticing.
+ *
+ * Errors are held as a translation key plus parameters so the banner can be
+ * rendered in the reader's language.
  */
 
-const erreur = ref(null)
-const conflit = ref(false)
-const cleRequise = ref(false)
-const enregistrement = ref(0)
+const error = ref(null)
+const conflict = ref(false)
+const keyRequired = ref(false)
+const saving = ref(0)
 
-export function signalerErreur(message, { conflit: estConflit = false } = {}) {
-  erreur.value = message
-  if (estConflit) conflit.value = true
+/**
+ * @param key     translation key
+ * @param params  interpolation values
+ * @param context 'load' | 'save' — a save failure also warns that the last
+ *                changes are not stored
+ */
+export function reportError(key, params = {}, { isConflict = false, context = null } = {}) {
+  error.value = { key, params, context }
+  if (isConflict) conflict.value = true
 }
 
-export function signalerCleRequise() {
-  cleRequise.value = true
-  erreur.value = 'Clé d\'accès requise ou invalide'
+export function reportKeyRequired() {
+  keyRequired.value = true
+  error.value = { key: 'errors.accessKeyRequired', params: {}, context: null }
 }
 
-export function effacerErreur() {
-  erreur.value = null
-  conflit.value = false
-  cleRequise.value = false
+export function clearError() {
+  error.value = null
+  conflict.value = false
+  keyRequired.value = false
 }
 
-export function debutEnregistrement() { enregistrement.value++ }
-export function finEnregistrement() { enregistrement.value = Math.max(0, enregistrement.value - 1) }
+export function startSaving() { saving.value++ }
+export function endSaving() { saving.value = Math.max(0, saving.value - 1) }
 
 export function useSync() {
   return {
-    erreur: readonly(erreur),
-    conflit: readonly(conflit),
-    cleRequise: readonly(cleRequise),
-    enregistrementEnCours: readonly(enregistrement),
-    effacerErreur,
+    error: readonly(error),
+    conflict: readonly(conflict),
+    keyRequired: readonly(keyRequired),
+    saving: readonly(saving),
+    clearError,
   }
 }

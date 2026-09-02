@@ -1,8 +1,8 @@
 /**
- * Génération d'identifiants.
+ * Identifier generation.
  *
- * `Date.now()` ne suffit pas : deux entités créées dans la même milliseconde
- * (une boucle, un double-clic) recevraient le même identifiant.
+ * `Date.now()` is not enough: two records created within the same
+ * millisecond (a loop, a double click) would share an identifier.
  */
 export function newId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()

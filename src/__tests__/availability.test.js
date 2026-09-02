@@ -1,220 +1,226 @@
 import { describe, it, expect } from 'vitest'
 import {
-  getMissionStatut, missionsEnCours, missionEngagePersonne, missionEngageVehicule,
-  isEnCongeA, isEnCongePendant, getPersonStatut, getPersonStatutAffiche,
-  getVehiculeStatut, missionsChevauchant, isPersonneEngagee, isVehiculeEngage,
-  personneDisponible, vehiculeDisponible,
+  getMissionStatus, ongoingMissions, missionInvolvesPerson, missionInvolvesVehicle,
+  isOnLeaveAt, isOnLeaveDuring, getPersonStatus, getDisplayedPersonStatus,
+  getVehicleStatus, missionsOverlapping, isPersonCommitted, isVehicleCommitted,
+  isPersonAvailable, isVehicleAvailable,
 } from '../availability.js'
 
 const NOW = '2026-09-02T10:00'
 
 const mission = (over = {}) => ({
-  id: 'm1', titre: 'Transport', dateDebut: '2026-09-02T08:00', dateFin: '2026-09-02T17:00',
-  vehicules: [], personnes: [], ...over,
+  id: 'm1', title: 'Transport', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',
+  vehicles: [], staffIds: [], ...over,
 })
-const person = (over = {}) => ({ id: 'p1', nom: 'Müller', prenom: 'Andreas', permis: ['930'], conges: [], indisponible: false, ...over })
-const vehicule = (over = {}) => ({ id: 'v1', nom: 'Duro', categorie: 'moyen', statut: 'libre', places: 8, ...over })
-
-describe('getMissionStatut', () => {
-  it('est « en cours » entre le début et la fin', () => {
-    expect(getMissionStatut(mission(), NOW)).toBe('en cours')
-  })
-
-  it('est « planifiée » avant le début', () => {
-    expect(getMissionStatut(mission({ dateDebut: '2026-09-03T08:00', dateFin: '2026-09-03T17:00' }), NOW)).toBe('planifiée')
-  })
-
-  it('est « terminée » après la fin', () => {
-    expect(getMissionStatut(mission({ dateDebut: '2026-09-01T08:00', dateFin: '2026-09-01T17:00' }), NOW)).toBe('terminée')
-  })
-
-  it('bascule à l\'heure exacte du début, en heure locale', () => {
-    const m = mission({ dateDebut: '2026-09-02T08:00', dateFin: '2026-09-02T17:00' })
-    expect(getMissionStatut(m, '2026-09-02T07:59')).toBe('planifiée')
-    expect(getMissionStatut(m, '2026-09-02T08:00')).toBe('en cours')
-    expect(getMissionStatut(m, '2026-09-02T17:00')).toBe('en cours')
-    expect(getMissionStatut(m, '2026-09-02T17:01')).toBe('terminée')
-  })
-
-  it('retombe sur « planifiée » sans dates', () => {
-    expect(getMissionStatut({ id: 'x' }, NOW)).toBe('planifiée')
-    expect(getMissionStatut(null, NOW)).toBe('planifiée')
-  })
+const person = (over = {}) => ({
+  id: 'p1', lastName: 'Müller', firstName: 'Andreas', licenses: ['930'],
+  leaves: [], unavailable: false, ...over,
+})
+const vehicle = (over = {}) => ({
+  id: 'v1', name: 'Duro', category: 'medium', status: 'free', seats: 8, ...over,
 })
 
-describe('missionEngagePersonne / missionEngageVehicule', () => {
-  it('reconnaît un chauffeur', () => {
-    expect(missionEngagePersonne(mission({ vehicules: [{ vehiculeId: 'v1', chauffeurId: 'p1' }] }), 'p1')).toBe(true)
+describe('getMissionStatus', () => {
+  it('is ongoing between start and end', () => {
+    expect(getMissionStatus(mission(), NOW)).toBe('ongoing')
   })
 
-  it('reconnaît le personnel sans véhicule', () => {
-    expect(missionEngagePersonne(mission({ personnes: ['p1'] }), 'p1')).toBe(true)
+  it('is planned before the start', () => {
+    expect(getMissionStatus(mission({ startDate: '2026-09-03T08:00', endDate: '2026-09-03T17:00' }), NOW)).toBe('planned')
   })
 
-  it('ignore une personne non affectée', () => {
-    expect(missionEngagePersonne(mission(), 'p1')).toBe(false)
+  it('is completed after the end', () => {
+    expect(getMissionStatus(mission({ startDate: '2026-09-01T08:00', endDate: '2026-09-01T17:00' }), NOW)).toBe('completed')
   })
 
-  it('reconnaît un véhicule engagé', () => {
-    expect(missionEngageVehicule(mission({ vehicules: [{ vehiculeId: 'v1', chauffeurId: null }] }), 'v1')).toBe(true)
-    expect(missionEngageVehicule(mission(), 'v1')).toBe(false)
+  it('switches at the exact local start time', () => {
+    const m = mission()
+    expect(getMissionStatus(m, '2026-09-02T07:59')).toBe('planned')
+    expect(getMissionStatus(m, '2026-09-02T08:00')).toBe('ongoing')
+    expect(getMissionStatus(m, '2026-09-02T17:00')).toBe('ongoing')
+    expect(getMissionStatus(m, '2026-09-02T17:01')).toBe('completed')
+  })
+
+  it('falls back to planned without dates', () => {
+    expect(getMissionStatus({ id: 'x' }, NOW)).toBe('planned')
+    expect(getMissionStatus(null, NOW)).toBe('planned')
   })
 })
 
-describe('congés', () => {
-  const p = person({ conges: [{ id: 'c1', dateDebut: '2026-09-01T00:00', dateFin: '2026-09-05T23:59' }] })
-
-  it('détecte un congé en cours', () => {
-    expect(isEnCongeA(p, NOW)).toBe(true)
-    expect(isEnCongeA(p, '2026-09-06T10:00')).toBe(false)
+describe('missionInvolvesPerson / missionInvolvesVehicle', () => {
+  it('recognises a driver', () => {
+    expect(missionInvolvesPerson(mission({ vehicles: [{ vehicleId: 'v1', driverId: 'p1' }] }), 'p1')).toBe(true)
   })
 
-  it('détecte un congé chevauchant une période', () => {
-    expect(isEnCongePendant(p, '2026-09-04T08:00', '2026-09-08T17:00')).toBe(true)
-    expect(isEnCongePendant(p, '2026-09-06T08:00', '2026-09-08T17:00')).toBe(false)
+  it('recognises unmounted staff', () => {
+    expect(missionInvolvesPerson(mission({ staffIds: ['p1'] }), 'p1')).toBe(true)
   })
 
-  it('renvoie false sans période ou sans congé', () => {
-    expect(isEnCongePendant(p, null, '2026-09-08T17:00')).toBe(false)
-    expect(isEnCongePendant(person(), '2026-09-04T08:00', '2026-09-08T17:00')).toBe(false)
-  })
-})
-
-describe('getPersonStatut', () => {
-  it('donne « disponible » par défaut', () => {
-    expect(getPersonStatut(person(), NOW)).toBe('disponible')
+  it('ignores an unassigned person', () => {
+    expect(missionInvolvesPerson(mission(), 'p1')).toBe(false)
   })
 
-  it('donne « en congé » pendant un congé', () => {
-    expect(getPersonStatut(person({ conges: [{ dateDebut: '2026-09-01T00:00', dateFin: '2026-09-05T23:59' }] }), NOW)).toBe('en congé')
-  })
-
-  it('donne « indisponible » en priorité sur le congé', () => {
-    const p = person({ indisponible: true, conges: [{ dateDebut: '2026-09-01T00:00', dateFin: '2026-09-05T23:59' }] })
-    expect(getPersonStatut(p, NOW)).toBe('indisponible')
+  it('recognises an assigned vehicle', () => {
+    expect(missionInvolvesVehicle(mission({ vehicles: [{ vehicleId: 'v1', driverId: null }] }), 'v1')).toBe(true)
+    expect(missionInvolvesVehicle(mission(), 'v1')).toBe(false)
   })
 })
 
-describe('getPersonStatutAffiche', () => {
-  it('signale « en mission » quand une mission en cours engage la personne', () => {
-    const missions = [mission({ personnes: ['p1'] })]
-    expect(getPersonStatutAffiche(person(), missions, NOW)).toBe('en mission')
+describe('leave', () => {
+  const onLeave = person({ leaves: [{ id: 'l1', startDate: '2026-09-01T00:00', endDate: '2026-09-05T23:59' }] })
+
+  it('detects an ongoing leave', () => {
+    expect(isOnLeaveAt(onLeave, NOW)).toBe(true)
+    expect(isOnLeaveAt(onLeave, '2026-09-06T10:00')).toBe(false)
   })
 
-  it('ne masque pas un congé par une mission', () => {
-    const missions = [mission({ personnes: ['p1'] })]
-    const p = person({ conges: [{ dateDebut: '2026-09-01T00:00', dateFin: '2026-09-05T23:59' }] })
-    expect(getPersonStatutAffiche(p, missions, NOW)).toBe('en congé')
+  it('detects a leave overlapping a period', () => {
+    expect(isOnLeaveDuring(onLeave, '2026-09-04T08:00', '2026-09-08T17:00')).toBe(true)
+    expect(isOnLeaveDuring(onLeave, '2026-09-06T08:00', '2026-09-08T17:00')).toBe(false)
   })
 
-  it('reste « disponible » si la mission n\'est pas en cours', () => {
-    const missions = [mission({ dateDebut: '2026-09-10T08:00', dateFin: '2026-09-10T17:00', personnes: ['p1'] })]
-    expect(getPersonStatutAffiche(person(), missions, NOW)).toBe('disponible')
-  })
-})
-
-describe('getVehiculeStatut', () => {
-  it('donne « libre » sans mission', () => {
-    expect(getVehiculeStatut(vehicule(), [], NOW)).toBe('libre')
-  })
-
-  it('donne « en mission » pendant une mission en cours', () => {
-    const missions = [mission({ vehicules: [{ vehiculeId: 'v1', chauffeurId: 'p1' }] })]
-    expect(getVehiculeStatut(vehicule(), missions, NOW)).toBe('en mission')
-  })
-
-  it('donne « en prêt » en priorité', () => {
-    const missions = [mission({ vehicules: [{ vehiculeId: 'v1', chauffeurId: 'p1' }] })]
-    expect(getVehiculeStatut(vehicule({ statut: 'en prêt' }), missions, NOW)).toBe('en prêt')
+  it('returns false without a period or without leave', () => {
+    expect(isOnLeaveDuring(onLeave, null, '2026-09-08T17:00')).toBe(false)
+    expect(isOnLeaveDuring(person(), '2026-09-04T08:00', '2026-09-08T17:00')).toBe(false)
   })
 })
 
-describe('missionsChevauchant', () => {
+describe('getPersonStatus', () => {
+  it('is available by default', () => {
+    expect(getPersonStatus(person(), NOW)).toBe('available')
+  })
+
+  it('is on-leave during a leave', () => {
+    expect(getPersonStatus(person({ leaves: [{ startDate: '2026-09-01T00:00', endDate: '2026-09-05T23:59' }] }), NOW))
+      .toBe('on-leave')
+  })
+
+  it('gives unavailable precedence over leave', () => {
+    const p = person({ unavailable: true, leaves: [{ startDate: '2026-09-01T00:00', endDate: '2026-09-05T23:59' }] })
+    expect(getPersonStatus(p, NOW)).toBe('unavailable')
+  })
+})
+
+describe('getDisplayedPersonStatus', () => {
+  it('reports on-mission when an ongoing mission involves the person', () => {
+    expect(getDisplayedPersonStatus(person(), [mission({ staffIds: ['p1'] })], NOW)).toBe('on-mission')
+  })
+
+  it('does not hide a leave behind a mission', () => {
+    const p = person({ leaves: [{ startDate: '2026-09-01T00:00', endDate: '2026-09-05T23:59' }] })
+    expect(getDisplayedPersonStatus(p, [mission({ staffIds: ['p1'] })], NOW)).toBe('on-leave')
+  })
+
+  it('stays available when the mission is not ongoing', () => {
+    const missions = [mission({ startDate: '2026-09-10T08:00', endDate: '2026-09-10T17:00', staffIds: ['p1'] })]
+    expect(getDisplayedPersonStatus(person(), missions, NOW)).toBe('available')
+  })
+})
+
+describe('getVehicleStatus', () => {
+  it('is free without a mission', () => {
+    expect(getVehicleStatus(vehicle(), [], NOW)).toBe('free')
+  })
+
+  it('is on-mission during an ongoing mission', () => {
+    const missions = [mission({ vehicles: [{ vehicleId: 'v1', driverId: 'p1' }] })]
+    expect(getVehicleStatus(vehicle(), missions, NOW)).toBe('on-mission')
+  })
+
+  it('gives on-loan precedence', () => {
+    const missions = [mission({ vehicles: [{ vehicleId: 'v1', driverId: 'p1' }] })]
+    expect(getVehicleStatus(vehicle({ status: 'on-loan' }), missions, NOW)).toBe('on-loan')
+  })
+})
+
+describe('missionsOverlapping', () => {
   const missions = [
-    mission({ id: 'a', dateDebut: '2026-09-02T08:00', dateFin: '2026-09-02T12:00' }),
-    mission({ id: 'b', dateDebut: '2026-09-03T08:00', dateFin: '2026-09-03T12:00' }),
+    mission({ id: 'a', startDate: '2026-09-02T08:00', endDate: '2026-09-02T12:00' }),
+    mission({ id: 'b', startDate: '2026-09-03T08:00', endDate: '2026-09-03T12:00' }),
   ]
 
-  it('ne retient que celles qui chevauchent', () => {
-    expect(missionsChevauchant(missions, '2026-09-02T10:00', '2026-09-02T18:00').map(m => m.id)).toEqual(['a'])
+  it('keeps only the overlapping ones', () => {
+    expect(missionsOverlapping(missions, '2026-09-02T10:00', '2026-09-02T18:00').map(m => m.id)).toEqual(['a'])
   })
 
-  it('exclut la mission en cours d\'édition', () => {
-    expect(missionsChevauchant(missions, '2026-09-02T10:00', '2026-09-02T18:00', { excludeMissionId: 'a' })).toEqual([])
-  })
-})
-
-describe('isPersonneEngagee / isVehiculeEngage', () => {
-  const missions = [mission({ id: 'a', vehicules: [{ vehiculeId: 'v1', chauffeurId: 'p1' }] })]
-
-  it('détecte le conflit sur une période qui chevauche', () => {
-    expect(isPersonneEngagee('p1', missions, '2026-09-02T10:00', '2026-09-02T18:00')).toBe(true)
-    expect(isVehiculeEngage('v1', missions, '2026-09-02T10:00', '2026-09-02T18:00')).toBe(true)
-  })
-
-  it('ne voit pas de conflit hors période', () => {
-    expect(isPersonneEngagee('p1', missions, '2026-09-05T08:00', '2026-09-05T18:00')).toBe(false)
+  it('excludes the mission being edited', () => {
+    expect(missionsOverlapping(missions, '2026-09-02T10:00', '2026-09-02T18:00', { excludeMissionId: 'a' })).toEqual([])
   })
 })
 
-describe('personneDisponible', () => {
-  const missions = [mission({ id: 'a', personnes: ['p1'] })]
+describe('isPersonCommitted / isVehicleCommitted', () => {
+  const missions = [mission({ id: 'a', vehicles: [{ vehicleId: 'v1', driverId: 'p1' }] })]
 
-  it('refuse une personne marquée indisponible', () => {
-    expect(personneDisponible(person({ indisponible: true }), [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
+  it('detects a conflict over an overlapping period', () => {
+    expect(isPersonCommitted('p1', missions, '2026-09-02T10:00', '2026-09-02T18:00')).toBe(true)
+    expect(isVehicleCommitted('v1', missions, '2026-09-02T10:00', '2026-09-02T18:00')).toBe(true)
   })
 
-  it('refuse une personne en congé sur la période', () => {
-    const p = person({ conges: [{ dateDebut: '2026-09-09T00:00', dateFin: '2026-09-11T23:59' }] })
-    expect(personneDisponible(p, [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
-  })
-
-  it('refuse une personne déjà engagée sur la période', () => {
-    expect(personneDisponible(person(), missions, '2026-09-02T10:00', '2026-09-02T18:00', { now: NOW })).toBe(false)
-  })
-
-  it('accepte la personne quand on édite la mission qui l\'engage', () => {
-    expect(personneDisponible(person(), missions, '2026-09-02T10:00', '2026-09-02T18:00', { excludeMissionId: 'a', now: NOW })).toBe(true)
-  })
-
-  it('ignore les missions déjà terminées', () => {
-    const passees = [mission({ id: 'z', dateDebut: '2026-08-01T08:00', dateFin: '2026-08-01T17:00', personnes: ['p1'] })]
-    expect(personneDisponible(person(), passees, '2026-08-01T09:00', '2026-08-01T12:00', { now: NOW })).toBe(true)
-  })
-
-  it('sans période, ne regarde que le congé du moment', () => {
-    const p = person({ conges: [{ dateDebut: '2026-09-01T00:00', dateFin: '2026-09-05T23:59' }] })
-    expect(personneDisponible(p, missions, '', '', { now: NOW })).toBe(false)
-    expect(personneDisponible(person(), missions, '', '', { now: NOW })).toBe(true)
+  it('sees no conflict outside the period', () => {
+    expect(isPersonCommitted('p1', missions, '2026-09-05T08:00', '2026-09-05T18:00')).toBe(false)
   })
 })
 
-describe('vehiculeDisponible', () => {
-  const missions = [mission({ id: 'a', vehicules: [{ vehiculeId: 'v1', chauffeurId: null }] })]
+describe('isPersonAvailable', () => {
+  const missions = [mission({ id: 'a', staffIds: ['p1'] })]
 
-  it('refuse un véhicule en prêt', () => {
-    expect(vehiculeDisponible(vehicule({ statut: 'en prêt' }), [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
+  it('refuses a person flagged unavailable', () => {
+    expect(isPersonAvailable(person({ unavailable: true }), [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
   })
 
-  it('refuse un véhicule déjà engagé sur la période', () => {
-    expect(vehiculeDisponible(vehicule(), missions, '2026-09-02T10:00', '2026-09-02T18:00', { now: NOW })).toBe(false)
+  it('refuses a person on leave during the period', () => {
+    const p = person({ leaves: [{ startDate: '2026-09-09T00:00', endDate: '2026-09-11T23:59' }] })
+    expect(isPersonAvailable(p, [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
   })
 
-  it('accepte le véhicule quand on édite la mission qui l\'engage', () => {
-    expect(vehiculeDisponible(vehicule(), missions, '2026-09-02T10:00', '2026-09-02T18:00', { excludeMissionId: 'a', now: NOW })).toBe(true)
+  it('refuses a person already committed over the period', () => {
+    expect(isPersonAvailable(person(), missions, '2026-09-02T10:00', '2026-09-02T18:00', { now: NOW })).toBe(false)
   })
 
-  it('accepte un véhicule libre sans période saisie', () => {
-    expect(vehiculeDisponible(vehicule(), missions, '', '')).toBe(true)
+  it('accepts the person while editing the mission that commits them', () => {
+    expect(isPersonAvailable(person(), missions, '2026-09-02T10:00', '2026-09-02T18:00',
+      { excludeMissionId: 'a', now: NOW })).toBe(true)
+  })
+
+  it('ignores missions that are already completed', () => {
+    const past = [mission({ id: 'z', startDate: '2026-08-01T08:00', endDate: '2026-08-01T17:00', staffIds: ['p1'] })]
+    expect(isPersonAvailable(person(), past, '2026-08-01T09:00', '2026-08-01T12:00', { now: NOW })).toBe(true)
+  })
+
+  it('only looks at the current leave when no period is given', () => {
+    const p = person({ leaves: [{ startDate: '2026-09-01T00:00', endDate: '2026-09-05T23:59' }] })
+    expect(isPersonAvailable(p, missions, '', '', { now: NOW })).toBe(false)
+    expect(isPersonAvailable(person(), missions, '', '', { now: NOW })).toBe(true)
   })
 })
 
-describe('missionsEnCours', () => {
-  it('filtre sur le statut calculé', () => {
+describe('isVehicleAvailable', () => {
+  const missions = [mission({ id: 'a', vehicles: [{ vehicleId: 'v1', driverId: null }] })]
+
+  it('refuses a vehicle on loan', () => {
+    expect(isVehicleAvailable(vehicle({ status: 'on-loan' }), [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
+  })
+
+  it('refuses a vehicle already committed over the period', () => {
+    expect(isVehicleAvailable(vehicle(), missions, '2026-09-02T10:00', '2026-09-02T18:00', { now: NOW })).toBe(false)
+  })
+
+  it('accepts the vehicle while editing the mission that commits it', () => {
+    expect(isVehicleAvailable(vehicle(), missions, '2026-09-02T10:00', '2026-09-02T18:00',
+      { excludeMissionId: 'a', now: NOW })).toBe(true)
+  })
+
+  it('accepts a free vehicle when no period is given', () => {
+    expect(isVehicleAvailable(vehicle(), missions, '', '')).toBe(true)
+  })
+})
+
+describe('ongoingMissions', () => {
+  it('filters on the computed status', () => {
     const missions = [
       mission({ id: 'a' }),
-      mission({ id: 'b', dateDebut: '2026-09-10T08:00', dateFin: '2026-09-10T17:00' }),
+      mission({ id: 'b', startDate: '2026-09-10T08:00', endDate: '2026-09-10T17:00' }),
     ]
-    expect(missionsEnCours(missions, NOW).map(m => m.id)).toEqual(['a'])
+    expect(ongoingMissions(missions, NOW).map(m => m.id)).toEqual(['a'])
   })
 })

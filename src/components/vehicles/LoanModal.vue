@@ -2,28 +2,31 @@
 import { ref } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
 
-defineProps({ vehicle: { type: Object, required: true } })
-const emit = defineEmits(['save', 'close'])
+const props = defineProps({ vehicle: { type: Object, required: true } })
+const emit = defineEmits(['confirm', 'close'])
 
-const commentaire = ref('')
+const note = ref('')
 
 function submit() {
-  if (!commentaire.value.trim()) return
-  emit('save', commentaire.value)
+  if (!note.value.trim()) return
+  emit('confirm', note.value.trim())
 }
 </script>
 
 <template>
-  <BaseModal title="Mettre en prêt" @close="$emit('close')">
+  <BaseModal :title="$t('vehicles.loan.title')" @close="emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
-      <p class="text-sm text-gray-600">Véhicule : <strong>{{ vehicle.nom }}</strong></p>
+      <p class="text-sm text-gray-600">
+        {{ $t('vehicles.loan.vehicle') }} <strong>{{ vehicle.name }}</strong>
+      </p>
       <div>
-        <label class="label" for="pret-commentaire">Commentaire de prêt *</label>
-        <textarea id="pret-commentaire" v-model="commentaire" class="input" rows="3" placeholder="À qui est prêté le véhicule, jusqu'à quand..." required autofocus />
+        <label class="label" for="loan-note">{{ $t('vehicles.loan.note') }} *</label>
+        <textarea id="loan-note" v-model="note" class="input" rows="3"
+          :placeholder="$t('vehicles.loan.notePlaceholder')" required autofocus />
       </div>
       <div class="flex justify-end gap-3 pt-2">
-        <button type="button" @click="$emit('close')" class="btn-secondary">Annuler</button>
-        <button type="submit" class="btn-primary">Confirmer le prêt</button>
+        <button type="button" @click="emit('close')" class="btn-secondary">{{ $t('actions.cancel') }}</button>
+        <button type="submit" class="btn-primary">{{ $t('vehicles.loan.confirm') }}</button>
       </div>
     </form>
   </BaseModal>

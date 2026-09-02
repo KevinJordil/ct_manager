@@ -1,46 +1,74 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { RouterView, RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useClock } from './stores/clock.js'
 import { useSync } from './stores/sync.js'
+import { localeTag } from './i18n/index.js'
+import { formatLongDate, formatClock } from './i18n/formats.js'
 import AccessKeyModal from './components/common/AccessKeyModal.vue'
+import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
 
 const route = useRoute()
+const { t, te, locale } = useI18n()
 const sidebarOpen = ref(false)
+const askForKey = ref(false)
 
 const { now } = useClock()
-const { erreur: erreurSync, conflit, cleRequise, enregistrementEnCours, effacerErreur } = useSync()
-const saisieCle = ref(false)
+const { error: syncError, conflict, keyRequired, saving, clearError } = useSync()
 
-const formatDate = (date) => date.toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-const formatTime = (date) => date.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+const tag = computed(() => localeTag(locale.value))
+const currentDate = computed(() => formatLongDate(now.value, tag.value))
+const currentTime = computed(() => formatClock(now.value, tag.value))
+
+/** Translates a key that may be absent, falling back to the raw value. */
+function translateOrKeep(prefix, value) {
+  const key = `${prefix}.${value}`
+  return te(key) ? t(key) : value
+}
+
+/**
+ * Errors are carried as a key plus parameters so they can be rendered in the
+ * reader's language; entity and field names are themselves translated.
+ */
+const errorMessage = computed(() => {
+  if (!syncError.value) return ''
+  const { key, params } = syncError.value
+  const resolved = { ...params }
+  if (resolved.entity) resolved.entity = translateOrKeep('entities', resolved.entity)
+  if (resolved.field) resolved.field = translateOrKeep('fields', resolved.field)
+  if (resolved.list) resolved.list = translateOrKeep('fields', resolved.list)
+  return te(key) ? t(key, resolved) : key
+})
+
+const showUnsavedHint = computed(() => syncError.value?.context === 'save')
 
 function reloadPage() { window.location.reload() }
 
-const navItems = [
+const NAV_ITEMS = [
   {
     to: '/',
-    label: 'Tableau de bord',
+    key: 'dashboard',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>`,
   },
   {
     to: '/persons',
-    label: 'Personnes',
+    key: 'persons',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>`,
   },
   {
     to: '/vehicles',
-    label: 'Véhicules',
+    key: 'vehicles',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a5 5 0 01-.916-9.916 5.002 5.002 0 019.832 0A5.002 5.002 0 0116 17m-7 0h6m-3-3v6"/>`,
   },
   {
     to: '/missions',
-    label: 'Missions',
+    key: 'missions',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>`,
   },
   {
     to: '/calendar',
-    label: 'Calendrier',
+    key: 'calendar',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>`,
   },
 ]
@@ -48,34 +76,35 @@ const navItems = [
 
 <template>
   <div class="min-h-screen flex">
-    <!-- Overlay mobile -->
+    <!-- Mobile overlay -->
     <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-20 lg:hidden" @click="sidebarOpen = false" />
 
     <!-- Sidebar -->
     <aside :class="['fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
       <div class="px-6 py-5 border-b border-gray-700">
         <div class="flex items-center gap-2">
-          <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7M3 7l3-4h12l3 4M5 21V7"/>
           </svg>
-          <span class="font-bold text-lg tracking-tight">Gestion CT</span>
+          <span class="font-bold text-lg tracking-tight">{{ $t('app.name') }}</span>
         </div>
       </div>
 
       <nav class="flex-1 px-3 py-4 space-y-1">
         <RouterLink
-          v-for="item in navItems"
+          v-for="item in NAV_ITEMS"
           :key="item.to"
           :to="item.to"
           @click="sidebarOpen = false"
           :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors', (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white']">
-          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" v-html="item.icon" />
-          {{ item.label }}
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" v-html="item.icon" aria-hidden="true" />
+          {{ $t(`nav.${item.key}`) }}
         </RouterLink>
       </nav>
 
-      <div class="px-6 py-4 border-t border-gray-700 text-xs text-gray-500">
-        Gestion des ressources
+      <div class="px-6 py-4 border-t border-gray-700 flex items-center justify-between gap-2">
+        <span class="text-xs text-gray-500 truncate">{{ $t('app.tagline') }}</span>
+        <LanguageSwitcher />
       </div>
     </aside>
 
@@ -84,50 +113,53 @@ const navItems = [
       <!-- Header -->
       <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3 lg:hidden">
-          <button @click="sidebarOpen = true" aria-label="Ouvrir le menu" class="text-gray-500 hover:text-gray-700">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button @click="sidebarOpen = true" :aria-label="$t('app.openMenu')" class="text-gray-500 hover:text-gray-700">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
-          <span class="font-semibold text-gray-900">Gestion CT</span>
+          <span class="font-semibold text-gray-900">{{ $t('app.name') }}</span>
         </div>
         <div class="hidden lg:block" />
         <div class="flex items-center gap-4">
-          <span v-if="enregistrementEnCours" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400" role="status" aria-live="polite">
+          <span v-if="saving" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400" role="status" aria-live="polite">
             <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
-            Enregistrement…
+            {{ $t('app.saving') }}
           </span>
           <div class="text-right">
-            <div class="text-xs font-medium text-gray-500 capitalize">{{ formatDate(now) }}</div>
-            <div class="text-sm font-bold text-gray-800 tabular-nums">{{ formatTime(now) }}</div>
+            <div class="text-xs font-medium text-gray-500">{{ currentDate }}</div>
+            <div class="text-sm font-bold text-gray-800 tabular-nums">{{ currentTime }}</div>
           </div>
         </div>
       </header>
 
-      <!-- Les sauvegardes partent en arrière-plan : un échec doit se voir. -->
-      <div v-if="erreurSync" role="alert"
+      <!-- Saves happen in the background: a failure has to be visible. -->
+      <div v-if="syncError" role="alert"
         class="flex items-start gap-2 px-4 py-3 bg-red-600 text-white text-sm">
         <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>
-        <span class="flex-1">{{ erreurSync }}</span>
-        <button v-if="cleRequise" @click="saisieCle = true"
+        <span class="flex-1">
+          {{ errorMessage }}
+          <template v-if="showUnsavedHint"> — {{ $t('errors.unsavedSuffix') }}</template>
+        </span>
+        <button v-if="keyRequired" @click="askForKey = true"
           class="shrink-0 underline underline-offset-2 hover:no-underline">
-          Saisir la clé
+          {{ $t('accessKey.enter') }}
         </button>
-        <button v-else-if="conflit" @click="reloadPage"
+        <button v-else-if="conflict" @click="reloadPage"
           class="shrink-0 underline underline-offset-2 hover:no-underline">
-          Recharger
+          {{ $t('actions.reload') }}
         </button>
-        <button @click="effacerErreur" class="shrink-0 underline underline-offset-2 hover:no-underline">
-          Masquer
+        <button @click="clearError" class="shrink-0 underline underline-offset-2 hover:no-underline">
+          {{ $t('actions.hide') }}
         </button>
       </div>
 
-      <AccessKeyModal v-if="saisieCle" @close="saisieCle = false" />
+      <AccessKeyModal v-if="askForKey" @close="askForKey = false" />
 
       <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
         <RouterView v-slot="{ Component }">

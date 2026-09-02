@@ -1,0 +1,264 @@
+{
+  "app": {
+    "name": "TK-Verwaltung",
+    "tagline": "Ressourcenverwaltung",
+    "openMenu": "Menü öffnen",
+    "saving": "Wird gespeichert…",
+    "language": "Sprache"
+  },
+  "nav": {
+    "dashboard": "Übersicht",
+    "persons": "Personen",
+    "vehicles": "Fahrzeuge",
+    "missions": "Einsätze",
+    "calendar": "Kalender"
+  },
+  "actions": {
+    "add": "Hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "save": "Speichern",
+    "confirm": "Bestätigen",
+    "close": "Schliessen",
+    "hide": "Ausblenden",
+    "reload": "Neu laden",
+    "validate": "Bestätigen",
+    "confirmation": "Bestätigung"
+  },
+  "common": {
+    "loading": "Wird geladen…",
+    "empty": "—",
+    "selectPerson": "— Person auswählen —",
+    "selectVehicle": "— Fahrzeug auswählen —"
+  },
+  "entities": {
+    "persons": "Personen",
+    "vehicles": "Fahrzeuge",
+    "missions": "Einsätze"
+  },
+  "status": {
+    "available": "verfügbar",
+    "on-mission": "im Einsatz",
+    "on-leave": "im Urlaub",
+    "unavailable": "nicht verfügbar",
+    "free": "frei",
+    "on-loan": "ausgeliehen",
+    "planned": "geplant",
+    "ongoing": "laufend",
+    "completed": "abgeschlossen",
+    "leave": "Urlaub"
+  },
+  "dashboard": {
+    "title": "Übersicht",
+    "ongoingMissions": "Laufende Einsätze",
+    "noOngoingMission": "Kein laufender Einsatz",
+    "stats": {
+      "available": "Verfügbar",
+      "onMission": "Im Einsatz",
+      "unavailable": "Nicht verfügbar",
+      "free": "Frei",
+      "onLoan": "Ausgeliehen"
+    },
+    "alerts": {
+      "driverOnLeave": "Einsatz «{mission}»: {person} (Fahrer) ist während des Einsatzes im Urlaub",
+      "staffOnLeave": "Einsatz «{mission}»: {person} ist während des Einsatzes im Urlaub",
+      "vehicleOnLoan": "Einsatz «{mission}»: Fahrzeug {vehicle} ist als «ausgeliehen» markiert"
+    }
+  },
+  "persons": {
+    "title": "Personen",
+    "empty": "Keine Person erfasst",
+    "new": "Neue Person",
+    "edit": "Person bearbeiten",
+    "deleteTitle": "Person löschen",
+    "deleteConfirm": "Möchten Sie diese Person wirklich löschen?",
+    "rank": "Grad",
+    "firstName": "Vorname",
+    "lastName": "Name",
+    "licenses": "Führerausweise (Schweizer Militärführerausweise)",
+    "notes": "Notizen",
+    "rankPlaceholder": "z. B. Sdt, Kpl…",
+    "firstNamePlaceholder": "Vorname",
+    "lastNamePlaceholder": "Name",
+    "notesPlaceholder": "Freie Notizen…",
+    "leaves": {
+      "title": "Urlaub — {name}",
+      "manage": "Urlaub verwalten",
+      "addPeriod": "Zeitraum hinzufügen",
+      "recorded": "Erfasste Zeiträume",
+      "empty": "Kein Urlaub erfasst",
+      "invalidRange": "Das Ende muss nach dem Beginn liegen",
+      "current": "Laufend",
+      "upcoming": "Bevorstehend",
+      "past": "Vergangen",
+      "addLeave": "Urlaub hinzufügen"
+    },
+    "unavailability": {
+      "title": "Nichtverfügbarkeit — {name}",
+      "mark": "Als nicht verfügbar markieren",
+      "clear": "Nichtverfügbarkeit aufheben",
+      "reason": "Grund der Nichtverfügbarkeit",
+      "placeholder": "z. B. Wachdienst, einer Sektion zugeteilt, Ausbildung…",
+      "person": "Person:"
+    }
+  },
+  "vehicles": {
+    "title": "Fahrzeuge",
+    "empty": "Kein Fahrzeug erfasst",
+    "new": "Neues Fahrzeug",
+    "edit": "Fahrzeug bearbeiten",
+    "deleteTitle": "Fahrzeug löschen",
+    "deleteConfirm": "Möchten Sie dieses Fahrzeug wirklich löschen?",
+    "name": "Name / Modell",
+    "plate": "Kontrollschild",
+    "seats": "Anzahl Plätze (Passagiere)",
+    "seatsShort": "{count} Plätze | {count} Platz | {count} Plätze",
+    "category": "Kategorie",
+    "status": "Status",
+    "namePlaceholder": "z. B. VW Golf",
+    "platePlaceholder": "z. B. MIL-001",
+    "seatsPlaceholder": "z. B. 9",
+    "categories": {
+      "light-road": "Leicht (Strasse)",
+      "light-offroad": "Leicht (Gelände)",
+      "medium": "Mittel ≤ 7.5t",
+      "heavy": "Schwer"
+    },
+    "categoryOptions": {
+      "light-road": "Leicht (Strasse) — Ausweis 920+",
+      "light-offroad": "Leicht (Gelände) — Ausweis 921+",
+      "medium": "Mittel ≤ 7.5t — Ausweis 930+",
+      "heavy": "Schwer > 7.5t — Ausweis 931+"
+    },
+    "loan": {
+      "title": "Ausleihen",
+      "lend": "Ausleihen",
+      "release": "Freigeben",
+      "releaseLabel": "Fahrzeug freigeben",
+      "confirm": "Ausleihe bestätigen",
+      "note": "Bemerkung zur Ausleihe",
+      "notePlaceholder": "An wen, bis wann…",
+      "vehicle": "Fahrzeug:"
+    }
+  },
+  "missions": {
+    "title": "Einsätze",
+    "empty": "Kein Einsatz",
+    "new": "Neuer Einsatz",
+    "edit": "Einsatz bearbeiten",
+    "deleteTitle": "Einsatz löschen",
+    "deleteConfirm": "Möchten Sie diesen Einsatz wirklich löschen?",
+    "missionTitle": "Titel",
+    "titlePlaceholder": "Titel des Einsatzes",
+    "description": "Beschreibung",
+    "descriptionPlaceholder": "Beschreibung…",
+    "start": "Beginn",
+    "end": "Ende",
+    "notes": "Notizen",
+    "notesPlaceholder": "Notizen…",
+    "filters": {
+      "all": "Alle",
+      "planned": "Geplant",
+      "ongoing": "Laufend",
+      "completed": "Abgeschlossen"
+    },
+    "vehiclesSection": "Eingesetzte Fahrzeuge",
+    "staffSection": "Personal ohne Fahrzeug",
+    "noVehicleAdded": "Kein Fahrzeug hinzugefügt",
+    "noStaffAdded": "Keine Person hinzugefügt",
+    "removeVehicle": "Dieses Fahrzeug entfernen",
+    "removeStaff": "Diese Person entfernen",
+    "withTrailer": "Mit Anhänger",
+    "trailerBadge": "+ Anhänger",
+    "trailerLicense": "(Ausweis E erforderlich)",
+    "noDriverOption": "— Ohne Fahrer —",
+    "noDriver": "ohne Fahrer",
+    "requiredLicenses": "Erforderliche Ausweise: {list}",
+    "noQualifiedDriver": "Kein qualifizierter Fahrer an diesen Daten verfügbar",
+    "capacity": "{seats} Plätze",
+    "drivers": "{count} Fahrer | {count} Fahrer | {count} Fahrer"
+  },
+  "calendar": {
+    "title": "Kalender",
+    "resource": "Ressource",
+    "today": "Heute",
+    "previousPeriod": "Vorherige Periode",
+    "nextPeriod": "Nächste Periode",
+    "views": {
+      "day": "Tag",
+      "week": "Woche",
+      "month": "Monat"
+    },
+    "tabs": {
+      "vehicles": "Fahrzeuge",
+      "persons": "Personen"
+    },
+    "noResource": "Keine Ressource anzuzeigen"
+  },
+  "accessKey": {
+    "title": "Zugangsschlüssel",
+    "description": "Dieser Server verlangt einen Zugangsschlüssel (Variable {variable}). Er wird in diesem Browser gespeichert.",
+    "label": "Schlüssel",
+    "placeholder": "Zugangsschlüssel",
+    "enter": "Schlüssel eingeben"
+  },
+  "fields": {
+    "id": "Identifikator",
+    "firstName": "Vorname",
+    "lastName": "Name",
+    "rank": "Grad",
+    "licenses": "Ausweise",
+    "notes": "Notizen",
+    "unavailable": "Nichtverfügbarkeit",
+    "unavailabilityNote": "Grund der Nichtverfügbarkeit",
+    "leaves": "Urlaub",
+    "name": "Name",
+    "plate": "Kontrollschild",
+    "category": "Kategorie",
+    "status": "Status",
+    "seats": "Plätze",
+    "loanNote": "Bemerkung zur Ausleihe",
+    "title": "Titel",
+    "description": "Beschreibung",
+    "vehicles": "Fahrzeuge",
+    "vehicleId": "Fahrzeug",
+    "driverId": "Fahrer",
+    "withTrailer": "Anhänger",
+    "staffIds": "Personal",
+    "dates": "Daten"
+  },
+  "errors": {
+    "loadFailed": "Laden nicht möglich ({entity}): {reason}",
+    "saveFailed": "Speichern nicht möglich ({entity}): {reason}",
+    "conflict": "Die {entity} wurden anderswo geändert. Laden Sie die Seite neu, um mit der Serverversion weiterzuarbeiten.",
+    "notLoaded": "Daten nicht geladen ({entity}): Speichern abgebrochen, um den Server nicht zu überschreiben.",
+    "accessKeyRequired": "Zugangsschlüssel erforderlich oder ungültig",
+    "unsavedSuffix": "Ihre letzten Änderungen sind nicht gespeichert."
+  },
+  "server": {
+    "unreachable": "Server nicht erreichbar",
+    "auth": {
+      "required": "Zugangsschlüssel erforderlich oder ungültig"
+    },
+    "conflict": "Die Daten wurden seit Ihrem Laden anderswo geändert",
+    "preconditionRequired": "Unvollständige Anfrage an den Server gesendet",
+    "notFound": "Unbekannte Route",
+    "payloadTooLarge": "Datenmenge zu gross",
+    "malformedJson": "Fehlerhafte Daten",
+    "internal": "Interner Serverfehler",
+    "validation": {
+      "notAnArray": "Eine Liste wurde erwartet",
+      "unknownCollection": "Unbekannte Sammlung: {entity}",
+      "tooManyItems": "Zu viele Einträge (maximal {max})",
+      "notAnObject": "Eintrag {index}: Objekt erwartet",
+      "missingId": "Eintrag {index}: Identifikator fehlt",
+      "duplicateId": "Eintrag {index}: doppelter Identifikator",
+      "invalidField": "Eintrag {index}: Feld «{field}» ungültig",
+      "invalidNested": "Eintrag {index}: {list}, Position {position}, Feld «{field}» ungültig",
+      "invalidDates": "Eintrag {index}: ungültige Daten",
+      "unknownValue": "Eintrag {index}: unbekannter Wert für «{field}»"
+    }
+  }
+}

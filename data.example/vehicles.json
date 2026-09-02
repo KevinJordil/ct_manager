@@ -1,182 +1,182 @@
 [
   {
-    "nom": "Camion 4x4",
-    "immatriculation": "M12346",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 38,
-    "id": "3001001"
+    "id": "3001001",
+    "name": "Camion 4x4",
+    "plate": "M12346",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 38
   },
   {
-    "nom": "Camion 4x4",
-    "immatriculation": "M23478",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 38,
-    "id": "3001002"
+    "id": "3001002",
+    "name": "Camion 4x4",
+    "plate": "M23478",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 38
   },
   {
-    "nom": "Camion 4x4",
-    "immatriculation": "M34521",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 38,
-    "id": "3001003"
+    "id": "3001003",
+    "name": "Camion 4x4",
+    "plate": "M34521",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 38
   },
   {
-    "nom": "Camion 4x4",
-    "immatriculation": "M45632",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 38,
-    "id": "3001004"
+    "id": "3001004",
+    "name": "Camion 4x4",
+    "plate": "M45632",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 38
   },
   {
-    "nom": "Camion 6x6",
-    "immatriculation": "M56741",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 46,
-    "id": "3001005"
+    "id": "3001005",
+    "name": "Camion 6x6",
+    "plate": "M56741",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 46
   },
   {
-    "nom": "Camion 6x6",
-    "immatriculation": "M67852",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 46,
-    "id": "3001006"
+    "id": "3001006",
+    "name": "Camion 6x6",
+    "plate": "M67852",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 46
   },
   {
-    "nom": "Camion 6x6",
-    "immatriculation": "M78963",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 46,
-    "id": "3001007"
+    "id": "3001007",
+    "name": "Camion 6x6",
+    "plate": "M78963",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 46
   },
   {
-    "nom": "Camion 6x6",
-    "immatriculation": "M89074",
-    "categorie": "lourd",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 46,
-    "id": "3001008"
+    "id": "3001008",
+    "name": "Camion 6x6",
+    "plate": "M89074",
+    "category": "heavy",
+    "status": "free",
+    "loanNote": "",
+    "seats": 46
   },
   {
-    "nom": "Duro",
-    "immatriculation": "M90183",
-    "categorie": "moyen",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 13,
-    "id": "3001009"
+    "id": "3001009",
+    "name": "Duro",
+    "plate": "M90183",
+    "category": "medium",
+    "status": "free",
+    "loanNote": "",
+    "seats": 13
   },
   {
-    "nom": "Duro",
-    "immatriculation": "M10294",
-    "categorie": "moyen",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 13,
-    "id": "3001010"
+    "id": "3001010",
+    "name": "Duro",
+    "plate": "M10294",
+    "category": "medium",
+    "status": "free",
+    "loanNote": "",
+    "seats": 13
   },
   {
-    "nom": "Duro",
-    "immatriculation": "M11305",
-    "categorie": "moyen",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 13,
-    "id": "3001011"
+    "id": "3001011",
+    "name": "Duro",
+    "plate": "M11305",
+    "category": "medium",
+    "status": "free",
+    "loanNote": "",
+    "seats": 13
   },
   {
-    "nom": "Duro",
-    "immatriculation": "M22416",
-    "categorie": "moyen",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 13,
-    "id": "3001012"
+    "id": "3001012",
+    "name": "Duro",
+    "plate": "M22416",
+    "category": "medium",
+    "status": "free",
+    "loanNote": "",
+    "seats": 13
   },
   {
-    "nom": "Class G",
-    "immatriculation": "M33527",
-    "categorie": "léger-tt",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 3,
-    "id": "3001013"
+    "id": "3001013",
+    "name": "Class G",
+    "plate": "M33527",
+    "category": "light-offroad",
+    "status": "free",
+    "loanNote": "",
+    "seats": 3
   },
   {
-    "nom": "Class G",
-    "immatriculation": "M44638",
-    "categorie": "léger-tt",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 3,
-    "id": "3001014"
+    "id": "3001014",
+    "name": "Class G",
+    "plate": "M44638",
+    "category": "light-offroad",
+    "status": "free",
+    "loanNote": "",
+    "seats": 3
   },
   {
-    "nom": "Class G",
-    "immatriculation": "M55749",
-    "categorie": "léger-tt",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 3,
-    "id": "3001015"
+    "id": "3001015",
+    "name": "Class G",
+    "plate": "M55749",
+    "category": "light-offroad",
+    "status": "free",
+    "loanNote": "",
+    "seats": 3
   },
   {
-    "nom": "Class G",
-    "immatriculation": "M66850",
-    "categorie": "léger-tt",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 3,
-    "id": "3001016"
+    "id": "3001016",
+    "name": "Class G",
+    "plate": "M66850",
+    "category": "light-offroad",
+    "status": "free",
+    "loanNote": "",
+    "seats": 3
   },
   {
-    "nom": "Renault Mégane",
-    "immatriculation": "M77961",
-    "categorie": "léger-route",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 4,
-    "id": "3001017"
+    "id": "3001017",
+    "name": "Renault Mégane",
+    "plate": "M77961",
+    "category": "light-road",
+    "status": "free",
+    "loanNote": "",
+    "seats": 4
   },
   {
-    "nom": "Renault Mégane",
-    "immatriculation": "M88072",
-    "categorie": "léger-route",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 4,
-    "id": "3001018"
+    "id": "3001018",
+    "name": "Renault Mégane",
+    "plate": "M88072",
+    "category": "light-road",
+    "status": "free",
+    "loanNote": "",
+    "seats": 4
   },
   {
-    "nom": "Renault Mégane",
-    "immatriculation": "M99183",
-    "categorie": "léger-route",
-    "statut": "libre",
-    "commentairePret": "",
-    "places": 4,
-    "id": "3001019"
+    "id": "3001019",
+    "name": "Renault Mégane",
+    "plate": "M99183",
+    "category": "light-road",
+    "status": "free",
+    "loanNote": "",
+    "seats": 4
   },
   {
-    "nom": "Renault Mégane",
-    "immatriculation": "M89309",
-    "categorie": "léger-route",
-    "statut": "en prêt",
-    "commentairePret": "Prêté à la cp EM jusqu'à fin de semaine",
-    "places": 4,
-    "id": "3001020"
+    "id": "3001020",
+    "name": "Renault Mégane",
+    "plate": "M89309",
+    "category": "light-road",
+    "status": "on-loan",
+    "loanNote": "Prêté à la cp EM jusqu'à fin de semaine",
+    "seats": 4
   }
 ]

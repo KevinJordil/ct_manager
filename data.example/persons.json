@@ -1,192 +1,192 @@
 [
   {
-    "grade": "Sgt",
-    "nom": "Müller",
-    "prenom": "Andreas",
-    "permis": [
+    "id": "2001001",
+    "rank": "Sgt",
+    "firstName": "Andreas",
+    "lastName": "Müller",
+    "licenses": [
       "930",
       "930E"
     ],
     "notes": "",
-    "id": "2001001",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sgt",
-    "nom": "Favre",
-    "prenom": "Caroline",
-    "permis": [
+    "id": "2001002",
+    "rank": "Sgt",
+    "firstName": "Caroline",
+    "lastName": "Favre",
+    "licenses": [
       "930E",
       "920E"
     ],
     "notes": "",
-    "id": "2001002",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sgt",
-    "nom": "Rossier",
-    "prenom": "Marc",
-    "permis": [
+    "id": "2001003",
+    "rank": "Sgt",
+    "firstName": "Marc",
+    "lastName": "Rossier",
+    "licenses": [
       "931",
       "930E"
     ],
     "notes": "",
-    "id": "2001003",
-    "conges": [
+    "leaves": [
       {
         "id": "5001001",
-        "dateDebut": "2026-05-06T00:00",
-        "dateFin": "2026-05-12T23:59"
+        "startDate": "2026-05-06T00:00",
+        "endDate": "2026-05-12T23:59"
       }
     ],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Dubois",
-    "prenom": "Pierre",
-    "permis": [
+    "id": "2001004",
+    "rank": "Sdt",
+    "firstName": "Pierre",
+    "lastName": "Dubois",
+    "licenses": [
       "920",
       "920E"
     ],
     "notes": "",
-    "id": "2001004",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Martin",
-    "prenom": "Sophie",
-    "permis": [
+    "id": "2001005",
+    "rank": "Sdt",
+    "firstName": "Sophie",
+    "lastName": "Martin",
+    "licenses": [
       "920"
     ],
     "notes": "",
-    "id": "2001005",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Leroy",
-    "prenom": "Thomas",
-    "permis": [
+    "id": "2001006",
+    "rank": "Sdt",
+    "firstName": "Thomas",
+    "lastName": "Leroy",
+    "licenses": [
       "921",
       "920"
     ],
     "notes": "",
-    "id": "2001006",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Bonvin",
-    "prenom": "Lucie",
-    "permis": [
+    "id": "2001007",
+    "rank": "Sdt",
+    "firstName": "Lucie",
+    "lastName": "Bonvin",
+    "licenses": [
       "920E"
     ],
     "notes": "",
-    "id": "2001007",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Fontana",
-    "prenom": "Roberto",
-    "permis": [
+    "id": "2001008",
+    "rank": "Sdt",
+    "firstName": "Roberto",
+    "lastName": "Fontana",
+    "licenses": [
       "930"
     ],
     "notes": "",
-    "id": "2001008",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Jacquemoud",
-    "prenom": "Florian",
-    "permis": [
+    "id": "2001009",
+    "rank": "Sdt",
+    "firstName": "Florian",
+    "lastName": "Jacquemoud",
+    "licenses": [
       "921E",
       "921"
     ],
     "notes": "",
-    "id": "2001009",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Michaud",
-    "prenom": "Élise",
-    "permis": [
+    "id": "2001010",
+    "rank": "Sdt",
+    "firstName": "Élise",
+    "lastName": "Michaud",
+    "licenses": [
       "920"
     ],
     "notes": "",
-    "id": "2001010",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Tornare",
-    "prenom": "Baptiste",
-    "permis": [
+    "id": "2001011",
+    "rank": "Sdt",
+    "firstName": "Baptiste",
+    "lastName": "Tornare",
+    "licenses": [
       "920",
       "921"
     ],
     "notes": "",
-    "id": "2001011",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Magnin",
-    "prenom": "Nathalie",
-    "permis": [
+    "id": "2001012",
+    "rank": "Sdt",
+    "firstName": "Nathalie",
+    "lastName": "Magnin",
+    "licenses": [
       "920E",
       "921E"
     ],
     "notes": "",
-    "id": "2001012",
-    "conges": [
+    "leaves": [
       {
         "id": "5001002",
-        "dateDebut": "2026-05-22T00:00",
-        "dateFin": "2026-05-27T23:59"
+        "startDate": "2026-05-22T00:00",
+        "endDate": "2026-05-27T23:59"
       }
     ],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "unavailable": false,
+    "unavailabilityNote": ""
   },
   {
-    "grade": "Sdt",
-    "nom": "Blanchard",
-    "prenom": "Sébastien",
-    "permis": [
+    "id": "2001013",
+    "rank": "Sdt",
+    "firstName": "Sébastien",
+    "lastName": "Blanchard",
+    "licenses": [
       "930",
       "920"
     ],
     "notes": "",
-    "id": "2001013",
-    "conges": [],
-    "indisponible": false,
-    "commentaireIndisponible": ""
+    "leaves": [],
+    "unavailable": false,
+    "unavailabilityNote": ""
   }
 ]

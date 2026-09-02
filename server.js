@@ -3,8 +3,8 @@ import crypto from 'crypto'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { ENTITES, valideCollection } from './validation.js'
-import { recaler } from './seed.js'
+import { ENTITIES, validateCollection } from './validation.js'
+import { reanchor } from './seed.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, 'data')
@@ -18,11 +18,20 @@ const app = express()
 app.disable('x-powered-by')
 app.use(express.json({ limit: '4mb' }))
 
+/**
+ * Errors travel as a machine-readable code plus parameters; the interface
+ * renders them in the reader's language. `message` is an English fallback
+ * for anyone calling the API directly.
+ */
+function fail(res, status, code, params = {}, message = code) {
+  return res.status(status).json({ code, params, error: message })
+}
+
 // ── CORS ──
-// En développement, Vite proxifie /api vers ce serveur : les requêtes sont
-// donc déjà de même origine et aucun en-tête CORS n'est nécessaire. On
-// n'ouvre l'API à une autre origine que si CORS_ORIGIN est explicitement
-// défini — jamais avec un joker, qui exposerait l'API à tout le web.
+// In development Vite proxies /api to this server, so requests are already
+// same-origin and need no CORS header. The API is opened to another origin
+// only when CORS_ORIGIN is set explicitly — never with a wildcard, which
+// would expose it to the whole web.
 if (CORS_ORIGIN) {
   app.use('/api', (req, res, next) => {
     res.header('Access-Control-Allow-Origin', CORS_ORIGIN)
@@ -35,12 +44,12 @@ if (CORS_ORIGIN) {
   })
 }
 
-// ── Authentification ──
-// Optionnelle : sans CT_TOKEN, l'API est ouverte (usage local). Dès que
-// l'application est exposée sur un réseau, ce jeton est indispensable —
-// un PUT non authentifié remplace l'intégralité d'une collection.
+// ── Authentication ──
+// Optional: without CT_TOKEN the API is open, which suits local use. As soon
+// as the application is reachable over a network the token is essential — an
+// unauthenticated PUT replaces a whole collection.
 
-function comparaisonConstante(a, b) {
+function constantTimeEquals(a, b) {
   const ba = Buffer.from(a)
   const bb = Buffer.from(b)
   if (ba.length !== bb.length) return false
@@ -49,105 +58,102 @@ function comparaisonConstante(a, b) {
 
 app.use('/api', (req, res, next) => {
   if (!TOKEN) return next()
-  const entete = req.get('Authorization') ?? ''
-  const fourni = entete.startsWith('Bearer ') ? entete.slice(7) : ''
-  if (!fourni || !comparaisonConstante(fourni, TOKEN)) {
-    return res.status(401).json({ error: 'Clé d\'accès requise ou invalide' })
+  const header = req.get('Authorization') ?? ''
+  const provided = header.startsWith('Bearer ') ? header.slice(7) : ''
+  if (!provided || !constantTimeEquals(provided, TOKEN)) {
+    return fail(res, 401, 'auth.required', {}, 'Access key required or invalid')
   }
   next()
 })
 
-// ── Mutex par entité ──
-// Node.js est mono-thread : ce mutex async suffit pour sérialiser les
-// requêtes simultanées sur la même entité.
+// ── Per-entity mutex ──
+// Node.js is single-threaded: this async mutex is enough to serialise
+// concurrent requests on the same entity.
 const locks = new Map()
 
 async function withLock(key, fn) {
   while (locks.has(key)) await locks.get(key)
-  let resolve
-  locks.set(key, new Promise(r => (resolve = r)))
+  let release
+  locks.set(key, new Promise(r => (release = r)))
   try {
     return await fn()
   } finally {
     locks.delete(key)
-    resolve()
+    release()
   }
 }
 
-// ── Lecture / écriture ──
+// ── Reading and writing ──
 
-function versionDe(contenu) {
-  return crypto.createHash('sha1').update(contenu).digest('hex').slice(0, 16)
+function versionOf(content) {
+  return crypto.createHash('sha1').update(content).digest('hex').slice(0, 16)
 }
 
-function fichierDe(entity) {
+function fileOf(entity) {
   return path.join(DATA_DIR, `${entity}.json`)
 }
 
-async function lireBrut(entity) {
+async function readRaw(entity) {
   try {
-    return await fs.readFile(fichierDe(entity), 'utf-8')
+    return await fs.readFile(fileOf(entity), 'utf-8')
   } catch (err) {
     if (err.code === 'ENOENT') return '[]'
     throw err
   }
 }
 
-async function ecrire(entity, contenu) {
-  const cible = fichierDe(entity)
-  const tmp = `${cible}.${process.pid}.tmp`
-  // Écriture dans un fichier temporaire puis renommage atomique : une panne
-  // en cours d'écriture ne peut pas laisser un JSON tronqué à la place des
-  // données.
-  await fs.writeFile(tmp, contenu, 'utf-8')
-  await fs.rename(tmp, cible)
+async function write(entity, content) {
+  const target = fileOf(entity)
+  const tmp = `${target}.${process.pid}.tmp`
+  // Write to a temporary file then rename atomically: a crash mid-write
+  // cannot leave truncated JSON in place of the data.
+  await fs.writeFile(tmp, content, 'utf-8')
+  await fs.rename(tmp, target)
 }
 
-// ── Routes API ──
+// ── API routes ──
 
-for (const entity of ENTITES) {
+for (const entity of ENTITIES) {
   app.get(`/api/${entity}`, async (_req, res, next) => {
     try {
-      const brut = await lireBrut(entity)
-      // La version permet au client de détecter qu'un autre onglet a modifié
-      // les données depuis son dernier chargement.
-      res.set('ETag', `"${versionDe(brut)}"`)
-      res.type('application/json').send(brut)
+      const raw = await readRaw(entity)
+      // The version lets a client detect that another tab changed the data
+      // since it last loaded.
+      res.set('ETag', `"${versionOf(raw)}"`)
+      res.type('application/json').send(raw)
     } catch (err) {
       next(err)
     }
   })
 
   app.put(`/api/${entity}`, async (req, res, next) => {
-    const erreur = valideCollection(entity, req.body)
-    if (erreur) return res.status(400).json({ error: erreur })
+    const invalid = validateCollection(entity, req.body)
+    if (invalid) {
+      return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid payload')
+    }
 
     try {
       await withLock(entity, async () => {
-        const actuel = versionDe(await lireBrut(entity))
-        const attendu = (req.get('If-Match') ?? '').replace(/"/g, '')
+        const current = versionOf(await readRaw(entity))
+        const expected = (req.get('If-Match') ?? '').replace(/"/g, '')
 
-        // Écriture aveugle refusée : un client qui n'a pas lu les données
-        // en cours écraserait le travail d'un autre onglet — ou remplacerait
-        // le fichier par une collection vide après un échec de chargement.
-        if (!attendu) {
-          return res.status(428).json({
-            error: 'En-tête If-Match requis',
-            version: actuel,
-          })
+        // Blind writes are refused: a client that has not read the current
+        // data would overwrite another tab's work — or replace the file with
+        // an empty collection after a failed load.
+        if (!expected) {
+          return fail(res, 428, 'preconditionRequired', { version: current },
+            'If-Match header required')
         }
-        if (attendu !== '*' && attendu !== actuel) {
-          return res.status(409).json({
-            error: 'Les données ont été modifiées ailleurs depuis votre chargement',
-            version: actuel,
-          })
+        if (expected !== '*' && expected !== current) {
+          return fail(res, 409, 'conflict', { version: current },
+            'Data was modified elsewhere since your load')
         }
 
-        const contenu = JSON.stringify(req.body, null, 2)
-        await ecrire(entity, contenu)
-        const nouvelle = versionDe(contenu)
-        res.set('ETag', `"${nouvelle}"`)
-        res.json({ ok: true, version: nouvelle })
+        const content = JSON.stringify(req.body, null, 2)
+        await write(entity, content)
+        const version = versionOf(content)
+        res.set('ETag', `"${version}"`)
+        res.json({ ok: true, version })
       })
     } catch (err) {
       next(err)
@@ -155,10 +161,10 @@ for (const entity of ENTITES) {
   })
 }
 
-// Une route /api inconnue doit répondre en JSON, pas renvoyer l'application.
-app.use('/api', (_req, res) => res.status(404).json({ error: 'Route inconnue' }))
+// An unknown /api route must answer in JSON, not serve the application.
+app.use('/api', (_req, res) => fail(res, 404, 'notFound', {}, 'Unknown route'))
 
-// ── Frontend en production ──
+// ── Frontend in production ──
 
 app.use(express.static(DIST_DIR))
 app.get('*', async (_req, res) => {
@@ -167,69 +173,68 @@ app.get('*', async (_req, res) => {
     await fs.access(index)
   } catch {
     return res.status(503).type('text/plain').send(
-      'Frontend non compilé. Lancez `npm run build`, ou `npm run dev` pour le mode développement.'
+      'Frontend not built. Run `npm run build`, or `npm run dev` for development mode.'
     )
   }
   res.sendFile(index)
 })
 
-// ── Gestion d'erreurs ──
+// ── Error handling ──
 
 app.use((err, _req, res, _next) => {
   console.error('[server]', err)
   if (res.headersSent) return
-  const statut = err.type === 'entity.too.large' ? 413
-    : err instanceof SyntaxError ? 400
-    : 500
-  res.status(statut).json({ error: statut === 500 ? 'Erreur interne' : err.message })
+  if (err.type === 'entity.too.large') return fail(res, 413, 'payloadTooLarge', {}, err.message)
+  if (err instanceof SyntaxError) return fail(res, 400, 'malformedJson', {}, err.message)
+  return fail(res, 500, 'internal', {}, 'Internal error')
 })
 
 /**
- * Au premier lancement, installe les données de démonstration.
- * Une collection déjà présente n'est jamais écrasée. Les dates du jeu
- * d'exemple sont recalées sur la date du jour (voir seed.js), sans quoi une
- * installation faite longtemps après n'afficherait que des missions passées.
+ * On first launch, installs the demonstration data. A collection that is
+ * already present is never overwritten. Sample dates are re-anchored on the
+ * current day (see seed.js), otherwise a later install would show nothing
+ * but past missions.
  */
-async function amorcerDonnees() {
-  const aAmorcer = []
-  for (const entity of ENTITES) {
+async function seedData() {
+  const missing = []
+  for (const entity of ENTITIES) {
     try {
-      await fs.access(fichierDe(entity))
+      await fs.access(fileOf(entity))
     } catch {
-      aAmorcer.push(entity)
+      missing.push(entity)
     }
   }
-  if (!aAmorcer.length) return
+  if (!missing.length) return
 
   const collections = {}
-  for (const entity of aAmorcer) {
+  for (const entity of missing) {
     try {
       collections[entity] = JSON.parse(await fs.readFile(path.join(SEED_DIR, `${entity}.json`), 'utf-8'))
     } catch (err) {
-      if (err.code !== 'ENOENT') throw err // pas de jeu d'exemple : collection vide
+      if (err.code !== 'ENOENT') throw err // no sample set: leave the collection empty
     }
   }
   if (!Object.keys(collections).length) return
 
-  for (const [entity, données] of Object.entries(recaler(collections))) {
-    await ecrire(entity, JSON.stringify(données, null, 2))
-    console.log(`Données de démonstration chargées : ${entity}`)
+  for (const [entity, data] of Object.entries(reanchor(collections))) {
+    await write(entity, JSON.stringify(data, null, 2))
+    console.log(`Demonstration data loaded: ${entity}`)
   }
 }
 
 async function start() {
   await fs.mkdir(DATA_DIR, { recursive: true })
-  await amorcerDonnees()
+  await seedData()
   app.listen(PORT, () => {
     console.log(`Server → http://localhost:${PORT}`)
     if (!TOKEN) {
-      console.warn('⚠  CT_TOKEN non défini : l\'API est accessible sans authentification.')
-      console.warn('   Définissez CT_TOKEN avant toute exposition sur un réseau.')
+      console.warn('⚠  CT_TOKEN is not set: the API accepts unauthenticated requests.')
+      console.warn('   Set CT_TOKEN before exposing the application on a network.')
     }
   })
 }
 
 start().catch(err => {
-  console.error('[server] démarrage impossible :', err)
+  console.error('[server] failed to start:', err)
   process.exit(1)
 })

@@ -1,0 +1,264 @@
+{
+  "app": {
+    "name": "Gestione CT",
+    "tagline": "Gestione delle risorse",
+    "openMenu": "Apri il menu",
+    "saving": "Salvataggio…",
+    "language": "Lingua"
+  },
+  "nav": {
+    "dashboard": "Cruscotto",
+    "persons": "Persone",
+    "vehicles": "Veicoli",
+    "missions": "Missioni",
+    "calendar": "Calendario"
+  },
+  "actions": {
+    "add": "Aggiungi",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "cancel": "Annulla",
+    "create": "Crea",
+    "save": "Salva",
+    "confirm": "Conferma",
+    "close": "Chiudi",
+    "hide": "Nascondi",
+    "reload": "Ricarica",
+    "validate": "Conferma",
+    "confirmation": "Conferma"
+  },
+  "common": {
+    "loading": "Caricamento…",
+    "empty": "—",
+    "selectPerson": "— Seleziona una persona —",
+    "selectVehicle": "— Seleziona un veicolo —"
+  },
+  "entities": {
+    "persons": "persone",
+    "vehicles": "veicoli",
+    "missions": "missioni"
+  },
+  "status": {
+    "available": "disponibile",
+    "on-mission": "in missione",
+    "on-leave": "in congedo",
+    "unavailable": "non disponibile",
+    "free": "libero",
+    "on-loan": "in prestito",
+    "planned": "pianificata",
+    "ongoing": "in corso",
+    "completed": "conclusa",
+    "leave": "Congedo"
+  },
+  "dashboard": {
+    "title": "Cruscotto",
+    "ongoingMissions": "Missioni in corso",
+    "noOngoingMission": "Nessuna missione in corso",
+    "stats": {
+      "available": "Disponibili",
+      "onMission": "In missione",
+      "unavailable": "Non disponibili",
+      "free": "Liberi",
+      "onLoan": "In prestito"
+    },
+    "alerts": {
+      "driverOnLeave": "Missione «{mission}»: {person} (conducente) è in congedo durante la missione",
+      "staffOnLeave": "Missione «{mission}»: {person} è in congedo durante la missione",
+      "vehicleOnLoan": "Missione «{mission}»: il veicolo {vehicle} è indicato come «in prestito»"
+    }
+  },
+  "persons": {
+    "title": "Persone",
+    "empty": "Nessuna persona registrata",
+    "new": "Nuova persona",
+    "edit": "Modifica la persona",
+    "deleteTitle": "Elimina la persona",
+    "deleteConfirm": "Vuoi davvero eliminare questa persona?",
+    "rank": "Grado",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "licenses": "Licenze di condurre (licenze militari svizzere)",
+    "notes": "Note",
+    "rankPlaceholder": "Es. Sdt, Cpl…",
+    "firstNamePlaceholder": "Nome",
+    "lastNamePlaceholder": "Cognome",
+    "notesPlaceholder": "Note libere…",
+    "leaves": {
+      "title": "Congedi — {name}",
+      "manage": "Gestisci i congedi",
+      "addPeriod": "Aggiungi un periodo",
+      "recorded": "Periodi registrati",
+      "empty": "Nessun congedo registrato",
+      "invalidRange": "La fine deve essere successiva all'inizio",
+      "current": "In corso",
+      "upcoming": "In arrivo",
+      "past": "Passato",
+      "addLeave": "Aggiungi il congedo"
+    },
+    "unavailability": {
+      "title": "Indisponibilità — {name}",
+      "mark": "Segna come non disponibile",
+      "clear": "Revoca l'indisponibilità",
+      "reason": "Motivo dell'indisponibilità",
+      "placeholder": "Es. assegnato alla guardia, aggregato a una sezione, formazione…",
+      "person": "Persona:"
+    }
+  },
+  "vehicles": {
+    "title": "Veicoli",
+    "empty": "Nessun veicolo registrato",
+    "new": "Nuovo veicolo",
+    "edit": "Modifica il veicolo",
+    "deleteTitle": "Elimina il veicolo",
+    "deleteConfirm": "Vuoi davvero eliminare questo veicolo?",
+    "name": "Nome / Modello",
+    "plate": "Targa",
+    "seats": "Numero di posti (passeggeri)",
+    "seatsShort": "{count} posti | {count} posto | {count} posti",
+    "category": "Categoria",
+    "status": "Stato",
+    "namePlaceholder": "Es. VW Golf",
+    "platePlaceholder": "Es. MIL-001",
+    "seatsPlaceholder": "Es. 9",
+    "categories": {
+      "light-road": "Leggero (strada)",
+      "light-offroad": "Leggero (fuoristrada)",
+      "medium": "Medio ≤ 7.5t",
+      "heavy": "Pesante"
+    },
+    "categoryOptions": {
+      "light-road": "Leggero (strada) — licenza 920+",
+      "light-offroad": "Leggero (fuoristrada) — licenza 921+",
+      "medium": "Medio ≤ 7.5t — licenza 930+",
+      "heavy": "Pesante > 7.5t — licenza 931+"
+    },
+    "loan": {
+      "title": "Metti in prestito",
+      "lend": "Metti in prestito",
+      "release": "Libera",
+      "releaseLabel": "Libera il veicolo",
+      "confirm": "Conferma il prestito",
+      "note": "Commento sul prestito",
+      "notePlaceholder": "A chi, fino a quando…",
+      "vehicle": "Veicolo:"
+    }
+  },
+  "missions": {
+    "title": "Missioni",
+    "empty": "Nessuna missione",
+    "new": "Nuova missione",
+    "edit": "Modifica la missione",
+    "deleteTitle": "Elimina la missione",
+    "deleteConfirm": "Vuoi davvero eliminare questa missione?",
+    "missionTitle": "Titolo",
+    "titlePlaceholder": "Titolo della missione",
+    "description": "Descrizione",
+    "descriptionPlaceholder": "Descrizione…",
+    "start": "Inizio",
+    "end": "Fine",
+    "notes": "Note",
+    "notesPlaceholder": "Note…",
+    "filters": {
+      "all": "Tutte",
+      "planned": "Pianificate",
+      "ongoing": "In corso",
+      "completed": "Concluse"
+    },
+    "vehiclesSection": "Veicoli impiegati",
+    "staffSection": "Personale senza veicolo",
+    "noVehicleAdded": "Nessun veicolo aggiunto",
+    "noStaffAdded": "Nessuna persona aggiunta",
+    "removeVehicle": "Rimuovi questo veicolo",
+    "removeStaff": "Rimuovi questa persona",
+    "withTrailer": "Con rimorchio",
+    "trailerBadge": "+ rimorchio",
+    "trailerLicense": "(licenza E richiesta)",
+    "noDriverOption": "— Senza conducente —",
+    "noDriver": "senza conducente",
+    "requiredLicenses": "Licenze richieste: {list}",
+    "noQualifiedDriver": "Nessun conducente qualificato disponibile in queste date",
+    "capacity": "{seats} posti",
+    "drivers": "{count} conducenti | {count} conducente | {count} conducenti"
+  },
+  "calendar": {
+    "title": "Calendario",
+    "resource": "Risorsa",
+    "today": "Oggi",
+    "previousPeriod": "Periodo precedente",
+    "nextPeriod": "Periodo successivo",
+    "views": {
+      "day": "Giorno",
+      "week": "Settimana",
+      "month": "Mese"
+    },
+    "tabs": {
+      "vehicles": "Veicoli",
+      "persons": "Persone"
+    },
+    "noResource": "Nessuna risorsa da visualizzare"
+  },
+  "accessKey": {
+    "title": "Chiave d'accesso",
+    "description": "Questo server richiede una chiave d'accesso (variabile {variable}). Viene conservata in questo browser.",
+    "label": "Chiave",
+    "placeholder": "Chiave d'accesso",
+    "enter": "Inserisci la chiave"
+  },
+  "fields": {
+    "id": "identificatore",
+    "firstName": "nome",
+    "lastName": "cognome",
+    "rank": "grado",
+    "licenses": "licenze",
+    "notes": "note",
+    "unavailable": "indisponibilità",
+    "unavailabilityNote": "motivo dell'indisponibilità",
+    "leaves": "congedi",
+    "name": "nome",
+    "plate": "targa",
+    "category": "categoria",
+    "status": "stato",
+    "seats": "posti",
+    "loanNote": "commento sul prestito",
+    "title": "titolo",
+    "description": "descrizione",
+    "vehicles": "veicoli",
+    "vehicleId": "veicolo",
+    "driverId": "conducente",
+    "withTrailer": "rimorchio",
+    "staffIds": "personale",
+    "dates": "date"
+  },
+  "errors": {
+    "loadFailed": "Caricamento impossibile ({entity}): {reason}",
+    "saveFailed": "Salvataggio impossibile ({entity}): {reason}",
+    "conflict": "Le {entity} sono state modificate altrove. Ricarica la pagina per ripartire dalla versione del server.",
+    "notLoaded": "Dati non caricati ({entity}): salvataggio annullato per non sovrascrivere il server.",
+    "accessKeyRequired": "Chiave d'accesso richiesta o non valida",
+    "unsavedSuffix": "Le tue ultime modifiche non sono state salvate."
+  },
+  "server": {
+    "unreachable": "Server irraggiungibile",
+    "auth": {
+      "required": "Chiave d'accesso richiesta o non valida"
+    },
+    "conflict": "I dati sono stati modificati altrove dopo il tuo caricamento",
+    "preconditionRequired": "Richiesta incompleta inviata al server",
+    "notFound": "Percorso sconosciuto",
+    "payloadTooLarge": "Dati troppo voluminosi",
+    "malformedJson": "Dati malformati",
+    "internal": "Errore interno del server",
+    "validation": {
+      "notAnArray": "Era attesa una lista",
+      "unknownCollection": "Collezione sconosciuta: {entity}",
+      "tooManyItems": "Troppi elementi (massimo {max})",
+      "notAnObject": "Elemento {index}: atteso un oggetto",
+      "missingId": "Elemento {index}: identificatore mancante",
+      "duplicateId": "Elemento {index}: identificatore duplicato",
+      "invalidField": "Elemento {index}: campo «{field}» non valido",
+      "invalidNested": "Elemento {index}: {list}, posizione {position}, campo «{field}» non valido",
+      "invalidDates": "Elemento {index}: date non valide",
+      "unknownValue": "Elemento {index}: valore sconosciuto per «{field}»"
+    }
+  }
+}

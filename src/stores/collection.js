@@ -2,84 +2,82 @@ import { ref, readonly } from 'vue'
 import { api } from '../api.js'
 import { newId } from '../id.js'
 import {
-  signalerErreur, signalerCleRequise, effacerErreur,
-  debutEnregistrement, finEnregistrement,
+  reportError, reportKeyRequired, clearError, startSaving, endSaving,
 } from './sync.js'
 
 /**
- * Squelette commun aux collections persistées (personnes, véhicules, missions) :
- * chargement unique, migration du format historique, CRUD et enregistrement.
+ * Shared skeleton for the persisted collections (persons, vehicles,
+ * missions): single load, migration of historic shapes, CRUD and saving.
  *
- * @param entity  nom de la collection côté API
- * @param migrate transformation appliquée aux données chargées
+ * @param entity  collection name on the API side
+ * @param migrate transformation applied to the loaded data
  */
 export function useCollection(entity, migrate = data => data) {
   const items = ref([])
-  const chargement = ref(false)
-  const chargee = ref(false)
-  const erreurChargement = ref(null)
-  // Version renvoyée par le serveur au dernier échange réussi ; sert de garde
-  // contre l'écrasement des modifications faites depuis un autre onglet.
+  const loading = ref(false)
+  const loaded = ref(false)
+  const loadError = ref(null)
+  // Version returned by the server on the last successful exchange; guards
+  // against overwriting changes made from another tab.
   let version = null
   let initPromise = null
 
-  function traiterErreur(err, prefixe) {
-    if (err.status === 401) return signalerCleRequise()
+  function handleError(err, context) {
+    if (err.status === 401) return reportKeyRequired()
     if (err.status === 409) {
-      version = err.version ?? version
-      return signalerErreur(
-        `${entity} : les données ont été modifiées ailleurs. Rechargez la page pour repartir de la version du serveur.`,
-        { conflit: true },
-      )
+      version = err.params?.version ?? version
+      return reportError('errors.conflict', { entity }, { isConflict: true, context })
     }
-    signalerErreur(`${prefixe} (${entity}) : ${err.message}`)
+    // A coded server error is rendered directly; anything else falls back to
+    // a generic message carrying the raw reason.
+    if (err.code) return reportError(`server.${err.code}`, { ...err.params, entity }, { context })
+    reportError(context === 'save' ? 'errors.saveFailed' : 'errors.loadFailed',
+      { entity, reason: err.message }, { context })
   }
 
   async function init() {
     if (initPromise) return initPromise
-    chargement.value = true
+    loading.value = true
     initPromise = (async () => {
       try {
-        const { data, version: v } = await api.load(entity)
+        const { data, version: loadedVersion } = await api.load(entity)
         items.value = migrate(data)
-        version = v
-        erreurChargement.value = null
+        version = loadedVersion
+        loadError.value = null
       } catch (err) {
-        erreurChargement.value = err.message
-        traiterErreur(err, 'Chargement impossible')
+        loadError.value = err.message
+        handleError(err, 'load')
       } finally {
-        chargement.value = false
-        chargee.value = true
+        loading.value = false
+        loaded.value = true
       }
     })()
     return initPromise
   }
 
-  /** Relance un chargement en oubliant le précédent (bouton « Réessayer ») */
-  async function recharger() {
+  /** Starts a fresh load, forgetting the previous one (a "retry" button) */
+  async function reload() {
     initPromise = null
-    chargee.value = false
-    effacerErreur()
+    loaded.value = false
+    clearError()
     return init()
   }
 
   async function persist() {
-    // Sans chargement réussi, la collection en mémoire est vide : l'enregistrer
-    // remplacerait le fichier du serveur par un tableau vide.
+    // Without a successful load the collection is empty in memory: saving it
+    // would replace the server's file with an empty array.
     if (!version) {
-      return signalerErreur(
-        `${entity} : données non chargées, enregistrement annulé pour ne pas écraser le serveur.`,
-      )
+      return reportError('errors.notLoaded', { entity }, { context: 'save' })
     }
-    debutEnregistrement()
+    startSaving()
     try {
-      const { version: nouvelle } = await api.save(entity, items.value, version)
-      version = nouvelle
-      effacerErreur()
+      const { version: newVersion } = await api.save(entity, items.value, version)
+      version = newVersion
+      clearError()
     } catch (err) {
-      traiterErreur(err, 'Enregistrement impossible')
+      handleError(err, 'save')
     } finally {
-      finEnregistrement()
+      endSaving()
     }
   }
 
@@ -91,10 +89,10 @@ export function useCollection(entity, migrate = data => data) {
   }
 
   function update(id, data) {
-    const idx = items.value.findIndex(i => i.id === id)
-    if (idx === -1) return
-    const { id: _ignore, ...rest } = data
-    items.value[idx] = { ...items.value[idx], ...rest }
+    const index = items.value.findIndex(i => i.id === id)
+    if (index === -1) return
+    const { id: _ignored, ...rest } = data
+    items.value[index] = { ...items.value[index], ...rest }
     persist()
   }
 
@@ -103,7 +101,7 @@ export function useCollection(entity, migrate = data => data) {
     persist()
   }
 
-  /** Applique une mutation à un élément puis enregistre, s'il existe */
+  /** Mutates one item then saves, if it exists */
   function mutate(id, fn) {
     const item = items.value.find(i => i.id === id)
     if (!item) return
@@ -113,9 +111,9 @@ export function useCollection(entity, migrate = data => data) {
 
   return {
     items,
-    chargement: readonly(chargement),
-    chargee: readonly(chargee),
-    erreurChargement: readonly(erreurChargement),
-    init, recharger, add, update, remove, mutate, persist,
+    loading: readonly(loading),
+    loaded: readonly(loaded),
+    loadError: readonly(loadError),
+    init, reload, add, update, remove, mutate, persist,
   }
 }

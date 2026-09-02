@@ -2,17 +2,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
+import { createI18n } from 'vue-i18n'
+import fr from '../locales/fr.json'
+import de from '../locales/de.json'
+import itMessages from '../locales/it.json'
 
-const donnees = vi.hoisted(() => ({
-  persons: [], vehicles: [], missions: [],
-}))
+const data = vi.hoisted(() => ({ persons: [], vehicles: [], missions: [] }))
 
 vi.mock('../api.js', () => ({
   ApiError: class ApiError extends Error {},
-  definirCle: () => {},
-  aUneCle: () => false,
+  setAccessKey: () => {},
+  hasAccessKey: () => false,
   api: {
-    load: async entity => ({ data: donnees[entity], version: 'v1' }),
+    load: async entity => ({ data: data[entity], version: 'v1' }),
     save: async () => ({ version: 'v2' }),
   },
 }))
@@ -24,109 +26,146 @@ const MissionsView = (await import('../views/MissionsView.vue')).default
 
 const stubs = { RouterLink: true, RouterView: true, CalendarGrid: true, CalendarTimeline: true }
 
-function monter(vue) {
-  return mount(vue, { global: { plugins: [createPinia()], stubs } })
+function i18nFor(locale) {
+  return createI18n({ legacy: false, locale, fallbackLocale: 'fr', messages: { fr, de, it: itMessages } })
 }
 
-/** Texte rendu, espaces normalisés */
-function texteDe(w) {
-  return w.text().replace(/\s+/g, ' ')
+function mountView(view, locale = 'fr') {
+  return mount(view, { global: { plugins: [createPinia(), i18nFor(locale)], stubs } })
 }
 
-const attendre = () => new Promise(r => setTimeout(r, 0))
+const settle = () => new Promise(resolve => setTimeout(resolve, 0))
+
+const text = wrapper => wrapper.text().replace(/\s+/g, ' ')
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date(2026, 8, 2, 10, 0))
-  donnees.persons = [
-    { id: 'p1', grade: 'Sgt', nom: 'Müller', prenom: 'Andreas', permis: ['930'], conges: [], indisponible: false },
-    { id: 'p2', grade: 'Sdt', nom: 'Favre', prenom: 'Caroline', permis: ['920'],
-      conges: [{ id: 'c1', dateDebut: '2026-09-01T00:00', dateFin: '2026-09-05T23:59' }], indisponible: false },
+  data.persons = [
+    { id: 'p1', rank: 'Sgt', firstName: 'Andreas', lastName: 'Müller', licenses: ['930'], leaves: [], unavailable: false },
+    { id: 'p2', rank: 'Sdt', firstName: 'Caroline', lastName: 'Favre', licenses: ['920'],
+      leaves: [{ id: 'l1', startDate: '2026-09-01T00:00', endDate: '2026-09-05T23:59' }], unavailable: false },
   ]
-  donnees.vehicles = [
-    { id: 'v1', nom: 'Duro', immatriculation: 'M12345', categorie: 'moyen', statut: 'libre', places: 8 },
-    { id: 'v2', nom: 'Puch', immatriculation: 'M54321', categorie: 'léger-tt', statut: 'en prêt', commentairePret: 'Cp EM' },
+  data.vehicles = [
+    { id: 'v1', name: 'Duro', plate: 'M12345', category: 'medium', status: 'free', seats: 8 },
+    { id: 'v2', name: 'Puch', plate: 'M54321', category: 'light-offroad', status: 'on-loan', loanNote: 'Cp EM' },
   ]
-  donnees.missions = [
-    { id: 'm1', titre: 'Transport matériel', dateDebut: '2026-09-02T08:00', dateFin: '2026-09-02T17:00',
-      vehicules: [{ id: 'x', vehiculeId: 'v1', chauffeurId: 'p1', avecRemorque: false }], personnes: [] },
-    { id: 'm2', titre: 'Reconnaissance', dateDebut: '2026-09-10T08:00', dateFin: '2026-09-10T17:00',
-      vehicules: [], personnes: ['p2'] },
+  data.missions = [
+    { id: 'm1', title: 'Transport matériel', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',
+      vehicles: [{ id: 'x', vehicleId: 'v1', driverId: 'p1', withTrailer: false }], staffIds: [] },
+    { id: 'm2', title: 'Reconnaissance', startDate: '2026-09-10T08:00', endDate: '2026-09-10T17:00',
+      vehicles: [], staffIds: ['p2'] },
   ]
 })
 
 afterEach(() => vi.useRealTimers())
 
-describe('Tableau de bord', () => {
-  it('se monte et compte les ressources', async () => {
-    const w = monter(DashboardView)
-    await attendre()
-    const texte = w.text()
-    expect(texte).toContain('Tableau de bord')
-    expect(texte).toContain('Transport matériel')  // seule mission en cours
-    expect(texte).not.toContain('Reconnaissance')  // encore planifiée
+describe('Dashboard', () => {
+  it('mounts and lists the ongoing missions', async () => {
+    const wrapper = mountView(DashboardView)
+    await settle()
+    expect(text(wrapper)).toContain(fr.dashboard.title)
+    expect(text(wrapper)).toContain('Transport matériel') // the only ongoing one
+    expect(text(wrapper)).not.toContain('Reconnaissance')  // still planned
   })
 
-  it('alerte quand une personne engagée est en congé', async () => {
-    donnees.missions = [{
-      id: 'm3', titre: 'Convoi', dateDebut: '2026-09-02T08:00', dateFin: '2026-09-02T17:00',
-      vehicules: [], personnes: ['p2'],
+  it('warns when a committed person is on leave', async () => {
+    data.missions = [{
+      id: 'm3', title: 'Convoi', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',
+      vehicles: [], staffIds: ['p2'],
     }]
-    const w = monter(DashboardView)
-    await attendre()
-    expect(w.text()).toMatch(/Caroline Favre.*en congé/)
+    const wrapper = mountView(DashboardView)
+    await settle()
+    expect(text(wrapper)).toMatch(/Caroline Favre.*congé/)
+  })
+
+  it('translates the alert', async () => {
+    data.missions = [{
+      id: 'm3', title: 'Convoi', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',
+      vehicles: [], staffIds: ['p2'],
+    }]
+    const wrapper = mountView(DashboardView, 'de')
+    await settle()
+    expect(text(wrapper)).toMatch(/Caroline Favre.*Urlaub/)
   })
 })
 
-describe('Vues de liste', () => {
-  it('affichent les personnes', async () => {
-    const w = monter(PersonsView)
-    await attendre()
-    expect(w.text()).toContain('Müller')
-    expect(w.text()).toContain('en congé')
+describe('List views', () => {
+  it('show the persons', async () => {
+    const wrapper = mountView(PersonsView)
+    await settle()
+    expect(text(wrapper)).toContain('Müller')
+    expect(text(wrapper)).toContain(fr.status['on-leave'])
   })
 
-  it('affichent les véhicules avec leur statut calculé', async () => {
-    const w = monter(VehiclesView)
-    await attendre()
-    const texte = w.text()
-    expect(texte).toContain('Duro')
-    expect(texte).toContain('en mission') // engagé sur la mission en cours
-    expect(texte).toContain('en prêt')
+  it('show the vehicles with their derived status', async () => {
+    const wrapper = mountView(VehiclesView)
+    await settle()
+    const rendered = text(wrapper)
+    expect(rendered).toContain('Duro')
+    expect(rendered).toContain(fr.status['on-mission']) // committed to the ongoing mission
+    expect(rendered).toContain(fr.status['on-loan'])
   })
 
-  it('affichent les missions et leurs compteurs par statut', async () => {
-    const w = monter(MissionsView)
-    await attendre()
-    const texte = texteDe(w)
-    expect(texte).toContain('Transport matériel')
-    expect(texte).toContain('Reconnaissance')
-    expect(texte).toContain('Toutes (2)')
-    expect(texte).toContain('En cours (1)')
-    expect(texte).toContain('Planifiées (1)')
+  it('show the missions and their per-status counts', async () => {
+    const wrapper = mountView(MissionsView)
+    await settle()
+    const rendered = text(wrapper)
+    expect(rendered).toContain('Transport matériel')
+    expect(rendered).toContain('Reconnaissance')
+    expect(rendered).toContain(`${fr.missions.filters.all} (2)`)
+    expect(rendered).toContain(`${fr.missions.filters.ongoing} (1)`)
+    expect(rendered).toContain(`${fr.missions.filters.planned} (1)`)
   })
 
-  it('filtrent les missions par statut', async () => {
-    const w = monter(MissionsView)
-    await attendre()
-    const filtre = w.findAll('button').find(b => b.text().startsWith('En cours'))
-    await filtre.trigger('click')
-    expect(w.text()).toContain('Transport matériel')
-    expect(w.text()).not.toContain('Reconnaissance')
+  it('filter the missions by status', async () => {
+    const wrapper = mountView(MissionsView)
+    await settle()
+    const filter = wrapper.findAll('button').find(b => b.text().startsWith(fr.missions.filters.ongoing))
+    await filter.trigger('click')
+    expect(text(wrapper)).toContain('Transport matériel')
+    expect(text(wrapper)).not.toContain('Reconnaissance')
   })
 })
 
-describe('États de chargement', () => {
-  it('affichent « Chargement… » plutôt que « Aucune mission »', () => {
-    const w = monter(MissionsView) // pas encore résolu
-    expect(w.text()).toContain('Chargement')
-    expect(w.text()).not.toContain('Aucune mission')
+describe('Languages', () => {
+  it('render the vehicle list in German', async () => {
+    const wrapper = mountView(VehiclesView, 'de')
+    await settle()
+    const rendered = text(wrapper)
+    expect(rendered).toContain(de.vehicles.title)
+    expect(rendered).toContain(de.status['on-loan'])
+    expect(rendered).toContain(de.vehicles.categories.medium)
   })
 
-  it('affichent l\'état vide une fois le chargement terminé', async () => {
-    donnees.missions = []
-    const w = monter(MissionsView)
-    await attendre()
-    expect(w.text()).toContain('Aucune mission')
+  it('render the mission list in Italian', async () => {
+    const wrapper = mountView(MissionsView, 'it')
+    await settle()
+    const rendered = text(wrapper)
+    expect(rendered).toContain(itMessages.missions.title)
+    expect(rendered).toContain(itMessages.missions.filters.ongoing)
+  })
+
+  it('translate the person statuses in all three languages', async () => {
+    for (const [locale, messages] of [['fr', fr], ['de', de], ['it', itMessages]]) {
+      const wrapper = mountView(PersonsView, locale)
+      await settle()
+      expect(text(wrapper)).toContain(messages.status['on-leave'])
+    }
+  })
+})
+
+describe('Loading states', () => {
+  it('show "loading" rather than "no mission"', () => {
+    const wrapper = mountView(MissionsView) // not resolved yet
+    expect(text(wrapper)).toContain(fr.common.loading)
+    expect(text(wrapper)).not.toContain(fr.missions.empty)
+  })
+
+  it('show the empty state once loading is done', async () => {
+    data.missions = []
+    const wrapper = mountView(MissionsView)
+    await settle()
+    expect(text(wrapper)).toContain(fr.missions.empty)
   })
 })

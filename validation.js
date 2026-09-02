@@ -1,111 +1,139 @@
 /**
- * Validation des collections reçues par l'API.
+ * Validation of the collections received by the API.
  *
- * Le serveur remplace le fichier entier à chaque PUT : sans validation, une
- * requête malformée (ou un bug client) détruit silencieusement les données.
+ * The server replaces the whole file on every PUT: without validation, a
+ * malformed request (or a client bug) would silently destroy the data.
+ *
+ * Errors are returned as {code, params} rather than prose, so the interface
+ * can render them in the reader's language.
  */
 
 const MAX_ITEMS = 5000
-const MAX_TEXTE = 5000
+const MAX_TEXT = 5000
 
-const estTexte = v => typeof v === 'string' && v.length <= MAX_TEXTE
-const estTexteOuVide = v => v === undefined || v === null || estTexte(v)
-const estBooleen = v => v === undefined || typeof v === 'boolean'
-const estDate = v => v === undefined || v === null || v === '' ||
+const CATEGORIES = ['light-road', 'light-offroad', 'medium', 'heavy']
+const VEHICLE_STATUSES = ['free', 'on-loan']
+
+const isText = v => typeof v === 'string' && v.length <= MAX_TEXT
+const isOptionalText = v => v === undefined || v === null || isText(v)
+const isOptionalBoolean = v => v === undefined || typeof v === 'boolean'
+const isOptionalDate = v => v === undefined || v === null || v === '' ||
   (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(v))
-const estListeDeTextes = v => v === undefined || (Array.isArray(v) && v.every(estTexte))
+const isOptionalTextList = v => v === undefined || (Array.isArray(v) && v.every(isText))
 
-const CATEGORIES = ['léger-route', 'léger-tt', 'moyen', 'lourd']
-const STATUTS_VEHICULE = ['libre', 'en prêt']
+const invalidField = field => ({ code: 'invalidField', params: { field } })
 
-/** @returns {string|null} message d'erreur, ou null si l'objet est valide */
-function valideCommun(item) {
-  if (item === null || typeof item !== 'object' || Array.isArray(item)) return 'objet attendu'
-  if (!estTexte(item.id) || item.id === '') return 'champ "id" manquant ou invalide'
-  return null
-}
+// ── Per-entity rules ──
 
-function validePerson(p) {
-  const base = valideCommun(p)
-  if (base) return base
-  if (!estTexte(p.nom)) return 'champ "nom" invalide'
-  if (!estTexte(p.prenom)) return 'champ "prenom" invalide'
-  if (!estTexteOuVide(p.grade)) return 'champ "grade" invalide'
-  if (!estTexteOuVide(p.notes)) return 'champ "notes" invalide'
-  if (!estListeDeTextes(p.permis)) return 'champ "permis" invalide'
-  if (!estBooleen(p.indisponible)) return 'champ "indisponible" invalide'
-  if (!estTexteOuVide(p.commentaireIndisponible)) return 'champ "commentaireIndisponible" invalide'
-  if (p.conges !== undefined) {
-    if (!Array.isArray(p.conges)) return 'champ "conges" invalide'
-    for (const [i, c] of p.conges.entries()) {
-      if (c === null || typeof c !== 'object') return `conges[${i}] : objet attendu`
-      if (!estTexte(c.id)) return `conges[${i}] : "id" invalide`
-      if (!estDate(c.dateDebut) || !estDate(c.dateFin)) return `conges[${i}] : dates invalides`
-    }
+function validateCommon(item) {
+  if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+    return { code: 'notAnObject', params: {} }
   }
+  if (!isText(item.id) || item.id === '') return { code: 'missingId', params: {} }
   return null
 }
 
-function valideVehicle(v) {
-  const base = valideCommun(v)
-  if (base) return base
-  if (!estTexte(v.nom)) return 'champ "nom" invalide'
-  if (!estTexteOuVide(v.immatriculation)) return 'champ "immatriculation" invalide'
-  if (v.categorie !== undefined && !CATEGORIES.includes(v.categorie)) return 'champ "categorie" inconnu'
-  if (v.statut !== undefined && !STATUTS_VEHICULE.includes(v.statut)) return 'champ "statut" inconnu'
-  if (!estTexteOuVide(v.commentairePret)) return 'champ "commentairePret" invalide'
-  if (v.places !== undefined && (!Number.isInteger(v.places) || v.places < 0 || v.places > 200)) {
-    return 'champ "places" invalide'
-  }
-  return null
-}
+function validatePerson(p) {
+  const common = validateCommon(p)
+  if (common) return common
+  if (!isText(p.lastName)) return invalidField('lastName')
+  if (!isText(p.firstName)) return invalidField('firstName')
+  if (!isOptionalText(p.rank)) return invalidField('rank')
+  if (!isOptionalText(p.notes)) return invalidField('notes')
+  if (!isOptionalTextList(p.licenses)) return invalidField('licenses')
+  if (!isOptionalBoolean(p.unavailable)) return invalidField('unavailable')
+  if (!isOptionalText(p.unavailabilityNote)) return invalidField('unavailabilityNote')
 
-function valideMission(m) {
-  const base = valideCommun(m)
-  if (base) return base
-  if (!estTexte(m.titre)) return 'champ "titre" invalide'
-  if (!estTexteOuVide(m.description)) return 'champ "description" invalide'
-  if (!estTexteOuVide(m.notes)) return 'champ "notes" invalide'
-  if (!estDate(m.dateDebut) || !estDate(m.dateFin)) return 'dates invalides'
-  if (m.vehicules !== undefined) {
-    if (!Array.isArray(m.vehicules)) return 'champ "vehicules" invalide'
-    for (const [i, v] of m.vehicules.entries()) {
-      if (v === null || typeof v !== 'object') return `vehicules[${i}] : objet attendu`
-      if (!estTexte(v.vehiculeId)) return `vehicules[${i}] : "vehiculeId" invalide`
-      if (v.chauffeurId !== null && v.chauffeurId !== undefined && !estTexte(v.chauffeurId)) {
-        return `vehicules[${i}] : "chauffeurId" invalide`
+  if (p.leaves !== undefined) {
+    if (!Array.isArray(p.leaves)) return invalidField('leaves')
+    for (const [i, leave] of p.leaves.entries()) {
+      if (leave === null || typeof leave !== 'object') {
+        return { code: 'invalidNested', params: { list: 'leaves', position: i, field: '' } }
       }
-      if (!estBooleen(v.avecRemorque)) return `vehicules[${i}] : "avecRemorque" invalide`
+      if (!isText(leave.id)) {
+        return { code: 'invalidNested', params: { list: 'leaves', position: i, field: 'id' } }
+      }
+      if (!isOptionalDate(leave.startDate) || !isOptionalDate(leave.endDate)) {
+        return { code: 'invalidNested', params: { list: 'leaves', position: i, field: 'dates' } }
+      }
     }
   }
-  if (!estListeDeTextes(m.personnes)) return 'champ "personnes" invalide'
   return null
 }
 
-const VALIDATEURS = {
-  persons: validePerson,
-  vehicles: valideVehicle,
-  missions: valideMission,
+function validateVehicle(v) {
+  const common = validateCommon(v)
+  if (common) return common
+  if (!isText(v.name)) return invalidField('name')
+  if (!isOptionalText(v.plate)) return invalidField('plate')
+  if (v.category !== undefined && !CATEGORIES.includes(v.category)) {
+    return { code: 'unknownValue', params: { field: 'category' } }
+  }
+  if (v.status !== undefined && !VEHICLE_STATUSES.includes(v.status)) {
+    return { code: 'unknownValue', params: { field: 'status' } }
+  }
+  if (!isOptionalText(v.loanNote)) return invalidField('loanNote')
+  if (v.seats !== undefined && (!Number.isInteger(v.seats) || v.seats < 0 || v.seats > 200)) {
+    return invalidField('seats')
+  }
+  return null
 }
 
-export const ENTITES = Object.keys(VALIDATEURS)
+function validateMission(m) {
+  const common = validateCommon(m)
+  if (common) return common
+  if (!isText(m.title)) return invalidField('title')
+  if (!isOptionalText(m.description)) return invalidField('description')
+  if (!isOptionalText(m.notes)) return invalidField('notes')
+  if (!isOptionalDate(m.startDate) || !isOptionalDate(m.endDate)) {
+    return { code: 'invalidDates', params: {} }
+  }
+
+  if (m.vehicles !== undefined) {
+    if (!Array.isArray(m.vehicles)) return invalidField('vehicles')
+    for (const [i, entry] of m.vehicles.entries()) {
+      if (entry === null || typeof entry !== 'object') {
+        return { code: 'invalidNested', params: { list: 'vehicles', position: i, field: '' } }
+      }
+      if (!isText(entry.vehicleId)) {
+        return { code: 'invalidNested', params: { list: 'vehicles', position: i, field: 'vehicleId' } }
+      }
+      if (entry.driverId !== null && entry.driverId !== undefined && !isText(entry.driverId)) {
+        return { code: 'invalidNested', params: { list: 'vehicles', position: i, field: 'driverId' } }
+      }
+      if (!isOptionalBoolean(entry.withTrailer)) {
+        return { code: 'invalidNested', params: { list: 'vehicles', position: i, field: 'withTrailer' } }
+      }
+    }
+  }
+  if (!isOptionalTextList(m.staffIds)) return invalidField('staffIds')
+  return null
+}
+
+const VALIDATORS = {
+  persons: validatePerson,
+  vehicles: validateVehicle,
+  missions: validateMission,
+}
+
+export const ENTITIES = Object.keys(VALIDATORS)
 
 /**
- * Valide une collection complète.
- * @returns {string|null} message d'erreur, ou null si tout est valide
+ * Validates a whole collection.
+ * @returns {{code: string, params: object}|null} null when everything is valid
  */
-export function valideCollection(entity, data) {
-  const validateur = VALIDATEURS[entity]
-  if (!validateur) return `collection inconnue : ${entity}`
-  if (!Array.isArray(data)) return 'tableau attendu'
-  if (data.length > MAX_ITEMS) return `trop d'éléments (max ${MAX_ITEMS})`
+export function validateCollection(entity, data) {
+  const validate = VALIDATORS[entity]
+  if (!validate) return { code: 'unknownCollection', params: { entity } }
+  if (!Array.isArray(data)) return { code: 'notAnArray', params: {} }
+  if (data.length > MAX_ITEMS) return { code: 'tooManyItems', params: { max: MAX_ITEMS } }
 
-  const vus = new Set()
-  for (const [i, item] of data.entries()) {
-    const erreur = validateur(item)
-    if (erreur) return `élément ${i} : ${erreur}`
-    if (vus.has(item.id)) return `élément ${i} : identifiant en double (${item.id})`
-    vus.add(item.id)
+  const seen = new Set()
+  for (const [index, item] of data.entries()) {
+    const error = validate(item)
+    if (error) return { ...error, params: { ...error.params, index } }
+    if (seen.has(item.id)) return { code: 'duplicateId', params: { index, id: item.id } }
+    seen.add(item.id)
   }
   return null
 }

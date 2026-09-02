@@ -1,21 +1,21 @@
 import { ref, computed } from 'vue'
-import { toDateStr, toDateTimeStr } from '../datetime.js'
+import { toDateString, toDateTimeString } from '../datetime.js'
 
 /**
- * Horloge unique et réactive de l'application.
+ * The application's single reactive clock.
  *
- * Sans elle, un `computed` qui appelle `new Date()` ne se recalcule jamais :
- * Vue ne trace pas le temps comme une dépendance, et une mission qui démarre
- * pendant que la page est ouverte resterait affichée « planifiée ».
+ * Without it, a computed that calls `new Date()` never recomputes: Vue does
+ * not track time as a dependency, and a mission starting while the page is
+ * open would stay displayed as "planned".
  *
- * `now` avance chaque seconde (pour l'horloge de l'en-tête) tandis que
- * `nowStr` et `todayStr` ne changent de *valeur* qu'à la minute et au jour :
- * les computed qui en dépendent ne se réévaluent donc pas inutilement.
+ * `now` advances every second (for the header clock) while `nowString` and
+ * `todayString` only change *value* on the minute and on the day, so the
+ * computeds depending on them are not re-evaluated needlessly.
  */
 
 const now = ref(new Date())
-const nowStr = computed(() => toDateTimeStr(now.value))
-const todayStr = computed(() => toDateStr(now.value))
+const nowString = computed(() => toDateTimeString(now.value))
+const todayString = computed(() => toDateString(now.value))
 
 let timer = null
 
@@ -23,5 +23,5 @@ export function useClock() {
   if (timer === null && typeof window !== 'undefined') {
     timer = setInterval(() => { now.value = new Date() }, 1000)
   }
-  return { now, nowStr, todayStr }
+  return { now, nowString, todayString }
 }

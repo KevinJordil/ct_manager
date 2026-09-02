@@ -5,6 +5,8 @@ personnels, véhicules et missions, avec calendrier intégré. Les statuts
 (disponible, en mission, en congé, en prêt) se déduisent des dates saisies,
 et les conflits d'affectation sont détectés à la saisie.
 
+Interface disponible en **français, allemand et italien**.
+
 Vue 3 · Pinia · Tailwind · Express · stockage en fichiers JSON, sans base de
 données à installer.
 
@@ -31,6 +33,12 @@ ou sans chauffeur, et contrôle des permis requis par catégorie de véhicule.
 **Personnes** — permis militaires suisses, congés et indisponibilités.
 
 ![Personnes](docs/personnes.png)
+
+**Multilingue** — toute l'interface bascule en allemand ou en italien depuis
+le sélecteur en bas de la barre latérale, y compris les noms de jours et de
+mois du calendrier.
+
+![Tableau de bord en allemand](docs/dashboard-de.png)
 
 > Les captures utilisent le jeu de démonstration livré avec le projet, dont
 > les dates sont recalées sur le jour de l'installation.
@@ -77,6 +85,29 @@ Trois modes de visualisation, deux onglets de ressources (Véhicules / Personnes
 
 ---
 
+## Langues
+
+L'interface est traduite en **français**, **allemand** et **italien**. La
+langue se choisit depuis la barre latérale ; le choix est conservé dans le
+navigateur. Au premier accès, la langue est déduite des préférences du
+navigateur, avec le français par défaut.
+
+Les noms de jours et de mois du calendrier viennent d'`Intl`, ils suivent donc
+la langue active sans table de correspondance à maintenir.
+
+### Ajouter une langue
+
+1. Copier `src/locales/fr.json` vers `src/locales/<code>.json` et traduire les
+   valeurs (les clés ne changent pas).
+2. Déclarer la langue dans `src/i18n/index.js` : l'ajouter à
+   `SUPPORTED_LOCALES` (code, libellé, balise `Intl`) et au dictionnaire
+   `messages`.
+
+Les tests vérifient que les trois catalogues ont exactement les mêmes clés ;
+une clé oubliée est donc détectée avant la mise en production.
+
+---
+
 ## Stack technique
 
 | Couche | Technologie |
@@ -87,6 +118,7 @@ Trois modes de visualisation, deux onglets de ressources (Véhicules / Personnes
 | Style | Tailwind CSS 3 |
 | Backend | Express 4 (Node.js) |
 | Stockage | Fichiers JSON (`data/`) avec mutex async et écriture atomique |
+| Traductions | vue-i18n 11 (fr / de / it) |
 | Tests | Vitest + Vue Test Utils |
 
 ---
@@ -135,10 +167,11 @@ npm run test:watch
 ```
 
 La suite couvre les helpers de date et la logique de disponibilité, la
-validation côté serveur, le recalage du jeu de démonstration, le store de
-collection (versions, conflits, garde anti-écrasement), la navigation du
-calendrier, les vues, et le serveur de bout en bout (authentification,
-validation, concurrence).
+migration des anciens formats, la validation côté serveur, le recalage du jeu
+de démonstration, le store de collection (versions, conflits, garde
+anti-écrasement), la navigation du calendrier, les vues dans les trois
+langues, et le serveur de bout en bout (authentification, validation,
+concurrence).
 
 ---
 
@@ -209,9 +242,14 @@ ct_manager/
 ├── docs/                  # Captures d'écran du README
 ├── src/
 │   ├── api.js             # Client HTTP (clé d'accès, versions, erreurs typées)
+│   ├── constants.js       # Vocabulaire métier : statuts, catégories, permis
 │   ├── datetime.js        # Dates en heure locale (jamais toISOString)
 │   ├── availability.js    # Règles métier : statuts et disponibilité
+│   ├── migrations.js      # Lecture des formats de données antérieurs
+│   ├── labels.js          # Helpers d'affichage partagés
 │   ├── id.js              # Génération d'identifiants
+│   ├── i18n/              # Configuration vue-i18n et formats de dates
+│   ├── locales/           # fr.json, de.json, it.json
 │   ├── stores/            # Stores Pinia
 │   │   ├── collection.js  # Squelette commun aux trois collections
 │   │   ├── clock.js       # Horloge réactive partagée
@@ -220,8 +258,8 @@ ct_manager/
 │   │   ├── vehicles.js
 │   │   └── missions.js
 │   ├── components/
-│   │   ├── common/        # BaseModal, ConfirmModal, StatusBadge, ListPlaceholder, AccessKeyModal
-│   │   ├── persons/       # PersonCard, PersonForm, CongesModal, PersonIndisponibleModal
+│   │   ├── common/        # BaseModal, ConfirmModal, StatusBadge, ListPlaceholder, AccessKeyModal, LanguageSwitcher
+│   │   ├── persons/       # PersonCard, PersonForm, LeavesModal, PersonUnavailableModal
 │   │   ├── vehicles/      # VehicleCard, VehicleForm, LoanModal
 │   │   ├── missions/      # MissionCard, MissionForm
 │   │   └── calendar/      # CalendarGrid (mois), CalendarTimeline (jour/semaine)
@@ -244,6 +282,10 @@ ct_manager/
 
 ### Conventions
 
+- **Le code est en anglais** — noms, commentaires, schéma de données, valeurs
+  de statut. Le français, l'allemand et l'italien n'existent que dans
+  `src/locales/` et dans ce README. Aucun texte affiché n'est écrit en dur
+  dans un composant : tout passe par une clé de traduction.
 - **Les dates sont des chaînes locales** (`YYYY-MM-DDTHH:mm`), comparables
   directement. `toISOString()` est proscrit pour les produire : il convertit
   en UTC et décale le résultat d'une à deux heures — donc parfois d'un jour.
@@ -251,8 +293,25 @@ ct_manager/
 - **L'instant courant vient de `useClock()`**, jamais de `new Date()` dans un
   `computed` : Vue ne trace pas le temps comme dépendance, et les statuts
   cesseraient de se rafraîchir.
-- **Les statuts ne sont pas stockés** : mission (planifiée / en cours /
-  terminée) et véhicule (libre / en mission) se déduisent des dates.
+- **Les statuts ne sont pas stockés** : mission (`planned` / `ongoing` /
+  `completed`) et véhicule (`free` / `on-mission`) se déduisent des dates.
+- **Les erreurs de l'API sont des codes**, pas des phrases : le serveur
+  renvoie `{code, params}` et l'interface les rend dans la langue du lecteur.
+
+### Modèle de données
+
+Les fichiers JSON utilisent des clés anglaises :
+
+| Collection | Champs |
+|------------|--------|
+| `persons` | `id`, `rank`, `firstName`, `lastName`, `licenses[]`, `notes`, `leaves[{id, startDate, endDate}]`, `unavailable`, `unavailabilityNote` |
+| `vehicles` | `id`, `name`, `plate`, `category`, `status`, `loanNote`, `seats` |
+| `missions` | `id`, `title`, `description`, `startDate`, `endDate`, `notes`, `vehicles[{id, vehicleId, driverId, withTrailer}]`, `staffIds[]` |
+
+Les fichiers écrits par une version antérieure — schéma français, statut de
+véhicule stocké, mission à véhicule unique, permis civils — sont convertis au
+chargement par `src/migrations.js`. La conversion est couverte par des tests
+et ne demande aucune intervention manuelle.
 
 ---
 

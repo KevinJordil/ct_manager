@@ -1,27 +1,32 @@
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useClock } from '../../stores/clock.js'
-import { addDays, mondayOf, parseLocal, toDateStr } from '../../datetime.js'
+import { addDays, mondayOf, parseLocal, toDateString } from '../../datetime.js'
+import { localeTag } from '../../i18n/index.js'
+import { weekdayNames, monthNames } from '../../i18n/formats.js'
 
 const props = defineProps({
   rows: { type: Array, required: true },
   events: { type: Array, required: true },
   view: { type: String, required: true }, // 'day' | 'week'
-  date: { type: String, required: true },  // YYYY-MM-DD
+  date: { type: String, required: true }, // YYYY-MM-DD
 })
 
-const EVENT_H = 24
+const EVENT_HEIGHT = 24
 const EVENT_GAP = 2
-const ROW_PAD = 5
+const ROW_PADDING = 5
+
+const { locale } = useI18n()
+const { nowString, todayString } = useClock()
+
+const tag = computed(() => localeTag(locale.value))
+const shortWeekdays = computed(() => weekdayNames(tag.value, 'short'))
+const longWeekdays = computed(() => weekdayNames(tag.value, 'long'))
+const longMonths = computed(() => monthNames(tag.value, 'long'))
+const shortMonths = computed(() => monthNames(tag.value, 'short'))
 
 // ── Period ──
-
-const DOW_FR   = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa']
-const DOW_LONG = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
-const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-const MONTHS_SHORT = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
-
-const { nowStr, todayStr } = useClock()
 
 const periodStart = computed(() =>
   props.view === 'day' ? props.date + 'T00:00' : mondayOf(props.date) + 'T00:00'
@@ -35,73 +40,67 @@ const periodEnd = computed(() =>
 
 const totalMinutes = computed(() => props.view === 'day' ? 24 * 60 : 7 * 24 * 60)
 
-function dtToMinutes(dt) {
+function minutesFromStart(dt) {
   return (parseLocal(dt) - parseLocal(periodStart.value)) / 60000
 }
 
-function pct(dt) {
-  return Math.max(0, Math.min(100, (dtToMinutes(dt) / totalMinutes.value) * 100))
+function percent(dt) {
+  return Math.max(0, Math.min(100, (minutesFromStart(dt) / totalMinutes.value) * 100))
 }
 
-// ── Header: day segments (row 1) ──
+// ── Header row 1: day segments ──
 
 const daySegments = computed(() => {
   if (props.view === 'day') {
     const d = parseLocal(props.date)
     return [{
       dateStr: props.date,
-      label: `${DOW_LONG[d.getDay()]} ${d.getDate()} ${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`,
-      pct: 0,
+      label: `${longWeekdays.value[d.getDay()]} ${d.getDate()} ${longMonths.value[d.getMonth()]} ${d.getFullYear()}`,
+      percent: 0,
       width: 100,
       isWeekend: d.getDay() === 0 || d.getDay() === 6,
-      isToday: props.date === todayStr.value,
+      isToday: props.date === todayString.value,
     }]
   }
   const monday = mondayOf(props.date)
-  return Array.from({ length: 7 }, (_, i) => {
+  return Array.from({ length: 7 }, (_, index) => {
     const d = parseLocal(monday)
-    d.setDate(d.getDate() + i)
-    const dateStr = toDateStr(d)
+    d.setDate(d.getDate() + index)
+    const dateStr = toDateString(d)
     return {
       dateStr,
-      label: `${DOW_FR[d.getDay()]} ${d.getDate()}`,
-      sublabel: MONTHS_SHORT[d.getMonth()],
-      pct: (i / 7) * 100,
+      label: `${shortWeekdays.value[d.getDay()]} ${d.getDate()}`,
+      sublabel: shortMonths.value[d.getMonth()],
+      percent: (index / 7) * 100,
       width: 100 / 7,
       isWeekend: d.getDay() === 0 || d.getDay() === 6,
-      isToday: dateStr === todayStr.value,
+      isToday: dateStr === todayString.value,
     }
   })
 })
 
-// ── Header: hour ticks (row 2) ──
+// ── Header row 2: hour ticks ──
 
 const hourTicks = computed(() => {
   const ticks = []
   if (props.view === 'day') {
-    // Toutes les 2 heures, labels toutes les 2h
-    for (let h = 0; h < 24; h++) {
-      const isMajor = h % 6 === 0
-      const hasLabel = h % 2 === 0
+    for (let hour = 0; hour < 24; hour++) {
       ticks.push({
-        label: hasLabel ? `${String(h).padStart(2, '0')}h` : '',
-        pct: (h * 60 / totalMinutes.value) * 100,
-        major: isMajor,
-        hasLabel,
+        label: hour % 2 === 0 ? `${String(hour).padStart(2, '0')}h` : '',
+        percent: (hour * 60 / totalMinutes.value) * 100,
+        major: hour % 6 === 0,
+        hasLabel: hour % 2 === 0,
       })
     }
   } else {
-    // Toutes les 6h par jour : 00h, 06h, 12h, 18h
-    for (let d = 0; d < 7; d++) {
-      for (let h = 0; h < 24; h += 3) {
-        const isMajor = h % 6 === 0
-        const hasLabel = h % 6 === 0
+    for (let day = 0; day < 7; day++) {
+      for (let hour = 0; hour < 24; hour += 3) {
         ticks.push({
-          label: hasLabel ? `${String(h).padStart(2, '0')}h` : '',
-          pct: ((d * 24 + h) * 60 / totalMinutes.value) * 100,
-          major: isMajor,
-          isDayStart: h === 0,
-          hasLabel,
+          label: hour % 6 === 0 ? `${String(hour).padStart(2, '0')}h` : '',
+          percent: ((day * 24 + hour) * 60 / totalMinutes.value) * 100,
+          major: hour % 6 === 0,
+          isDayStart: hour === 0,
+          hasLabel: hour % 6 === 0,
         })
       }
     }
@@ -114,93 +113,96 @@ const hourTicks = computed(() => {
 const gridLines = computed(() => {
   const lines = []
   if (props.view === 'day') {
-    for (let h = 1; h < 24; h++) {
-      lines.push({ pct: (h * 60 / totalMinutes.value) * 100, major: h % 6 === 0, dayBorder: false })
+    for (let hour = 1; hour < 24; hour++) {
+      lines.push({ percent: (hour * 60 / totalMinutes.value) * 100, major: hour % 6 === 0, dayBorder: false })
     }
   } else {
-    for (let d = 1; d <= 7; d++) {
-      lines.push({ pct: (d * 24 * 60 / totalMinutes.value) * 100, major: true, dayBorder: true })
+    for (let day = 1; day <= 7; day++) {
+      lines.push({ percent: (day * 24 * 60 / totalMinutes.value) * 100, major: true, dayBorder: true })
     }
-    for (let d = 0; d < 7; d++) {
-      for (let h = 1; h < 24; h++) {
-        if (h % 24 !== 0) {
-          lines.push({
-            pct: ((d * 24 + h) * 60 / totalMinutes.value) * 100,
-            major: h % 6 === 0,
-            dayBorder: false,
-          })
-        }
+    for (let day = 0; day < 7; day++) {
+      for (let hour = 1; hour < 24; hour++) {
+        lines.push({
+          percent: ((day * 24 + hour) * 60 / totalMinutes.value) * 100,
+          major: hour % 6 === 0,
+          dayBorder: false,
+        })
       }
     }
   }
   return lines
 })
 
-// ── Indicateur de l'heure actuelle ──
+// ── Current time marker ──
 
-const nowPct = computed(() => {
-  if (nowStr.value < periodStart.value || nowStr.value > periodEnd.value) return null
-  return pct(nowStr.value)
+const nowPercent = computed(() => {
+  if (nowString.value < periodStart.value || nowString.value > periodEnd.value) return null
+  return percent(nowString.value)
 })
 
 // ── Lane packing ──
 
+/** Stacks overlapping events on as many lanes as needed */
 function packLanes(events) {
-  const inPeriod = events.filter(e => e.dateDebut < periodEnd.value && e.dateFin > periodStart.value)
-  const sorted = [...inPeriod].sort((a, b) => a.dateDebut.localeCompare(b.dateDebut))
+  const inPeriod = events.filter(e => e.start < periodEnd.value && e.end > periodStart.value)
+  const sorted = [...inPeriod].sort((a, b) => a.start.localeCompare(b.start))
   const laneEnds = []
-  return sorted.map(ev => {
-    let lane = laneEnds.findIndex(end => end <= ev.dateDebut)
-    if (lane === -1) { lane = laneEnds.length; laneEnds.push(ev.dateFin) }
-    else laneEnds[lane] = ev.dateFin
-    return { ...ev, _lane: lane }
+  return sorted.map(event => {
+    let lane = laneEnds.findIndex(end => end <= event.start)
+    if (lane === -1) {
+      lane = laneEnds.length
+      laneEnds.push(event.end)
+    } else {
+      laneEnds[lane] = event.end
+    }
+    return { ...event, lane }
   })
 }
 
 const rowsData = computed(() =>
   props.rows.map(row => {
-    const evs = packLanes(props.events.filter(e => e.rowId === row.id))
-    const lanes = evs.length ? Math.max(...evs.map(e => e._lane)) + 1 : 0
-    const height = ROW_PAD * 2 + Math.max(1, lanes) * (EVENT_H + EVENT_GAP) - EVENT_GAP
-    return { row, evs, height }
+    const events = packLanes(props.events.filter(e => e.rowId === row.id))
+    const lanes = events.length ? Math.max(...events.map(e => e.lane)) + 1 : 0
+    const height = ROW_PADDING * 2 + Math.max(1, lanes) * (EVENT_HEIGHT + EVENT_GAP) - EVENT_GAP
+    return { row, events, height }
   })
 )
 
 // ── Event rendering ──
 
-function evWidthPct(ev) {
-  return Math.max(0.2, pct(ev.dateFin) - pct(ev.dateDebut))
+function eventWidthPercent(event) {
+  return Math.max(0.2, percent(event.end) - percent(event.start))
 }
 
-function evStyle(ev) {
-  const startPct = pct(ev.dateDebut)
+function eventStyle(event) {
   return {
-    left: startPct + '%',
-    width: evWidthPct(ev) + '%',
-    top: ROW_PAD + ev._lane * (EVENT_H + EVENT_GAP) + 'px',
-    height: EVENT_H + 'px',
+    left: percent(event.start) + '%',
+    width: eventWidthPercent(event) + '%',
+    top: ROW_PADDING + event.lane * (EVENT_HEIGHT + EVENT_GAP) + 'px',
+    height: EVENT_HEIGHT + 'px',
   }
 }
 
-function hhmm(dt) {
+function hourMinute(dt) {
   return dt ? dt.slice(11, 16) : ''
 }
 
-// Seuils pour afficher le contenu selon la largeur (% de la période totale)
-// Jour : 1% ≈ 14 min  |  Semaine : 1% ≈ 100 min
-function evDisplayMode(ev) {
-  const w = evWidthPct(ev)
+/**
+ * How much text fits in the block, from its width as a share of the period.
+ * Day view: 1% ≈ 14 min. Week view: 1% ≈ 100 min.
+ */
+function displayMode(event) {
+  const width = eventWidthPercent(event)
   if (props.view === 'day') {
-    if (w >= 7)  return 'full'   // ≥ ~1h : "HH:MM–HH:MM  Titre"
-    if (w >= 2)  return 'times'  // ≥ ~17min : "HH:MM–HH:MM"
-    if (w >= 0.8) return 'start' // ≥ ~7min : "HH:MM"
-    return 'none'
-  } else {
-    if (w >= 10)  return 'full'  // ≥ ~17h : "HH:MM–HH:MM  Titre"
-    if (w >= 4)   return 'times' // ≥ ~7h  : "HH:MM–HH:MM"
-    if (w >= 1.5) return 'start' // ≥ ~2.5h : "HH:MM"
+    if (width >= 7) return 'full'
+    if (width >= 2) return 'times'
+    if (width >= 0.8) return 'start'
     return 'none'
   }
+  if (width >= 10) return 'full'
+  if (width >= 4) return 'times'
+  if (width >= 1.5) return 'start'
+  return 'none'
 }
 </script>
 
@@ -208,42 +210,44 @@ function evDisplayMode(ev) {
   <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm bg-white w-full">
     <div style="min-width: 420px;">
 
-      <!-- ═══ En-tête collant (2 lignes) ═══ -->
+      <!-- Sticky header, two rows -->
       <div class="sticky top-0 z-10 shadow-sm">
 
-        <!-- Ligne 1 : jours -->
+        <!-- Days -->
         <div class="flex bg-gray-50 border-b border-gray-200">
           <div class="shrink-0 sticky left-0 z-20 bg-gray-50 border-r border-gray-200 px-3 flex items-center"
             style="width: 160px; height: 34px;">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ressource</span>
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ $t('calendar.resource') }}</span>
           </div>
           <div class="flex-1 flex overflow-hidden">
-            <div v-for="seg in daySegments" :key="seg.dateStr"
-              :style="{ width: seg.width + '%' }"
+            <div v-for="segment in daySegments" :key="segment.dateStr"
+              :style="{ width: segment.width + '%' }"
               :class="['flex flex-col justify-center px-2 py-1 border-l overflow-hidden',
-                seg.isToday  ? 'bg-blue-50 border-blue-200'
-                : seg.isWeekend ? 'bg-gray-100 border-gray-200'
+                segment.isToday ? 'bg-blue-50 border-blue-200'
+                : segment.isWeekend ? 'bg-gray-100 border-gray-200'
                 : 'bg-gray-50 border-gray-200']">
               <span :class="['text-xs font-semibold truncate leading-tight',
-                seg.isToday ? 'text-blue-700' : 'text-gray-700']">
-                {{ seg.label }}
+                segment.isToday ? 'text-blue-700' : 'text-gray-700']">
+                {{ segment.label }}
               </span>
-              <span v-if="seg.sublabel" class="text-[10px] text-gray-400 leading-none mt-0.5">{{ seg.sublabel }}</span>
+              <span v-if="segment.sublabel" class="text-[10px] text-gray-400 leading-none mt-0.5">
+                {{ segment.sublabel }}
+              </span>
             </div>
           </div>
         </div>
 
-        <!-- Ligne 2 : heures -->
+        <!-- Hours -->
         <div class="flex bg-white border-b-2 border-gray-300">
           <div class="shrink-0 sticky left-0 z-20 bg-white border-r border-gray-200"
             style="width: 160px; height: 22px;" />
           <div class="flex-1 relative overflow-hidden" style="height: 22px;">
-            <div v-for="tick in hourTicks" :key="tick.pct"
-              :style="{ left: tick.pct + '%' }"
+            <div v-for="tick in hourTicks" :key="tick.percent"
+              :style="{ left: tick.percent + '%' }"
               :class="['absolute top-0 bottom-0 flex items-center',
                 tick.isDayStart ? 'border-l-2 border-gray-400'
-                : tick.major    ? 'border-l border-gray-300'
-                :                 'border-l border-gray-100']">
+                : tick.major ? 'border-l border-gray-300'
+                : 'border-l border-gray-100']">
               <span v-if="tick.hasLabel"
                 class="text-[10px] font-semibold text-gray-500 pl-1 whitespace-nowrap leading-none">
                 {{ tick.label }}
@@ -253,12 +257,11 @@ function evDisplayMode(ev) {
         </div>
       </div>
 
-      <!-- ═══ Lignes de ressources ═══ -->
-      <div v-for="{ row, evs, height } in rowsData" :key="row.id"
+      <!-- Resource rows -->
+      <div v-for="{ row, events, height } in rowsData" :key="row.id"
         :style="{ height: height + 'px' }"
         class="flex border-b border-gray-100 hover:bg-gray-50/30 transition-colors">
 
-        <!-- Label ressource (collant à gauche) -->
         <div class="shrink-0 sticky left-0 z-10 bg-white border-r border-gray-200 px-3 flex items-center"
           style="width: 160px;">
           <div class="min-w-0">
@@ -267,66 +270,59 @@ function evDisplayMode(ev) {
           </div>
         </div>
 
-        <!-- Zone temporelle -->
         <div class="flex-1 relative overflow-hidden">
 
-          <!-- Fond weekend -->
-          <div v-for="seg in daySegments.filter(s => s.isWeekend)" :key="'bg-' + seg.dateStr"
-            :style="{ left: seg.pct + '%', width: seg.width + '%' }"
+          <div v-for="segment in daySegments.filter(s => s.isWeekend)" :key="'weekend-' + segment.dateStr"
+            :style="{ left: segment.percent + '%', width: segment.width + '%' }"
             class="absolute top-0 bottom-0 bg-gray-50/70 pointer-events-none" />
 
-          <!-- Fond aujourd'hui -->
-          <div v-for="seg in daySegments.filter(s => s.isToday)" :key="'today-' + seg.dateStr"
-            :style="{ left: seg.pct + '%', width: seg.width + '%' }"
+          <div v-for="segment in daySegments.filter(s => s.isToday)" :key="'today-' + segment.dateStr"
+            :style="{ left: segment.percent + '%', width: segment.width + '%' }"
             class="absolute top-0 bottom-0 bg-blue-50/40 pointer-events-none" />
 
-          <!-- Lignes de grille -->
-          <div v-for="line in gridLines" :key="line.pct + '-' + line.dayBorder"
-            :style="{ left: line.pct + '%' }"
+          <div v-for="line in gridLines" :key="line.percent + '-' + line.dayBorder"
+            :style="{ left: line.percent + '%' }"
             :class="['absolute top-0 bottom-0 pointer-events-none',
               line.dayBorder ? 'border-l-2 border-gray-300'
-              : line.major   ? 'border-l border-gray-200'
-              :                'border-l border-gray-100']" />
+              : line.major ? 'border-l border-gray-200'
+              : 'border-l border-gray-100']" />
 
-          <!-- Heure actuelle -->
-          <div v-if="nowPct !== null"
-            :style="{ left: nowPct + '%' }"
+          <div v-if="nowPercent !== null"
+            :style="{ left: nowPercent + '%' }"
             class="absolute top-0 bottom-0 border-l-2 border-red-500 z-20 pointer-events-none">
             <div class="absolute -top-0 -translate-x-1/2 w-2 h-2 bg-red-500 rounded-full" />
           </div>
 
-          <!-- Événements -->
-          <div v-for="ev in evs" :key="ev.id"
-            :style="evStyle(ev)"
-            :class="['absolute rounded overflow-hidden cursor-default select-none flex items-center', ev.colorClass]"
-            :title="`${hhmm(ev.dateDebut)} – ${hhmm(ev.dateFin)}  •  ${ev.label}`">
+          <div v-for="event in events" :key="event.id"
+            :style="eventStyle(event)"
+            :class="['absolute rounded overflow-hidden cursor-default select-none flex items-center', event.colorClass]"
+            :title="`${hourMinute(event.start)} – ${hourMinute(event.end)}  •  ${event.label}`">
 
-            <template v-if="evDisplayMode(ev) === 'full'">
+            <template v-if="displayMode(event) === 'full'">
               <span class="px-1.5 truncate leading-none font-medium" style="font-size: 11px;">
-                <span class="opacity-80 font-bold">{{ hhmm(ev.dateDebut) }}–{{ hhmm(ev.dateFin) }}</span>
-                &thinsp;{{ ev.label }}
+                <span class="opacity-80 font-bold">{{ hourMinute(event.start) }}–{{ hourMinute(event.end) }}</span>
+                &thinsp;{{ event.label }}
               </span>
             </template>
 
-            <template v-else-if="evDisplayMode(ev) === 'times'">
+            <template v-else-if="displayMode(event) === 'times'">
               <span class="px-1.5 truncate leading-none font-bold" style="font-size: 11px;">
-                {{ hhmm(ev.dateDebut) }}–{{ hhmm(ev.dateFin) }}
+                {{ hourMinute(event.start) }}–{{ hourMinute(event.end) }}
               </span>
             </template>
 
-            <template v-else-if="evDisplayMode(ev) === 'start'">
+            <template v-else-if="displayMode(event) === 'start'">
               <span class="px-1 leading-none font-bold whitespace-nowrap" style="font-size: 10px;">
-                {{ hhmm(ev.dateDebut) }}
+                {{ hourMinute(event.start) }}
               </span>
             </template>
-            <!-- mode 'none' : bloc coloré sans texte -->
+            <!-- 'none': a coloured block with no text -->
           </div>
         </div>
       </div>
 
-      <div v-if="rows.length === 0"
-        class="py-10 text-center text-sm text-gray-400 italic">
-        Aucune ressource à afficher
+      <div v-if="rows.length === 0" class="py-10 text-center text-sm text-gray-400 italic">
+        {{ $t('calendar.noResource') }}
       </div>
     </div>
   </div>

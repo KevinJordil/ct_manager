@@ -1,98 +1,105 @@
 const BASE = '/api'
-const CLE_STOCKAGE = 'ct_manager_token'
+const STORAGE_KEY = 'ct_manager_token'
 
-/** Erreur d'appel à l'API, avec le code HTTP quand il y en a un. */
+/**
+ * API failure. `code` and `params` come from the server and are rendered in
+ * the reader's language by the interface; `message` is the English fallback.
+ */
 export class ApiError extends Error {
-  constructor(message, { status = null, version = null, cause = null } = {}) {
+  constructor(message, { status = null, code = null, params = {}, cause = null } = {}) {
     super(message)
     this.name = 'ApiError'
     this.status = status
-    this.version = version
+    this.code = code
+    this.params = params
     this.cause = cause
   }
 }
 
-// ── Clé d'accès ──
-// Le serveur ne l'exige que si CT_TOKEN est défini de son côté.
+// ── Access key ──
+// The server only requires it when CT_TOKEN is set on its side.
 
-function lireCle() {
+function readKey() {
   try {
-    return localStorage.getItem(CLE_STOCKAGE) ?? ''
+    return localStorage.getItem(STORAGE_KEY) ?? ''
   } catch {
-    return '' // navigation privée, stockage bloqué…
+    return '' // private browsing, storage blocked…
   }
 }
 
-let cle = lireCle()
+let accessKey = readKey()
 
-export function definirCle(valeur) {
-  cle = valeur ?? ''
+export function setAccessKey(value) {
+  accessKey = value ?? ''
   try {
-    if (cle) localStorage.setItem(CLE_STOCKAGE, cle)
-    else localStorage.removeItem(CLE_STOCKAGE)
-  } catch { /* le stockage peut être indisponible : la clé vaut pour la session */ }
+    if (accessKey) localStorage.setItem(STORAGE_KEY, accessKey)
+    else localStorage.removeItem(STORAGE_KEY)
+  } catch { /* storage may be unavailable: the key lasts for this session */ }
 }
 
-export function aUneCle() {
-  return Boolean(cle)
+export function hasAccessKey() {
+  return Boolean(accessKey)
 }
 
-// ── Requêtes ──
+// ── Requests ──
 
-async function messageDErreur(res) {
+async function readError(res) {
   try {
     const body = await res.json()
-    if (body?.error) return { message: body.error, version: body.version ?? null }
-  } catch { /* réponse non JSON */ }
-  return { message: `HTTP ${res.status}`, version: null }
+    if (body?.code) {
+      return { message: body.error ?? body.code, code: body.code, params: body.params ?? {} }
+    }
+    if (body?.error) return { message: body.error, code: null, params: {} }
+  } catch { /* not a JSON response */ }
+  return { message: `HTTP ${res.status}`, code: null, params: {} }
 }
 
-async function requete(url, options = {}) {
+async function request(url, options = {}) {
   const headers = { ...options.headers }
-  if (cle) headers.Authorization = `Bearer ${cle}`
+  if (accessKey) headers.Authorization = `Bearer ${accessKey}`
 
   let res
   try {
     res = await fetch(url, { ...options, headers })
   } catch (err) {
-    throw new ApiError('Serveur injoignable', { cause: err })
+    throw new ApiError('Server unreachable', { code: 'unreachable', cause: err })
   }
   if (!res.ok) {
-    const { message, version } = await messageDErreur(res)
-    throw new ApiError(message, { status: res.status, version })
+    const { message, code, params } = await readError(res)
+    throw new ApiError(message, { status: res.status, code, params })
   }
   return res
 }
 
-/** Version courante de la collection, telle que renvoyée par le serveur */
-function versionDe(res) {
+/** Collection version as returned by the server */
+function versionOf(res) {
   return (res.headers.get('ETag') ?? '').replace(/"/g, '')
 }
 
 export const api = {
   /** @returns {{ data: Array, version: string }} */
   async load(entity) {
-    const res = await requete(`${BASE}/${entity}`)
-    return { data: await res.json(), version: versionDe(res) }
+    const res = await request(`${BASE}/${entity}`)
+    return { data: await res.json(), version: versionOf(res) }
   },
 
   /**
-   * Enregistre la collection complète.
+   * Saves the whole collection.
    *
-   * `version` est celle reçue au dernier chargement : le serveur refuse
-   * l'écriture (409) si les données ont changé entre-temps, ce qui évite
-   * qu'un second onglet écrase silencieusement le travail du premier.
+   * `version` is the one received at the last load: the server refuses the
+   * write (409) if the data changed meanwhile, which stops a second tab from
+   * silently overwriting the first one's work.
    *
-   * Lève une ApiError en cas d'échec — un échec silencieux ferait croire à
-   * l'utilisateur que ses modifications sont enregistrées.
+   * Throws an ApiError on failure — a silent failure would let the user
+   * believe their changes were saved.
    */
   async save(entity, data, version) {
-    const res = await requete(`${BASE}/${entity}`, {
+    const res = await request(`${BASE}/${entity}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'If-Match': version ?? '' },
       body: JSON.stringify(data),
     })
     const body = await res.json()
-    return { version: body.version ?? versionDe(res) }
+    return { version: body.version ?? versionOf(res) }
   },
 }

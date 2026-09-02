@@ -1,132 +1,137 @@
 /**
- * Règles métier de disponibilité — personnes, véhicules et statut des missions.
+ * Business rules for mission status and resource availability.
  *
- * Ces fonctions sont pures : l'instant de référence est toujours passé en
- * paramètre (`now`, au format "YYYY-MM-DDTHH:mm" local). Cela les rend
- * testables et permet aux composants de dépendre d'une horloge réactive
- * (voir `stores/clock.js`) plutôt que d'appeler `new Date()` dans un computed,
- * ce qui empêcherait Vue de recalculer les statuts au fil du temps.
+ * These functions are pure: the reference instant is always passed in (`now`,
+ * as a local "YYYY-MM-DDTHH:mm" string). That keeps them testable and lets
+ * components depend on a reactive clock (see stores/clock.js) rather than
+ * calling `new Date()` inside a computed, which would stop Vue from
+ * recomputing statuses as time passes.
  */
 
-import { nowStr, overlaps } from './datetime.js'
+import { nowString, overlaps } from './datetime.js'
+import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS } from './constants.js'
 
 // ── Missions ──
 
-/** Statut d'une mission, calculé depuis ses dates */
-export function getMissionStatut(mission, now = nowStr()) {
-  if (!mission?.dateDebut || !mission?.dateFin) return 'planifiée'
-  if (mission.dateFin < now) return 'terminée'
-  if (mission.dateDebut <= now) return 'en cours'
-  return 'planifiée'
+/** Mission status, derived from its dates */
+export function getMissionStatus(mission, now = nowString()) {
+  if (!mission?.startDate || !mission?.endDate) return MISSION_STATUS.PLANNED
+  if (mission.endDate < now) return MISSION_STATUS.COMPLETED
+  if (mission.startDate <= now) return MISSION_STATUS.ONGOING
+  return MISSION_STATUS.PLANNED
 }
 
-export function missionsEnCours(missions, now = nowStr()) {
-  return missions.filter(m => getMissionStatut(m, now) === 'en cours')
+export function ongoingMissions(missions, now = nowString()) {
+  return missions.filter(m => getMissionStatus(m, now) === MISSION_STATUS.ONGOING)
 }
 
-/** La mission engage-t-elle cette personne (comme chauffeur ou sans véhicule) ? */
-export function missionEngagePersonne(mission, personId) {
+/** Does the mission involve this person, as a driver or as unmounted staff? */
+export function missionInvolvesPerson(mission, personId) {
   return Boolean(
-    mission.vehicules?.some(v => v.chauffeurId === personId) ||
-    mission.personnes?.includes(personId)
+    mission.vehicles?.some(v => v.driverId === personId) ||
+    mission.staffIds?.includes(personId)
   )
 }
 
-/** La mission engage-t-elle ce véhicule ? */
-export function missionEngageVehicule(mission, vehiculeId) {
-  return Boolean(mission.vehicules?.some(v => v.vehiculeId === vehiculeId))
+/** Does the mission involve this vehicle? */
+export function missionInvolvesVehicle(mission, vehicleId) {
+  return Boolean(mission.vehicles?.some(v => v.vehicleId === vehicleId))
 }
 
-// ── Congés / indisponibilité ──
+// ── Leave and unavailability ──
 
-/** La personne est-elle en congé à un instant donné ? */
-export function isEnCongeA(person, now = nowStr()) {
-  return Boolean(person.conges?.some(c => c.dateDebut <= now && now <= c.dateFin))
+/** Is the person on leave at a given instant? */
+export function isOnLeaveAt(person, now = nowString()) {
+  return Boolean(person.leaves?.some(l => l.startDate <= now && now <= l.endDate))
 }
 
-/** La personne a-t-elle un congé qui chevauche la période ? */
-export function isEnCongePendant(person, dateDebut, dateFin) {
-  if (!dateDebut || !dateFin || !person.conges?.length) return false
-  return person.conges.some(c => overlaps(c.dateDebut, c.dateFin, dateDebut, dateFin))
+/** Does the person have a leave overlapping the period? */
+export function isOnLeaveDuring(person, startDate, endDate) {
+  if (!startDate || !endDate || !person.leaves?.length) return false
+  return person.leaves.some(l => overlaps(l.startDate, l.endDate, startDate, endDate))
 }
 
-/** Statut de base d'une personne : disponible | en congé | indisponible */
-export function getPersonStatut(person, now = nowStr()) {
-  if (person.indisponible) return 'indisponible'
-  return isEnCongeA(person, now) ? 'en congé' : 'disponible'
+/** Base person status: available | on-leave | unavailable */
+export function getPersonStatus(person, now = nowString()) {
+  if (person.unavailable) return PERSON_STATUS.UNAVAILABLE
+  return isOnLeaveAt(person, now) ? PERSON_STATUS.ON_LEAVE : PERSON_STATUS.AVAILABLE
 }
 
-// ── Engagement sur une période ──
+// ── Commitments over a period ──
 
 /**
- * Missions qui chevauchent la période donnée.
- * `excludeMissionId` sert à ignorer la mission en cours d'édition.
+ * Missions overlapping the given period.
+ * `excludeMissionId` skips the mission currently being edited.
  */
-export function missionsChevauchant(missions, dateDebut, dateFin, { excludeMissionId = null } = {}) {
+export function missionsOverlapping(missions, startDate, endDate, { excludeMissionId = null } = {}) {
   return missions.filter(m =>
-    m.id !== excludeMissionId && overlaps(m.dateDebut, m.dateFin, dateDebut, dateFin)
+    m.id !== excludeMissionId && overlaps(m.startDate, m.endDate, startDate, endDate)
   )
 }
 
-/** La personne est-elle déjà engagée sur une mission chevauchant la période ? */
-export function isPersonneEngagee(personId, missions, dateDebut, dateFin, options = {}) {
-  return missionsChevauchant(missions, dateDebut, dateFin, options)
-    .some(m => missionEngagePersonne(m, personId))
+/** Is the person already committed to a mission overlapping the period? */
+export function isPersonCommitted(personId, missions, startDate, endDate, options = {}) {
+  return missionsOverlapping(missions, startDate, endDate, options)
+    .some(m => missionInvolvesPerson(m, personId))
 }
 
-/** Le véhicule est-il déjà engagé sur une mission chevauchant la période ? */
-export function isVehiculeEngage(vehiculeId, missions, dateDebut, dateFin, options = {}) {
-  return missionsChevauchant(missions, dateDebut, dateFin, options)
-    .some(m => missionEngageVehicule(m, vehiculeId))
+/** Is the vehicle already committed to a mission overlapping the period? */
+export function isVehicleCommitted(vehicleId, missions, startDate, endDate, options = {}) {
+  return missionsOverlapping(missions, startDate, endDate, options)
+    .some(m => missionInvolvesVehicle(m, vehicleId))
 }
 
-// ── Statuts « affichés », qui tiennent compte des missions en cours ──
+// ── Displayed statuses, accounting for ongoing missions ──
 
-/** Mission actuellement en cours qui engage cette personne, ou undefined */
-export function missionActuelleDePersonne(personId, missions, now = nowStr()) {
-  return missionsEnCours(missions, now).find(m => missionEngagePersonne(m, personId))
+/** Ongoing mission involving this person, or undefined */
+export function currentMissionOfPerson(personId, missions, now = nowString()) {
+  return ongoingMissions(missions, now).find(m => missionInvolvesPerson(m, personId))
 }
 
-/** Mission actuellement en cours qui engage ce véhicule, ou undefined */
-export function missionActuelleDeVehicule(vehiculeId, missions, now = nowStr()) {
-  return missionsEnCours(missions, now).find(m => missionEngageVehicule(m, vehiculeId))
+/** Ongoing mission involving this vehicle, or undefined */
+export function currentMissionOfVehicle(vehicleId, missions, now = nowString()) {
+  return ongoingMissions(missions, now).find(m => missionInvolvesVehicle(m, vehicleId))
 }
 
-/** disponible | en mission | en congé | indisponible */
-export function getPersonStatutAffiche(person, missions, now = nowStr()) {
-  const base = getPersonStatut(person, now)
-  if (base !== 'disponible') return base
-  return missionActuelleDePersonne(person.id, missions, now) ? 'en mission' : 'disponible'
+/** available | on-mission | on-leave | unavailable */
+export function getDisplayedPersonStatus(person, missions, now = nowString()) {
+  const base = getPersonStatus(person, now)
+  if (base !== PERSON_STATUS.AVAILABLE) return base
+  return currentMissionOfPerson(person.id, missions, now)
+    ? PERSON_STATUS.ON_MISSION
+    : PERSON_STATUS.AVAILABLE
 }
 
-/** libre | en mission | en prêt */
-export function getVehiculeStatut(vehicule, missions, now = nowStr()) {
-  if (vehicule.statut === 'en prêt') return 'en prêt'
-  return missionActuelleDeVehicule(vehicule.id, missions, now) ? 'en mission' : 'libre'
+/** free | on-mission | on-loan */
+export function getVehicleStatus(vehicle, missions, now = nowString()) {
+  if (vehicle.status === VEHICLE_STATUS.ON_LOAN) return VEHICLE_STATUS.ON_LOAN
+  return currentMissionOfVehicle(vehicle.id, missions, now)
+    ? VEHICLE_STATUS.ON_MISSION
+    : VEHICLE_STATUS.FREE
 }
 
-// ── Disponibilité pour l'affectation à une mission ──
+// ── Availability for assignment to a mission ──
 
 /**
- * La personne peut-elle être affectée à une mission sur cette période ?
- * `excludeMissionId` : mission en cours d'édition, dont les affectations
- * actuelles ne doivent pas compter comme un conflit.
+ * Can the person be assigned to a mission over this period?
+ * `excludeMissionId`: the mission being edited, whose current assignments
+ * must not count as conflicts.
  */
-export function personneDisponible(person, missions, dateDebut, dateFin, options = {}) {
-  const { excludeMissionId = null, now = nowStr() } = options
-  if (person.indisponible) return false
-  if (!dateDebut || !dateFin) return !isEnCongeA(person, now)
-  if (isEnCongePendant(person, dateDebut, dateFin)) return false
-  // Une mission déjà terminée ne mobilise plus personne.
-  const enJeu = missions.filter(m => getMissionStatut(m, now) !== 'terminée')
-  return !isPersonneEngagee(person.id, enJeu, dateDebut, dateFin, { excludeMissionId })
+export function isPersonAvailable(person, missions, startDate, endDate, options = {}) {
+  const { excludeMissionId = null, now = nowString() } = options
+  if (person.unavailable) return false
+  if (!startDate || !endDate) return !isOnLeaveAt(person, now)
+  if (isOnLeaveDuring(person, startDate, endDate)) return false
+  // A mission that is already over no longer ties anybody up.
+  const relevant = missions.filter(m => getMissionStatus(m, now) !== MISSION_STATUS.COMPLETED)
+  return !isPersonCommitted(person.id, relevant, startDate, endDate, { excludeMissionId })
 }
 
-/** Le véhicule peut-il être affecté à une mission sur cette période ? */
-export function vehiculeDisponible(vehicule, missions, dateDebut, dateFin, options = {}) {
-  const { excludeMissionId = null, now = nowStr() } = options
-  if (vehicule.statut === 'en prêt') return false
-  if (!dateDebut || !dateFin) return true
-  const enJeu = missions.filter(m => getMissionStatut(m, now) !== 'terminée')
-  return !isVehiculeEngage(vehicule.id, enJeu, dateDebut, dateFin, { excludeMissionId })
+/** Can the vehicle be assigned to a mission over this period? */
+export function isVehicleAvailable(vehicle, missions, startDate, endDate, options = {}) {
+  const { excludeMissionId = null, now = nowString() } = options
+  if (vehicle.status === VEHICLE_STATUS.ON_LOAN) return false
+  if (!startDate || !endDate) return true
+  const relevant = missions.filter(m => getMissionStatus(m, now) !== MISSION_STATUS.COMPLETED)
+  return !isVehicleCommitted(vehicle.id, relevant, startDate, endDate, { excludeMissionId })
 }

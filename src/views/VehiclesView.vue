@@ -17,53 +17,46 @@ onMounted(() => {
 })
 
 const showForm = ref(false)
-const editingVehicle = ref(null)
-const deletingId = ref(null)
-const loanVehicle = ref(null)
+const editedVehicle = ref(null)
+const deletedId = ref(null)
+const lentVehicle = ref(null)
 
 function openCreate() {
-  editingVehicle.value = null
+  editedVehicle.value = null
   showForm.value = true
 }
 
 function openEdit(vehicle) {
-  editingVehicle.value = vehicle
+  editedVehicle.value = vehicle
   showForm.value = true
 }
 
 function onSave(data) {
-  if (editingVehicle.value) {
-    store.update(editingVehicle.value.id, data)
-  } else {
-    store.add(data)
-  }
+  if (editedVehicle.value) store.update(editedVehicle.value.id, data)
+  else store.add(data)
   showForm.value = false
 }
 
-function onLoan(commentaire) {
-  store.setPret(loanVehicle.value.id, commentaire)
-  loanVehicle.value = null
-}
-
-function confirmDelete(id) {
-  deletingId.value = id
-}
-
 function onDelete() {
-  store.remove(deletingId.value)
-  deletingId.value = null
+  store.remove(deletedId.value)
+  deletedId.value = null
+}
+
+function confirmLoan(note) {
+  store.lend(lentVehicle.value.id, note)
+  lentVehicle.value = null
 }
 </script>
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="page-title mb-0">Véhicules</h1>
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="page-title mb-0">{{ $t('vehicles.title') }}</h1>
       <button @click="openCreate" class="btn-primary">
-        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        Ajouter
+        {{ $t('actions.add') }}
       </button>
     </div>
 
@@ -73,23 +66,26 @@ function onDelete() {
         :key="vehicle.id"
         :vehicle="vehicle"
         @edit="openEdit(vehicle)"
-        @delete="confirmDelete(vehicle.id)"
-        @pret="loanVehicle = vehicle"
-        @liberer="store.liberer(vehicle.id)"
+        @delete="deletedId = vehicle.id"
+        @lend="lentVehicle = vehicle"
+        @release="store.release(vehicle.id)"
       />
     </TransitionGroup>
 
     <ListPlaceholder v-if="store.vehicles.length === 0"
-      :chargement="!store.chargee" message="Aucun véhicule enregistré" />
+      :loading="!store.loaded" :message="$t('vehicles.empty')" />
 
-    <VehicleForm v-if="showForm" :vehicle="editingVehicle" @save="onSave" @close="showForm = false" />
-    <LoanModal v-if="loanVehicle" :vehicle="loanVehicle" @save="onLoan" @close="loanVehicle = null" />
+    <VehicleForm v-if="showForm" :vehicle="editedVehicle" @save="onSave" @close="showForm = false" />
+
+    <LoanModal v-if="lentVehicle" :vehicle="lentVehicle"
+      @confirm="confirmLoan" @close="lentVehicle = null" />
 
     <ConfirmModal
-      v-if="deletingId"
-      message="Êtes-vous sûr de vouloir supprimer ce véhicule ?"
+      v-if="deletedId"
+      :title="$t('vehicles.deleteTitle')"
+      :message="$t('vehicles.deleteConfirm')"
       @confirm="onDelete"
-      @cancel="deletingId = null"
+      @cancel="deletedId = null"
     />
   </div>
 </template>
