@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { useClock } from '../../stores/clock.js'
 
 const props = defineProps({
   rows: { type: Array, required: true },   // [{id, label, sublabel?}]
@@ -10,7 +11,7 @@ const props = defineProps({
 
 const DOW_FR = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa']
 
-const todayStr = new Date().toISOString().split('T')[0]
+const { todayStr } = useClock()
 
 const daysInMonth = computed(() => new Date(props.year, props.month, 0).getDate())
 
@@ -23,7 +24,7 @@ const days = computed(() => {
       day: d,
       dow: DOW_FR[date.getDay()],
       isWeekend: date.getDay() === 0 || date.getDay() === 6,
-      isToday: dateStr === todayStr,
+      isToday: dateStr === todayStr.value,
     })
   }
   return result

@@ -1,7 +1,8 @@
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   statut: { type: String, required: true },
-  type: { type: String, default: 'default' },
 })
 
 const COLOR_MAP = {
@@ -16,7 +17,9 @@ const COLOR_MAP = {
   indisponible: 'bg-yellow-100 text-yellow-800',
 }
 
-const colorClass = COLOR_MAP[props.statut] ?? 'bg-gray-100 text-gray-800'
+// computed, et non une constante : le statut d'une mission change avec le temps
+// sans que le composant soit recréé.
+const colorClass = computed(() => COLOR_MAP[props.statut] ?? 'bg-gray-100 text-gray-800')
 </script>
 
 <template>

@@ -1,14 +1,21 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { usePersonsStore, getStatut, isEnCongePendant } from '../stores/persons.js'
-import { formatDT, getMissionStatut } from '../utils.js'
+import { usePersonsStore } from '../stores/persons.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { useMissionsStore } from '../stores/missions.js'
+import { useClock } from '../stores/clock.js'
+import { formatDT } from '../datetime.js'
+import {
+  getPersonStatut, getVehiculeStatut, isEnCongePendant,
+  missionEngagePersonne, missionsEnCours,
+} from '../availability.js'
 import StatusBadge from '../components/common/StatusBadge.vue'
+import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
 const missionsStore = useMissionsStore()
+const { nowStr } = useClock()
 
 onMounted(() => {
   personsStore.init()
@@ -16,46 +23,42 @@ onMounted(() => {
   missionsStore.init()
 })
 
+const enCours = computed(() => missionsEnCours(missionsStore.missions, nowStr.value))
+
+/** Compte les éléments par statut, en une seule passe */
+function compter(items, statutDe) {
+  return items.reduce((acc, item) => {
+    const s = statutDe(item)
+    acc[s] = (acc[s] ?? 0) + 1
+    return acc
+  }, {})
+}
+
 const stats = computed(() => {
-  const vehiculesLibres = vehiclesStore.vehicles.filter(v => {
-    if (v.statut === 'en prêt') return false
-    return !missionsStore.missions.some(m =>
-      getMissionStatut(m) === 'en cours' && m.vehicules?.some(mv => mv.vehiculeId === v.id)
-    )
-  }).length
+  const now = nowStr.value
 
-  const vehiculesEnMission = vehiclesStore.vehicles.filter(v => {
-    if (v.statut === 'en prêt') return false
-    return missionsStore.missions.some(m =>
-      getMissionStatut(m) === 'en cours' && m.vehicules?.some(mv => mv.vehiculeId === v.id)
-    )
-  }).length
+  const parVehicule = compter(vehiclesStore.vehicles, v =>
+    getVehiculeStatut(v, missionsStore.missions, now)
+  )
 
-  const missionsCours = missionsStore.missions.filter(m => getMissionStatut(m) === 'en cours')
-
-  function estEnMission(p) {
-    return missionsCours.some(m =>
-      m.vehicules?.some(v => v.chauffeurId === p.id) || m.personnes?.includes(p.id)
-    )
-  }
-
-  const personnesDisponibles = personsStore.persons.filter(p => getStatut(p) === 'disponible' && !estEnMission(p)).length
-  const personnesEnMission   = personsStore.persons.filter(p => getStatut(p) === 'disponible' && estEnMission(p)).length
-  const personnesIndisponibles = personsStore.persons.filter(p => getStatut(p) !== 'disponible').length
+  const parPersonne = compter(personsStore.persons, p => {
+    const base = getPersonStatut(p, now)
+    if (base !== 'disponible') return 'indisponible'
+    return enCours.value.some(m => missionEngagePersonne(m, p.id)) ? 'en mission' : 'disponible'
+  })
 
   return {
-    personnesDisponibles,
-    personnesEnMission,
-    personnesIndisponibles,
-    vehiculesLibres,
-    vehiculesEnMission,
-    vehiculesEnPret: vehiclesStore.vehicles.filter(v => v.statut === 'en prêt').length,
+    personnesDisponibles: parPersonne['disponible'] ?? 0,
+    personnesEnMission: parPersonne['en mission'] ?? 0,
+    personnesIndisponibles: parPersonne['indisponible'] ?? 0,
+    vehiculesLibres: parVehicule['libre'] ?? 0,
+    vehiculesEnMission: parVehicule['en mission'] ?? 0,
+    vehiculesEnPret: parVehicule['en prêt'] ?? 0,
   }
 })
 
-const missionsEnCours = computed(() =>
-  missionsStore.missions
-    .filter(m => getMissionStatut(m) === 'en cours')
+const missionsDetaillees = computed(() =>
+  enCours.value
     .map(m => ({
       ...m,
       vehiculesDetail: (m.vehicules ?? []).map(v => ({
@@ -71,7 +74,7 @@ const missionsEnCours = computed(() =>
 
 const alertes = computed(() => {
   const list = []
-  missionsStore.missions.filter(m => getMissionStatut(m) === 'en cours').forEach(m => {
+  enCours.value.forEach(m => {
     m.vehicules?.forEach(v => {
       if (!v.chauffeurId) return
       const chauffeur = personsStore.persons.find(p => p.id === v.chauffeurId)
@@ -148,8 +151,8 @@ const alertes = computed(() => {
 
     <section>
       <h2 class="section-title">Missions en cours</h2>
-      <div v-if="missionsEnCours.length" class="space-y-3">
-        <div v-for="m in missionsEnCours" :key="m.id" class="card">
+      <div v-if="missionsDetaillees.length" class="space-y-3">
+        <div v-for="m in missionsDetaillees" :key="m.id" class="card">
           <div class="flex items-start justify-between gap-2">
             <div class="flex-1 min-w-0">
               <p class="font-semibold text-gray-900">{{ m.titre }}</p>
@@ -176,7 +179,7 @@ const alertes = computed(() => {
           </div>
         </div>
       </div>
-      <p v-else class="text-gray-400 text-sm italic">Aucune mission en cours</p>
+      <ListPlaceholder v-else :chargement="!missionsStore.chargee" message="Aucune mission en cours" />
     </section>
   </div>
 </template>

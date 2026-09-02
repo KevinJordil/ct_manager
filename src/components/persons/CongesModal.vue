@@ -2,12 +2,14 @@
 import { reactive, computed } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
 import { usePersonsStore } from '../../stores/persons.js'
-import { formatDT } from '../../utils.js'
+import { useClock } from '../../stores/clock.js'
+import { formatDT } from '../../datetime.js'
 
 const props = defineProps({ person: { type: Object, required: true } })
 defineEmits(['close'])
 
 const store = usePersonsStore()
+const { nowStr } = useClock()
 const form = reactive({ dateDebut: '', dateFin: '' })
 
 const erreur = computed(() => {
@@ -23,9 +25,8 @@ function addConge() {
 
 function removeConge(id) { store.removeConge(props.person.id, id) }
 
-const now = new Date().toISOString().slice(0, 16)
-
 function congeStatus(c) {
+  const now = nowStr.value
   if (c.dateFin < now) return 'passé'
   if (c.dateDebut <= now && now <= c.dateFin) return 'actuel'
   return 'futur'
@@ -75,12 +76,12 @@ const congesTries = computed(() =>
         <p class="text-sm font-medium text-gray-700 mb-3">Ajouter une période</p>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="label">Début</label>
-            <input v-model="form.dateDebut" type="datetime-local" class="input" />
+            <label class="label" for="conge-debut">Début</label>
+            <input id="conge-debut" v-model="form.dateDebut" type="datetime-local" class="input" />
           </div>
           <div>
-            <label class="label">Fin</label>
-            <input v-model="form.dateFin" type="datetime-local" class="input" :min="form.dateDebut" />
+            <label class="label" for="conge-fin">Fin</label>
+            <input id="conge-fin" v-model="form.dateFin" type="datetime-local" class="input" :min="form.dateDebut" />
           </div>
         </div>
         <p v-if="erreur" class="mt-1.5 text-xs text-red-600">{{ erreur }}</p>

@@ -1,23 +1,21 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { RouterView, RouterLink, useRoute } from 'vue-router'
+import { useClock } from './stores/clock.js'
+import { useSync } from './stores/sync.js'
+import AccessKeyModal from './components/common/AccessKeyModal.vue'
 
 const route = useRoute()
 const sidebarOpen = ref(false)
 
-const now = ref(new Date())
-let timer = null
-
-onMounted(() => {
-  timer = setInterval(() => { now.value = new Date() }, 1000)
-})
-
-onUnmounted(() => {
-  clearInterval(timer)
-})
+const { now } = useClock()
+const { erreur: erreurSync, conflit, cleRequise, enregistrementEnCours, effacerErreur } = useSync()
+const saisieCle = ref(false)
 
 const formatDate = (date) => date.toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 const formatTime = (date) => date.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
+function reloadPage() { window.location.reload() }
 
 const navItems = [
   {
@@ -86,7 +84,7 @@ const navItems = [
       <!-- Header -->
       <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3 lg:hidden">
-          <button @click="sidebarOpen = true" class="text-gray-500 hover:text-gray-700">
+          <button @click="sidebarOpen = true" aria-label="Ouvrir le menu" class="text-gray-500 hover:text-gray-700">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
@@ -94,11 +92,42 @@ const navItems = [
           <span class="font-semibold text-gray-900">Gestion CT</span>
         </div>
         <div class="hidden lg:block" />
-        <div class="text-right">
-          <div class="text-xs font-medium text-gray-500 capitalize">{{ formatDate(now) }}</div>
-          <div class="text-sm font-bold text-gray-800 tabular-nums">{{ formatTime(now) }}</div>
+        <div class="flex items-center gap-4">
+          <span v-if="enregistrementEnCours" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400" role="status" aria-live="polite">
+            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+            Enregistrement…
+          </span>
+          <div class="text-right">
+            <div class="text-xs font-medium text-gray-500 capitalize">{{ formatDate(now) }}</div>
+            <div class="text-sm font-bold text-gray-800 tabular-nums">{{ formatTime(now) }}</div>
+          </div>
         </div>
       </header>
+
+      <!-- Les sauvegardes partent en arrière-plan : un échec doit se voir. -->
+      <div v-if="erreurSync" role="alert"
+        class="flex items-start gap-2 px-4 py-3 bg-red-600 text-white text-sm">
+        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span class="flex-1">{{ erreurSync }}</span>
+        <button v-if="cleRequise" @click="saisieCle = true"
+          class="shrink-0 underline underline-offset-2 hover:no-underline">
+          Saisir la clé
+        </button>
+        <button v-else-if="conflit" @click="reloadPage"
+          class="shrink-0 underline underline-offset-2 hover:no-underline">
+          Recharger
+        </button>
+        <button @click="effacerErreur" class="shrink-0 underline underline-offset-2 hover:no-underline">
+          Masquer
+        </button>
+      </div>
+
+      <AccessKeyModal v-if="saisieCle" @close="saisieCle = false" />
 
       <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
         <RouterView v-slot="{ Component }">

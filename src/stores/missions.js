@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { api } from '../api.js'
-import { addTimeIfMissing } from '../utils.js'
+import { addTimeIfMissing } from '../datetime.js'
+import { useCollection } from './collection.js'
 
 // ── Migration des données existantes ──
 
@@ -33,44 +32,25 @@ function migrate(data) {
   })
 }
 
+/** Le statut est toujours recalculé depuis les dates : on ne le persiste pas. */
+function sansStatut(mission) {
+  const { statut: _s, ...data } = mission
+  return data
+}
+
 // ── Store ──
 
 export const useMissionsStore = defineStore('missions', () => {
-  const missions = ref([])
-  let initPromise = null
+  const c = useCollection('missions', migrate)
 
-  async function init() {
-    if (initPromise) return initPromise
-    initPromise = (async () => {
-      try {
-        const raw = await api.load('missions')
-        missions.value = migrate(raw)
-      } catch (err) {
-        console.warn('[missions] server unavailable:', err.message)
-      }
-    })()
-    return initPromise
+  return {
+    missions: c.items,
+    chargement: c.chargement,
+    chargee: c.chargee,
+    init: c.init,
+    recharger: c.recharger,
+    add: mission => c.add(sansStatut(mission)),
+    update: (id, data) => c.update(id, sansStatut(data)),
+    remove: c.remove,
   }
-
-  function _save() { api.save('missions', missions.value) }
-
-  function add(mission) {
-    const { statut: _s, ...data } = mission
-    missions.value.push({ ...data, id: Date.now().toString() })
-    _save()
-  }
-
-  function update(id, data) {
-    const { statut: _s, ...rest } = data
-    const idx = missions.value.findIndex(m => m.id === id)
-    if (idx !== -1) missions.value[idx] = { ...missions.value[idx], ...rest }
-    _save()
-  }
-
-  function remove(id) {
-    missions.value = missions.value.filter(m => m.id !== id)
-    _save()
-  }
-
-  return { missions, init, add, update, remove }
 })

@@ -1,5 +1,7 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
+import { useClock } from '../../stores/clock.js'
+import { addDays, mondayOf, parseLocal, toDateStr } from '../../datetime.js'
 
 const props = defineProps({
   rows: { type: Array, required: true },
@@ -19,30 +21,22 @@ const DOW_LONG = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi',
 const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 const MONTHS_SHORT = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
 
-function getMondayStr(dateStr) {
-  const d = new Date(dateStr + 'T00:00')
-  const day = d.getDay()
-  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
-  return d.toISOString().slice(0, 10)
-}
-
-const todayStr = new Date().toISOString().slice(0, 10)
+const { nowStr, todayStr } = useClock()
 
 const periodStart = computed(() =>
-  props.view === 'day' ? props.date + 'T00:00' : getMondayStr(props.date) + 'T00:00'
+  props.view === 'day' ? props.date + 'T00:00' : mondayOf(props.date) + 'T00:00'
 )
 
-const periodEnd = computed(() => {
-  if (props.view === 'day') return props.date + 'T23:59'
-  const d = new Date(getMondayStr(props.date) + 'T00:00')
-  d.setDate(d.getDate() + 6)
-  return d.toISOString().slice(0, 10) + 'T23:59'
-})
+const periodEnd = computed(() =>
+  props.view === 'day'
+    ? props.date + 'T23:59'
+    : addDays(mondayOf(props.date), 6) + 'T23:59'
+)
 
 const totalMinutes = computed(() => props.view === 'day' ? 24 * 60 : 7 * 24 * 60)
 
 function dtToMinutes(dt) {
-  return (new Date(dt) - new Date(periodStart.value)) / 60000
+  return (parseLocal(dt) - parseLocal(periodStart.value)) / 60000
 }
 
 function pct(dt) {
@@ -53,21 +47,21 @@ function pct(dt) {
 
 const daySegments = computed(() => {
   if (props.view === 'day') {
-    const d = new Date(props.date + 'T00:00')
+    const d = parseLocal(props.date)
     return [{
       dateStr: props.date,
       label: `${DOW_LONG[d.getDay()]} ${d.getDate()} ${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`,
       pct: 0,
       width: 100,
       isWeekend: d.getDay() === 0 || d.getDay() === 6,
-      isToday: props.date === todayStr,
+      isToday: props.date === todayStr.value,
     }]
   }
-  const monday = getMondayStr(props.date)
+  const monday = mondayOf(props.date)
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday + 'T00:00')
+    const d = parseLocal(monday)
     d.setDate(d.getDate() + i)
-    const dateStr = d.toISOString().slice(0, 10)
+    const dateStr = toDateStr(d)
     return {
       dateStr,
       label: `${DOW_FR[d.getDay()]} ${d.getDate()}`,
@@ -75,7 +69,7 @@ const daySegments = computed(() => {
       pct: (i / 7) * 100,
       width: 100 / 7,
       isWeekend: d.getDay() === 0 || d.getDay() === 6,
-      isToday: dateStr === todayStr,
+      isToday: dateStr === todayStr.value,
     }
   })
 })
@@ -142,17 +136,11 @@ const gridLines = computed(() => {
   return lines
 })
 
-// ── Current time ──
-
-const nowRef = ref(new Date())
-let timer = null
-onMounted(() => { timer = setInterval(() => { nowRef.value = new Date() }, 60000) })
-onUnmounted(() => clearInterval(timer))
+// ── Indicateur de l'heure actuelle ──
 
 const nowPct = computed(() => {
-  const nowStr = nowRef.value.toISOString().slice(0, 16)
-  if (nowStr < periodStart.value || nowStr > periodEnd.value) return null
-  return pct(nowStr)
+  if (nowStr.value < periodStart.value || nowStr.value > periodEnd.value) return null
+  return pct(nowStr.value)
 })
 
 // ── Lane packing ──

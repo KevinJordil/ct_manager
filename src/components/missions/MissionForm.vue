@@ -1,10 +1,12 @@
 <script setup>
 import { reactive, ref, computed, watch } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
-import { usePersonsStore, isEnCongePendant } from '../../stores/persons.js'
+import { usePersonsStore } from '../../stores/persons.js'
 import { useVehiclesStore } from '../../stores/vehicles.js'
 import { useMissionsStore } from '../../stores/missions.js'
-import { getMissionStatut } from '../../utils.js'
+import { useClock } from '../../stores/clock.js'
+import { personneDisponible, vehiculeDisponible } from '../../availability.js'
+import { newId } from '../../id.js'
 
 const props = defineProps({ mission: { type: Object, default: null } })
 const emit = defineEmits(['save', 'close'])
@@ -12,6 +14,7 @@ const emit = defineEmits(['save', 'close'])
 const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
 const missionsStore = useMissionsStore()
+const { nowStr } = useClock()
 
 // Permis requis par catégorie de véhicule (sans remorque)
 const PERMIS_PAR_CATEGORIE = {
@@ -39,10 +42,10 @@ watch(() => props.mission, (m) => {
     form.dateDebut = m.dateDebut; form.dateFin = m.dateFin
     form.notes = m.notes
     vehiculesForm.value = (m.vehicules ?? []).map(v => ({
-      tempId: Math.random(), vehiculeId: v.vehiculeId, chauffeurId: v.chauffeurId ?? null,
+      tempId: newId(), id: v.id, vehiculeId: v.vehiculeId, chauffeurId: v.chauffeurId ?? null,
       avecRemorque: v.avecRemorque ?? false,
     }))
-    personnesForm.value = [...(m.personnes ?? [])]
+    personnesForm.value = (m.personnes ?? []).map(id => ({ tempId: newId(), personId: id }))
   } else {
     form.titre = ''; form.description = ''; form.dateDebut = ''; form.dateFin = ''
     form.notes = ''
@@ -52,48 +55,32 @@ watch(() => props.mission, (m) => {
 
 // ── Disponibilité ──
 
+// Options communes : on ignore les conflits nés de la mission qu'on édite.
+function optionsDispo() {
+  return { excludeMissionId: props.mission?.id ?? null, now: nowStr.value }
+}
+
 function personneOk(p, excludePersonId = null) {
   if (p.id === excludePersonId) return true
-  if (p.indisponible) return false
-  if (form.dateDebut && form.dateFin) {
-    if (isEnCongePendant(p, form.dateDebut, form.dateFin)) return false
-    return !missionsStore.missions.some(m => {
-      if (m.id === props.mission?.id || getMissionStatut(m) === 'terminée') return false
-      if (m.dateDebut > form.dateFin || m.dateFin < form.dateDebut) return false
-      return m.vehicules?.some(v => v.chauffeurId === p.id) || m.personnes?.includes(p.id)
-    })
-  }
-  const s = p.conges?.some(c => {
-    const now = new Date().toISOString().slice(0, 16)
-    return c.dateDebut <= now && now <= c.dateFin
-  })
-  return !s
+  return personneDisponible(p, missionsStore.missions, form.dateDebut, form.dateFin, optionsDispo())
 }
 
 function vehiculeOk(v, excludeVehiculeId = null) {
   if (v.id === excludeVehiculeId) return true
-  if (v.statut === 'en prêt') return false
-  if (form.dateDebut && form.dateFin) {
-    return !missionsStore.missions.some(m => {
-      if (m.id === props.mission?.id || getMissionStatut(m) === 'terminée') return false
-      if (m.dateDebut > form.dateFin || m.dateFin < form.dateDebut) return false
-      return m.vehicules?.some(mv => mv.vehiculeId === v.id)
-    })
-  }
-  return true
+  return vehiculeDisponible(v, missionsStore.missions, form.dateDebut, form.dateFin, optionsDispo())
 }
 
-function occupeesExceptRow(excludeTempId) {
+/** Personnes déjà retenues ailleurs dans le formulaire */
+function dejaRetenues({ exceptVehiculeRow = null, exceptPersonneRow = null } = {}) {
   return new Set([
-    ...vehiculesForm.value.filter(r => r.tempId !== excludeTempId).map(r => r.chauffeurId).filter(Boolean),
-    ...personnesForm.value,
-  ])
-}
-
-function occupeesExceptIdx(excludeIdx) {
-  return new Set([
-    ...vehiculesForm.value.map(r => r.chauffeurId).filter(Boolean),
-    ...personnesForm.value.filter((_, i) => i !== excludeIdx),
+    ...vehiculesForm.value
+      .filter(r => r.tempId !== exceptVehiculeRow)
+      .map(r => r.chauffeurId)
+      .filter(Boolean),
+    ...personnesForm.value
+      .filter(r => r.tempId !== exceptPersonneRow)
+      .map(r => r.personId)
+      .filter(Boolean),
   ])
 }
 
@@ -110,7 +97,7 @@ function chauffeursDispoForRow(row) {
   const permisRequis = vehicule
     ? (row.avecRemorque ? PERMIS_REMORQUE_PAR_CATEGORIE[vehicule.categorie] : PERMIS_PAR_CATEGORIE[vehicule.categorie])
     : null
-  const occupees = occupeesExceptRow(row.tempId)
+  const occupees = dejaRetenues({ exceptVehiculeRow: row.tempId })
   return personsStore.persons.filter(p => {
     if (p.id !== row.chauffeurId && occupees.has(p.id)) return false
     if (!personneOk(p, row.chauffeurId)) return false
@@ -119,11 +106,11 @@ function chauffeursDispoForRow(row) {
   })
 }
 
-function personnelDispoForIdx(idx) {
-  const occupees = occupeesExceptIdx(idx)
+function personnelDispoForRow(row) {
+  const occupees = dejaRetenues({ exceptPersonneRow: row.tempId })
   return personsStore.persons.filter(p => {
-    if (p.id !== personnesForm.value[idx] && occupees.has(p.id)) return false
-    return personneOk(p, personnesForm.value[idx])
+    if (p.id !== row.personId && occupees.has(p.id)) return false
+    return personneOk(p, row.personId)
   })
 }
 
@@ -137,7 +124,7 @@ function permisRequisPourRow(row) {
 
 // ── Mutations sur les listes ──
 
-function addVehicule() { vehiculesForm.value.push({ tempId: Math.random(), vehiculeId: '', chauffeurId: null, avecRemorque: false }) }
+function addVehicule() { vehiculesForm.value.push({ tempId: newId(), id: null, vehiculeId: '', chauffeurId: null, avecRemorque: false }) }
 function removeVehicule(tid) { vehiculesForm.value = vehiculesForm.value.filter(r => r.tempId !== tid) }
 function onVehiculeChange(row) {
   row.avecRemorque = false
@@ -148,8 +135,8 @@ function onRemorqueChange(row) {
   if (!row.chauffeurId) return
   if (!chauffeursDispoForRow(row).find(p => p.id === row.chauffeurId)) row.chauffeurId = null
 }
-function addPersonnel() { personnesForm.value.push('') }
-function removePersonnel(idx) { personnesForm.value.splice(idx, 1) }
+function addPersonnel() { personnesForm.value.push({ tempId: newId(), personId: '' }) }
+function removePersonnel(tid) { personnesForm.value = personnesForm.value.filter(r => r.tempId !== tid) }
 
 watch([() => form.dateDebut, () => form.dateFin], () => {
   if (!form.dateDebut || !form.dateFin) return
@@ -158,9 +145,10 @@ watch([() => form.dateDebut, () => form.dateFin], () => {
     const p = personsStore.persons.find(p => p.id === row.chauffeurId)
     if (!p || !personneOk(p, row.chauffeurId)) row.chauffeurId = null
   })
-  personnesForm.value = personnesForm.value.filter(id => {
-    const p = personsStore.persons.find(p => p.id === id)
-    return p && personneOk(p, id)
+  personnesForm.value = personnesForm.value.filter(row => {
+    if (!row.personId) return true
+    const p = personsStore.persons.find(p => p.id === row.personId)
+    return p && personneOk(p, row.personId)
   })
 })
 
@@ -181,10 +169,10 @@ function submit() {
   emit('save', {
     ...form,
     vehicules: vehiculesForm.value.filter(r => r.vehiculeId).map(r => ({
-      id: String(r.tempId), vehiculeId: r.vehiculeId, chauffeurId: r.chauffeurId || null,
+      id: r.id ?? r.tempId, vehiculeId: r.vehiculeId, chauffeurId: r.chauffeurId || null,
       avecRemorque: r.avecRemorque ?? false,
     })),
-    personnes: personnesForm.value.filter(Boolean),
+    personnes: personnesForm.value.map(r => r.personId).filter(Boolean),
   })
 }
 </script>
@@ -195,21 +183,21 @@ function submit() {
 
       <div class="space-y-3">
         <div>
-          <label class="label">Titre *</label>
-          <input v-model="form.titre" class="input" placeholder="Titre de la mission" required />
+          <label class="label" for="mission-titre">Titre *</label>
+          <input id="mission-titre" v-model="form.titre" class="input" placeholder="Titre de la mission" required />
         </div>
         <div>
-          <label class="label">Description</label>
-          <textarea v-model="form.description" class="input" rows="2" placeholder="Description..." />
+          <label class="label" for="mission-description">Description</label>
+          <textarea id="mission-description" v-model="form.description" class="input" rows="2" placeholder="Description..." />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="label">Début *</label>
-            <input v-model="form.dateDebut" type="datetime-local" class="input" required />
+            <label class="label" for="mission-debut">Début *</label>
+            <input id="mission-debut" v-model="form.dateDebut" type="datetime-local" class="input" required />
           </div>
           <div>
-            <label class="label">Fin *</label>
-            <input v-model="form.dateFin" type="datetime-local" class="input" :min="form.dateDebut" required />
+            <label class="label" for="mission-fin">Fin *</label>
+            <input id="mission-fin" v-model="form.dateFin" type="datetime-local" class="input" :min="form.dateDebut" required />
           </div>
         </div>
       </div>
@@ -246,7 +234,7 @@ function submit() {
                   {{ v.nom }} {{ v.immatriculation }}{{ v.places ? ` — ${v.places} places` : '' }}
                 </option>
               </select>
-              <button type="button" @click="removeVehicule(row.tempId)" class="mt-1 icon-btn text-red-400 hover:text-red-600 shrink-0">
+              <button type="button" @click="removeVehicule(row.tempId)" aria-label="Retirer ce véhicule" class="mt-1 icon-btn text-red-400 hover:text-red-600 shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -291,14 +279,14 @@ function submit() {
           </button>
         </div>
         <div v-if="personnesForm.length" class="divide-y divide-gray-100">
-          <div v-for="(pid, idx) in personnesForm" :key="idx" class="flex gap-2 items-center p-3">
-            <select v-model="personnesForm[idx]" class="input text-sm flex-1">
+          <div v-for="row in personnesForm" :key="row.tempId" class="flex gap-2 items-center p-3">
+            <select v-model="row.personId" class="input text-sm flex-1">
               <option value="">— Sélectionner une personne —</option>
-              <option v-for="p in personnelDispoForIdx(idx)" :key="p.id" :value="p.id">
+              <option v-for="p in personnelDispoForRow(row)" :key="p.id" :value="p.id">
                 {{ p.grade ? p.grade + ' ' : '' }}{{ p.prenom }} {{ p.nom }}
               </option>
             </select>
-            <button type="button" @click="removePersonnel(idx)" class="icon-btn text-red-400 hover:text-red-600 shrink-0">
+            <button type="button" @click="removePersonnel(row.tempId)" aria-label="Retirer cette personne" class="icon-btn text-red-400 hover:text-red-600 shrink-0">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -309,8 +297,8 @@ function submit() {
       </div>
 
       <div>
-        <label class="label">Notes</label>
-        <textarea v-model="form.notes" class="input" rows="2" placeholder="Notes..." />
+        <label class="label" for="mission-notes">Notes</label>
+        <textarea id="mission-notes" v-model="form.notes" class="input" rows="2" placeholder="Notes..." />
       </div>
 
       <div class="flex justify-end gap-3 pt-1">

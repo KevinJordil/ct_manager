@@ -20,8 +20,8 @@ function submit() {
         Personne : <strong>{{ person.grade ? person.grade + ' ' : '' }}{{ person.prenom }} {{ person.nom }}</strong>
       </p>
       <div>
-        <label class="label">Motif d'indisponibilité *</label>
-        <textarea v-model="commentaire" class="input" rows="3"
+        <label class="label" for="indispo-motif">Motif d'indisponibilité *</label>
+        <textarea id="indispo-motif" v-model="commentaire" class="input" rows="3"
           placeholder="Ex : Assigné à la garde, affecté à une section, formation..."
           required autofocus />
       </div>

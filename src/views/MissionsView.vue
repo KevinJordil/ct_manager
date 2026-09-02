@@ -3,14 +3,17 @@ import { ref, computed, onMounted } from 'vue'
 import { useMissionsStore } from '../stores/missions.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
-import { getMissionStatut } from '../utils.js'
+import { useClock } from '../stores/clock.js'
+import { getMissionStatut } from '../availability.js'
 import MissionCard from '../components/missions/MissionCard.vue'
 import MissionForm from '../components/missions/MissionForm.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
+import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const store = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
+const { nowStr } = useClock()
 
 onMounted(() => {
   store.init()
@@ -26,15 +29,17 @@ const filtreStatut = ref('all')
 const STATUTS = ['all', 'planifiée', 'en cours', 'terminée']
 const STATUT_LABELS = { all: 'Toutes', planifiée: 'Planifiées', 'en cours': 'En cours', terminée: 'Terminées' }
 
+const compteurs = computed(() => {
+  const acc = { all: store.missions.length, 'planifiée': 0, 'en cours': 0, 'terminée': 0 }
+  for (const m of store.missions) acc[getMissionStatut(m, nowStr.value)]++
+  return acc
+})
+
 const missionsFiltrees = computed(() =>
   filtreStatut.value === 'all'
     ? store.missions
-    : store.missions.filter(m => getMissionStatut(m) === filtreStatut.value)
+    : store.missions.filter(m => getMissionStatut(m, nowStr.value) === filtreStatut.value)
 )
-
-function countByStatut(s) {
-  return store.missions.filter(m => getMissionStatut(m) === s).length
-}
 
 function openCreate() { editingMission.value = null; showForm.value = true }
 function openEdit(mission) { editingMission.value = mission; showForm.value = true }
@@ -74,7 +79,7 @@ function onDelete() {
           filtreStatut === s ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300']">
         {{ STATUT_LABELS[s] }}
         <span class="ml-1 text-xs opacity-70">
-          ({{ s === 'all' ? store.missions.length : countByStatut(s) }})
+          ({{ compteurs[s] }})
         </span>
       </button>
     </div>
@@ -89,7 +94,8 @@ function onDelete() {
       />
     </TransitionGroup>
 
-    <p v-if="missionsFiltrees.length === 0" class="text-gray-400 text-sm italic">Aucune mission</p>
+    <ListPlaceholder v-if="missionsFiltrees.length === 0"
+      :chargement="!store.chargee" message="Aucune mission" />
 
     <MissionForm v-if="showForm" :mission="editingMission" @save="onSave" @close="showForm = false" />
 

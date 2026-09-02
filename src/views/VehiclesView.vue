@@ -6,6 +6,7 @@ import VehicleCard from '../components/vehicles/VehicleCard.vue'
 import VehicleForm from '../components/vehicles/VehicleForm.vue'
 import LoanModal from '../components/vehicles/LoanModal.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
+import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const store = useVehiclesStore()
 const missionsStore = useMissionsStore()
@@ -78,7 +79,8 @@ function onDelete() {
       />
     </TransitionGroup>
 
-    <p v-if="store.vehicles.length === 0" class="text-gray-400 text-sm italic">Aucun véhicule enregistré</p>
+    <ListPlaceholder v-if="store.vehicles.length === 0"
+      :chargement="!store.chargee" message="Aucun véhicule enregistré" />
 
     <VehicleForm v-if="showForm" :vehicle="editingVehicle" @save="onSave" @close="showForm = false" />
     <LoanModal v-if="loanVehicle" :vehicle="loanVehicle" @save="onLoan" @close="loanVehicle = null" />

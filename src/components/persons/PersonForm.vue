@@ -53,22 +53,22 @@ function submit() {
     <form @submit.prevent="submit" class="space-y-4">
       <div class="grid grid-cols-3 gap-3">
         <div>
-          <label class="label">Grade</label>
-          <input v-model="form.grade" class="input" placeholder="Ex: Sdt, Cpl…" />
+          <label class="label" for="personne-grade">Grade</label>
+          <input id="personne-grade" v-model="form.grade" class="input" placeholder="Ex: Sdt, Cpl…" />
         </div>
         <div>
-          <label class="label">Prénom *</label>
-          <input v-model="form.prenom" class="input" placeholder="Prénom" required />
+          <label class="label" for="personne-prenom">Prénom *</label>
+          <input id="personne-prenom" v-model="form.prenom" class="input" placeholder="Prénom" required />
         </div>
         <div>
-          <label class="label">Nom *</label>
-          <input v-model="form.nom" class="input" placeholder="Nom" required />
+          <label class="label" for="personne-nom">Nom *</label>
+          <input id="personne-nom" v-model="form.nom" class="input" placeholder="Nom" required />
         </div>
       </div>
 
       <div>
-        <label class="label">Permis de conduire (permis militaires suisses)</label>
-        <div class="flex flex-wrap gap-2 mt-1">
+        <span class="label" id="personne-permis-label">Permis de conduire (permis militaires suisses)</span>
+        <div class="flex flex-wrap gap-2 mt-1" role="group" aria-labelledby="personne-permis-label">
           <button v-for="p in PERMIS_OPTIONS" :key="p" type="button"
             @click="togglePermis(p)"
             :class="['px-3 py-1.5 rounded-lg text-sm font-medium border transition-all',
@@ -81,8 +81,8 @@ function submit() {
       </div>
 
       <div>
-        <label class="label">Notes</label>
-        <textarea v-model="form.notes" class="input" rows="3" placeholder="Notes libres..." />
+        <label class="label" for="personne-notes">Notes</label>
+        <textarea id="personne-notes" v-model="form.notes" class="input" rows="3" placeholder="Notes libres..." />
       </div>
 
       <div class="flex justify-end gap-3 pt-2">

@@ -2,3 +2,6 @@ node_modules/
 dist/
 *.local
 .DS_Store
+
+# Données de travail (seed dans data.example/)
+data/

@@ -1,24 +1,11 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { api } from '../api.js'
-import { addTimeIfMissing } from '../utils.js'
-
-// ── Helpers exportés ──
-
-export function getStatut(person) {
-  if (person.indisponible) return 'indisponible'
-  const now = new Date().toISOString().slice(0, 16)
-  return person.conges?.some(c => c.dateDebut <= now && now <= c.dateFin)
-    ? 'en congé'
-    : 'disponible'
-}
-
-export function isEnCongePendant(person, dateDebut, dateFin) {
-  if (!dateDebut || !dateFin || !person.conges?.length) return false
-  return person.conges.some(c => c.dateDebut <= dateFin && c.dateFin >= dateDebut)
-}
+import { addTimeIfMissing } from '../datetime.js'
+import { newId } from '../id.js'
+import { useCollection } from './collection.js'
 
 // ── Migration des données existantes ──
+
+const PERMIS_MAP = { B: '920', BE: '920E', C: '930', CE: '930E' }
 
 function migrate(data) {
   return data.map(p => {
@@ -32,8 +19,7 @@ function migrate(data) {
       person = { ...rest, conges }
     }
     // Migration permis civils → militaires suisses
-    const PERMIS_MAP = { B: '920', BE: '920E', C: '930', CE: '930E' }
-    person.permis = (person.permis ?? []).map(p => PERMIS_MAP[p] ?? p)
+    person.permis = (person.permis ?? []).map(perm => PERMIS_MAP[perm] ?? perm)
     // Conges sans heure → ajouter heure par défaut
     person.conges = person.conges.map(c => ({
       ...c,
@@ -51,80 +37,39 @@ function migrate(data) {
 // ── Store ──
 
 export const usePersonsStore = defineStore('persons', () => {
-  const persons = ref([])
-  let initPromise = null
-
-  async function init() {
-    if (initPromise) return initPromise
-    initPromise = (async () => {
-      try {
-        const raw = await api.load('persons')
-        persons.value = migrate(raw)
-      } catch (err) {
-        console.warn('[persons] server unavailable:', err.message)
-      }
-    })()
-    return initPromise
-  }
-
-  function _save() { api.save('persons', persons.value) }
+  const c = useCollection('persons', migrate)
 
   function add(person) {
-    persons.value.push({
-      ...person,
-      id: Date.now().toString(),
-      conges: [],
-      indisponible: false,
-      commentaireIndisponible: '',
-    })
-    _save()
-  }
-
-  function update(id, data) {
-    const idx = persons.value.findIndex(p => p.id === id)
-    if (idx !== -1) persons.value[idx] = { ...persons.value[idx], ...data }
-    _save()
-  }
-
-  function remove(id) {
-    persons.value = persons.value.filter(p => p.id !== id)
-    _save()
+    return c.add({ ...person, conges: [], indisponible: false, commentaireIndisponible: '' })
   }
 
   function addConge(personId, conge) {
-    const p = persons.value.find(p => p.id === personId)
-    if (p) {
+    c.mutate(personId, p => {
       if (!p.conges) p.conges = []
-      p.conges.push({ ...conge, id: Date.now().toString() })
-      _save()
-    }
+      p.conges.push({ ...conge, id: newId() })
+    })
   }
 
   function removeConge(personId, congeId) {
-    const p = persons.value.find(p => p.id === personId)
-    if (p) {
-      p.conges = p.conges.filter(c => c.id !== congeId)
-      _save()
-    }
+    c.mutate(personId, p => { p.conges = p.conges.filter(x => x.id !== congeId) })
   }
 
   function setIndisponible(id, commentaire) {
-    const p = persons.value.find(p => p.id === id)
-    if (p) {
-      p.indisponible = true
-      p.commentaireIndisponible = commentaire
-      _save()
-    }
+    c.mutate(id, p => { p.indisponible = true; p.commentaireIndisponible = commentaire })
   }
 
   function clearIndisponible(id) {
-    const p = persons.value.find(p => p.id === id)
-    if (p) {
-      p.indisponible = false
-      p.commentaireIndisponible = ''
-      _save()
-    }
+    c.mutate(id, p => { p.indisponible = false; p.commentaireIndisponible = '' })
   }
 
-  return { persons, init, add, update, remove, addConge, removeConge, setIndisponible, clearIndisponible }
+  return {
+    persons: c.items,
+    chargement: c.chargement,
+    chargee: c.chargee,
+    init: c.init,
+    recharger: c.recharger,
+    update: c.update,
+    remove: c.remove,
+    add, addConge, removeConge, setIndisponible, clearIndisponible,
+  }
 })

@@ -3,13 +3,16 @@ import { ref, computed, onMounted } from 'vue'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
 import { useMissionsStore } from '../stores/missions.js'
-import { getMissionStatut } from '../utils.js'
+import { useClock } from '../stores/clock.js'
+import { getMissionStatut } from '../availability.js'
+import { addDays, addMonths, mondayOf, parseLocal, todayStr } from '../datetime.js'
 import CalendarGrid from '../components/calendar/CalendarGrid.vue'
 import CalendarTimeline from '../components/calendar/CalendarTimeline.vue'
 
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
 const missionsStore = useMissionsStore()
+const { nowStr } = useClock()
 
 onMounted(() => {
   vehiclesStore.init()
@@ -19,8 +22,7 @@ onMounted(() => {
 
 // ── State ──
 
-const now = new Date()
-const currentDate = ref(now.toISOString().slice(0, 10))
+const currentDate = ref(todayStr())
 const viewMode = ref('week')   // 'day' | 'week' | 'month'
 const activeTab = ref('vehicles')
 
@@ -30,57 +32,36 @@ const DOW_FR = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa']
 const MONTH_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
 const MONTH_FR_SHORT = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc']
 
-function addDaysToDate(dateStr, n) {
-  const d = new Date(dateStr + 'T00:00')
-  d.setDate(d.getDate() + n)
-  return d.toISOString().slice(0, 10)
+const PAS = { day: 1, week: 7 }
+
+function decale(signe) {
+  const pas = PAS[viewMode.value]
+  currentDate.value = pas
+    ? addDays(currentDate.value, signe * pas)
+    : addMonths(currentDate.value, signe)
 }
 
-function getMondayStr(dateStr) {
-  const d = new Date(dateStr + 'T00:00')
-  const day = d.getDay()
-  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
-  return d.toISOString().slice(0, 10)
-}
-
-function prevPeriod() {
-  if (viewMode.value === 'day') currentDate.value = addDaysToDate(currentDate.value, -1)
-  else if (viewMode.value === 'week') currentDate.value = addDaysToDate(currentDate.value, -7)
-  else {
-    const d = new Date(currentDate.value + 'T00:00')
-    d.setMonth(d.getMonth() - 1)
-    currentDate.value = d.toISOString().slice(0, 10)
-  }
-}
-
-function nextPeriod() {
-  if (viewMode.value === 'day') currentDate.value = addDaysToDate(currentDate.value, 1)
-  else if (viewMode.value === 'week') currentDate.value = addDaysToDate(currentDate.value, 7)
-  else {
-    const d = new Date(currentDate.value + 'T00:00')
-    d.setMonth(d.getMonth() + 1)
-    currentDate.value = d.toISOString().slice(0, 10)
-  }
-}
-
-function goToToday() {
-  currentDate.value = new Date().toISOString().slice(0, 10)
-}
+function prevPeriod() { decale(-1) }
+function nextPeriod() { decale(1) }
+function goToToday() { currentDate.value = todayStr() }
 
 const periodLabel = computed(() => {
-  const d = new Date(currentDate.value + 'T00:00')
+  const d = parseLocal(currentDate.value)
   if (viewMode.value === 'day') {
     return `${DOW_FR[d.getDay()]} ${d.getDate()} ${MONTH_FR[d.getMonth()]} ${d.getFullYear()}`
   }
   if (viewMode.value === 'week') {
-    const monday = new Date(getMondayStr(currentDate.value) + 'T00:00')
+    const monday = parseLocal(mondayOf(currentDate.value))
     const sunday = new Date(monday)
     sunday.setDate(monday.getDate() + 6)
-    const startLabel = `${monday.getDate()} ${MONTH_FR_SHORT[monday.getMonth()]}`
-    const endLabel = monday.getMonth() === sunday.getMonth()
-      ? sunday.getDate()
-      : `${sunday.getDate()} ${MONTH_FR_SHORT[sunday.getMonth()]}`
-    return `${startLabel} – ${endLabel} ${sunday.getFullYear()}`
+    // Dans un même mois, le mois n'est écrit qu'une fois, à la fin :
+    // « 7 – 13 sep 2026 » plutôt que « 7 sep – 13 2026 ».
+    const memeMois = monday.getMonth() === sunday.getMonth()
+    const debut = memeMois
+      ? `${monday.getDate()}`
+      : `${monday.getDate()} ${MONTH_FR_SHORT[monday.getMonth()]}`
+    const fin = `${sunday.getDate()} ${MONTH_FR_SHORT[sunday.getMonth()]}`
+    return `${debut} – ${fin} ${sunday.getFullYear()}`
   }
   return `${MONTH_FR[d.getMonth()]} ${d.getFullYear()}`
 })
@@ -105,7 +86,7 @@ const MISSION_COLOR = {
 }
 
 function missionColor(m) {
-  return MISSION_COLOR[getMissionStatut(m)] ?? 'bg-gray-100 text-gray-700'
+  return MISSION_COLOR[getMissionStatut(m, nowStr.value)] ?? 'bg-gray-100 text-gray-700'
 }
 
 // ── Vehicle rows & events ──
@@ -228,12 +209,12 @@ const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEven
       </div>
 
       <!-- Navigation -->
-      <button @click="prevPeriod" class="icon-btn" title="Précédent">
+      <button @click="prevPeriod" class="icon-btn" title="Précédent" aria-label="Période précédente">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
       </button>
-      <button @click="nextPeriod" class="icon-btn" title="Suivant">
+      <button @click="nextPeriod" class="icon-btn" title="Suivant" aria-label="Période suivante">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>

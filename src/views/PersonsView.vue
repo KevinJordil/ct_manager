@@ -7,6 +7,7 @@ import PersonForm from '../components/persons/PersonForm.vue'
 import CongesModal from '../components/persons/CongesModal.vue'
 import PersonIndisponibleModal from '../components/persons/PersonIndisponibleModal.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
+import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
@@ -84,7 +85,8 @@ function onSaveIndisponible(commentaire) {
       />
     </TransitionGroup>
 
-    <p v-if="store.persons.length === 0" class="text-gray-400 text-sm italic">Aucune personne enregistrée</p>
+    <ListPlaceholder v-if="store.persons.length === 0"
+      :chargement="!store.chargee" message="Aucune personne enregistrée" />
 
     <PersonForm v-if="showForm" :person="editingPerson" @save="onSave" @close="showForm = false" />
     <CongesModal v-if="congesPerson" :person="congesPerson" @close="congesPerson = null" />

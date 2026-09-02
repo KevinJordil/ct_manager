@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { api } from '../api.js'
+import { useCollection } from './collection.js'
 
 // ── Migration des données existantes ──
 
@@ -21,49 +20,25 @@ function migrate(data) {
 // ── Store ──
 
 export const useVehiclesStore = defineStore('vehicles', () => {
-  const vehicles = ref([])
-  let initPromise = null
-
-  async function init() {
-    if (initPromise) return initPromise
-    initPromise = (async () => {
-      try {
-        const raw = await api.load('vehicles')
-        vehicles.value = migrate(raw)
-      } catch (err) {
-        console.warn('[vehicles] server unavailable:', err.message)
-      }
-    })()
-    return initPromise
-  }
-
-  function _save() { api.save('vehicles', vehicles.value) }
-
-  function add(vehicle) {
-    vehicles.value.push({ ...vehicle, id: Date.now().toString() })
-    _save()
-  }
-
-  function update(id, data) {
-    const idx = vehicles.value.findIndex(v => v.id === id)
-    if (idx !== -1) vehicles.value[idx] = { ...vehicles.value[idx], ...data }
-    _save()
-  }
-
-  function remove(id) {
-    vehicles.value = vehicles.value.filter(v => v.id !== id)
-    _save()
-  }
+  const c = useCollection('vehicles', migrate)
 
   function setPret(id, commentaire) {
-    const v = vehicles.value.find(v => v.id === id)
-    if (v) { v.statut = 'en prêt'; v.commentairePret = commentaire; _save() }
+    c.mutate(id, v => { v.statut = 'en prêt'; v.commentairePret = commentaire })
   }
 
   function liberer(id) {
-    const v = vehicles.value.find(v => v.id === id)
-    if (v) { v.statut = 'libre'; v.commentairePret = ''; _save() }
+    c.mutate(id, v => { v.statut = 'libre'; v.commentairePret = '' })
   }
 
-  return { vehicles, init, add, update, remove, setPret, liberer }
+  return {
+    vehicles: c.items,
+    chargement: c.chargement,
+    chargee: c.chargee,
+    init: c.init,
+    recharger: c.recharger,
+    add: c.add,
+    update: c.update,
+    remove: c.remove,
+    setPret, liberer,
+  }
 })

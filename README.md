@@ -56,6 +56,7 @@ Trois modes de visualisation, deux onglets de ressources (Véhicules / Personnes
 | Style | Tailwind CSS 3 |
 | Backend | Express 4 (Node.js) |
 | Stockage | Fichiers JSON (`data/`) avec mutex async et écriture atomique |
+| Tests | Vitest + Vue Test Utils |
 
 ---
 
@@ -70,7 +71,6 @@ Trois modes de visualisation, deux onglets de ressources (Véhicules / Personnes
 
 ```bash
 # Cloner ou copier le projet, puis :
-cd app
 npm install
 ```
 
@@ -88,7 +88,21 @@ Cette commande démarre en parallèle :
 
 Ouvrir **http://localhost:5173** dans le navigateur.
 
-> Les données sont stockées dans le dossier `data/` à la racine du projet (créé automatiquement). Au premier lancement sans données existantes, des données de démonstration sont chargées.
+> Les données sont stockées dans le dossier `data/` à la racine du projet (créé automatiquement, non versionné). Au premier lancement, chaque collection absente est initialisée depuis `data.example/`.
+
+---
+
+## Tests
+
+```bash
+npm test          # une passe
+npm run test:watch
+```
+
+La suite couvre les helpers de date et la logique de disponibilité, la
+validation côté serveur, le store de collection (versions, conflits, garde
+anti-écrasement), la navigation du calendrier et le serveur de bout en bout
+(authentification, validation, concurrence).
 
 ---
 
@@ -110,46 +124,97 @@ node server.js
 
 Ouvrir **http://localhost:3000**.
 
-Pour changer le port :
+### Configuration
+
+| Variable | Défaut | Rôle |
+|----------|--------|------|
+| `PORT` | `3000` | Port d'écoute |
+| `DATA_DIR` | `./data` | Dossier des fichiers JSON |
+| `SEED_DIR` | `./data.example` | Données de démonstration du premier lancement |
+| `CT_TOKEN` | *(vide)* | Clé d'accès à l'API — voir ci-dessous |
+| `CORS_ORIGIN` | *(vide)* | Origine autorisée si le frontend est servi ailleurs |
 
 ```bash
-PORT=8080 node server.js
+PORT=8080 CT_TOKEN=une-cle-longue-et-aleatoire node server.js
 ```
+
+### Sécurité
+
+L'API n'est **pas** protégée par défaut : c'est confortable en local, mais un
+`PUT /api/persons` remplace l'intégralité d'une collection. Dès que
+l'application est accessible depuis un réseau, définissez `CT_TOKEN` :
+
+```bash
+CT_TOKEN="$(openssl rand -hex 24)" node server.js
+```
+
+Le navigateur demande alors la clé au premier accès et la conserve
+localement. Sans `CT_TOKEN`, le serveur affiche un avertissement au démarrage.
+
+En développement, Vite proxifie `/api` vers le serveur Express : les requêtes
+sont de même origine et aucun en-tête CORS n'est nécessaire. `CORS_ORIGIN`
+n'est utile que si le frontend est servi depuis une autre origine.
+
+### Modifications concurrentes
+
+Chaque lecture renvoie une version (`ETag`) et chaque écriture doit la
+présenter (`If-Match`). Si deux onglets modifient la même collection, le
+second reçoit un `409` et l'interface propose de recharger, au lieu d'écraser
+silencieusement le travail du premier.
 
 ---
 
 ## Structure du projet
 
 ```
-app/
-├── data/                  # Données JSON (créé automatiquement)
-│   ├── persons.json
-│   ├── vehicles.json
-│   └── missions.json
+ct_manager/
+├── data/                  # Données de travail (créé au 1er lancement, non versionné)
+├── data.example/          # Données de démonstration servant d'amorçage
 ├── src/
-│   ├── api.js             # Client HTTP (load / save)
-│   ├── utils.js           # Helpers partagés (formatDT, getMissionStatut, …)
+│   ├── api.js             # Client HTTP (clé d'accès, versions, erreurs typées)
+│   ├── datetime.js        # Dates en heure locale (jamais toISOString)
+│   ├── availability.js    # Règles métier : statuts et disponibilité
+│   ├── id.js              # Génération d'identifiants
 │   ├── stores/            # Stores Pinia
+│   │   ├── collection.js  # Squelette commun aux trois collections
+│   │   ├── clock.js       # Horloge réactive partagée
+│   │   ├── sync.js        # État de synchronisation (erreurs, conflits)
 │   │   ├── persons.js
 │   │   ├── vehicles.js
 │   │   └── missions.js
 │   ├── components/
-│   │   ├── common/        # BaseModal, ConfirmModal, StatusBadge
+│   │   ├── common/        # BaseModal, ConfirmModal, StatusBadge, ListPlaceholder, AccessKeyModal
 │   │   ├── persons/       # PersonCard, PersonForm, CongesModal, PersonIndisponibleModal
 │   │   ├── vehicles/      # VehicleCard, VehicleForm, LoanModal
 │   │   ├── missions/      # MissionCard, MissionForm
 │   │   └── calendar/      # CalendarGrid (mois), CalendarTimeline (jour/semaine)
-│   └── views/
-│       ├── DashboardView.vue
-│       ├── PersonsView.vue
-│       ├── VehiclesView.vue
-│       ├── MissionsView.vue
-│       └── CalendarView.vue
+│   ├── views/
+│   │   ├── DashboardView.vue
+│   │   ├── PersonsView.vue
+│   │   ├── VehiclesView.vue
+│   │   ├── MissionsView.vue
+│   │   └── CalendarView.vue
+│   └── __tests__/         # Tests unitaires et de composants
+├── test/                  # Tests d'intégration du serveur
 ├── server.js              # Serveur Express
+├── validation.js          # Validation des collections reçues par l'API
 ├── vite.config.js
+├── vitest.config.js
 ├── tailwind.config.js
 └── package.json
 ```
+
+### Conventions
+
+- **Les dates sont des chaînes locales** (`YYYY-MM-DDTHH:mm`), comparables
+  directement. `toISOString()` est proscrit pour les produire : il convertit
+  en UTC et décale le résultat d'une à deux heures — donc parfois d'un jour.
+  Tout passe par `src/datetime.js`.
+- **L'instant courant vient de `useClock()`**, jamais de `new Date()` dans un
+  `computed` : Vue ne trace pas le temps comme dépendance, et les statuts
+  cesseraient de se rafraîchir.
+- **Les statuts ne sont pas stockés** : mission (planifiée / en cours /
+  terminée) et véhicule (libre / en mission) se déduisent des dates.
 
 ---
 
@@ -165,7 +230,8 @@ cp -r data/ data_backup/
 cp -r data_backup/ data/
 ```
 
-Pour repartir des données de démonstration, supprimer les fichiers JSON :
+Pour repartir des données de démonstration, supprimer les fichiers JSON : ils
+seront réamorcés depuis `data.example/` au prochain démarrage.
 
 ```bash
 rm data/*.json

@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMissionsStore } from '../../stores/missions.js'
-import { getMissionStatut } from '../../utils.js'
+import { useClock } from '../../stores/clock.js'
+import { getVehiculeStatut, missionActuelleDeVehicule } from '../../availability.js'
 import StatusBadge from '../common/StatusBadge.vue'
 
 const props = defineProps({ vehicle: { type: Object, required: true } })
@@ -10,17 +11,15 @@ defineEmits(['edit', 'delete', 'pret', 'liberer'])
 
 const router = useRouter()
 const missionsStore = useMissionsStore()
+const { nowStr } = useClock()
 
 const missionEnCours = computed(() =>
-  missionsStore.missions.find(m =>
-    getMissionStatut(m) === 'en cours' && m.vehicules?.some(v => v.vehiculeId === props.vehicle.id)
-  )
+  missionActuelleDeVehicule(props.vehicle.id, missionsStore.missions, nowStr.value)
 )
 
-const effectiveStatut = computed(() => {
-  if (props.vehicle.statut === 'en prêt') return 'en prêt'
-  return missionEnCours.value ? 'en mission' : 'libre'
-})
+const effectiveStatut = computed(() =>
+  getVehiculeStatut(props.vehicle, missionsStore.missions, nowStr.value)
+)
 
 const CATEGORIE_LABELS = {
   'léger-route': 'Léger (route)',
@@ -62,25 +61,25 @@ const CATEGORIE_LABELS = {
 
       <div class="flex gap-1 shrink-0">
         <template v-if="effectiveStatut === 'libre'">
-          <button @click="$emit('pret')" class="icon-btn" title="Mettre en prêt">
+          <button @click="$emit('pret')" class="icon-btn" title="Mettre en prêt" aria-label="Mettre en prêt">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
             </svg>
           </button>
         </template>
         <template v-if="vehicle.statut === 'en prêt'">
-          <button @click="$emit('liberer')" class="icon-btn text-green-600 hover:text-green-800" title="Libérer">
+          <button @click="$emit('liberer')" class="icon-btn text-green-600 hover:text-green-800" title="Libérer" aria-label="Libérer le véhicule">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </button>
         </template>
-        <button @click="$emit('edit')" class="icon-btn">
+        <button @click="$emit('edit')" aria-label="Modifier le véhicule" title="Modifier" class="icon-btn">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
           </svg>
         </button>
-        <button @click="$emit('delete')" class="icon-btn text-red-400 hover:text-red-600">
+        <button @click="$emit('delete')" aria-label="Supprimer le véhicule" title="Supprimer" class="icon-btn text-red-400 hover:text-red-600">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
           </svg>

@@ -36,23 +36,23 @@ function submit() {
   <BaseModal :title="vehicle ? 'Modifier le véhicule' : 'Nouveau véhicule'" @close="$emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
       <div>
-        <label class="label">Nom / Modèle *</label>
-        <input v-model="form.nom" class="input" placeholder="Ex: VW Golf" required />
+        <label class="label" for="vehicule-nom">Nom / Modèle *</label>
+        <input id="vehicule-nom" v-model="form.nom" class="input" placeholder="Ex: VW Golf" required />
       </div>
 
       <div>
-        <label class="label">Immatriculation</label>
-        <input v-model="form.immatriculation" class="input" placeholder="Ex: MIL-001" />
+        <label class="label" for="vehicule-immat">Immatriculation</label>
+        <input id="vehicule-immat" v-model="form.immatriculation" class="input" placeholder="Ex: MIL-001" />
       </div>
 
       <div>
-        <label class="label">Nombre de places (passagers)</label>
-        <input v-model.number="form.places" type="number" min="1" max="99" class="input" placeholder="Ex: 9" />
+        <label class="label" for="vehicule-places">Nombre de places (passagers)</label>
+        <input id="vehicule-places" v-model.number="form.places" type="number" min="1" max="99" class="input" placeholder="Ex: 9" />
       </div>
 
       <div>
-        <label class="label">Catégorie</label>
-        <select v-model="form.categorie" class="input">
+        <label class="label" for="vehicule-categorie">Catégorie</label>
+        <select id="vehicule-categorie" v-model="form.categorie" class="input">
           <option value="léger-route">Léger (route) — permis 920+</option>
           <option value="léger-tt">Léger (tout-terrain) — permis 921+</option>
           <option value="moyen">Moyen ≤ 7.5t — permis 930+</option>
@@ -61,16 +61,16 @@ function submit() {
       </div>
 
       <div>
-        <label class="label">Statut</label>
-        <select v-model="form.statut" class="input">
+        <label class="label" for="vehicule-statut">Statut</label>
+        <select id="vehicule-statut" v-model="form.statut" class="input">
           <option value="libre">Libre</option>
           <option value="en prêt">En prêt</option>
         </select>
       </div>
 
       <div v-if="form.statut === 'en prêt'">
-        <label class="label">Commentaire de prêt *</label>
-        <textarea v-model="form.commentairePret" class="input" rows="2" placeholder="À qui, jusqu'à quand..." required />
+        <label class="label" for="vehicule-commentaire">Commentaire de prêt *</label>
+        <textarea id="vehicule-commentaire" v-model="form.commentairePret" class="input" rows="2" placeholder="À qui, jusqu'à quand..." required />
       </div>
 
       <div class="flex justify-end gap-3 pt-2">
