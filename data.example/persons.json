@@ -3,7 +3,10 @@
     "grade": "Sgt",
     "nom": "Müller",
     "prenom": "Andreas",
-    "permis": ["930", "930E"],
+    "permis": [
+      "930",
+      "930E"
+    ],
     "notes": "",
     "id": "2001001",
     "conges": [],
@@ -14,7 +17,10 @@
     "grade": "Sgt",
     "nom": "Favre",
     "prenom": "Caroline",
-    "permis": ["930E", "920E"],
+    "permis": [
+      "930E",
+      "920E"
+    ],
     "notes": "",
     "id": "2001002",
     "conges": [],
@@ -25,10 +31,19 @@
     "grade": "Sgt",
     "nom": "Rossier",
     "prenom": "Marc",
-    "permis": ["931", "930E"],
+    "permis": [
+      "931",
+      "930E"
+    ],
     "notes": "",
     "id": "2001003",
-    "conges": [],
+    "conges": [
+      {
+        "id": "5001001",
+        "dateDebut": "2026-05-06T00:00",
+        "dateFin": "2026-05-12T23:59"
+      }
+    ],
     "indisponible": false,
     "commentaireIndisponible": ""
   },
@@ -36,7 +51,10 @@
     "grade": "Sdt",
     "nom": "Dubois",
     "prenom": "Pierre",
-    "permis": ["920", "920E"],
+    "permis": [
+      "920",
+      "920E"
+    ],
     "notes": "",
     "id": "2001004",
     "conges": [],
@@ -47,7 +65,9 @@
     "grade": "Sdt",
     "nom": "Martin",
     "prenom": "Sophie",
-    "permis": ["920"],
+    "permis": [
+      "920"
+    ],
     "notes": "",
     "id": "2001005",
     "conges": [],
@@ -58,7 +78,10 @@
     "grade": "Sdt",
     "nom": "Leroy",
     "prenom": "Thomas",
-    "permis": ["921", "920"],
+    "permis": [
+      "921",
+      "920"
+    ],
     "notes": "",
     "id": "2001006",
     "conges": [],
@@ -69,7 +92,9 @@
     "grade": "Sdt",
     "nom": "Bonvin",
     "prenom": "Lucie",
-    "permis": ["920E"],
+    "permis": [
+      "920E"
+    ],
     "notes": "",
     "id": "2001007",
     "conges": [],
@@ -80,7 +105,9 @@
     "grade": "Sdt",
     "nom": "Fontana",
     "prenom": "Roberto",
-    "permis": ["930"],
+    "permis": [
+      "930"
+    ],
     "notes": "",
     "id": "2001008",
     "conges": [],
@@ -91,7 +118,10 @@
     "grade": "Sdt",
     "nom": "Jacquemoud",
     "prenom": "Florian",
-    "permis": ["921E", "921"],
+    "permis": [
+      "921E",
+      "921"
+    ],
     "notes": "",
     "id": "2001009",
     "conges": [],
@@ -102,7 +132,9 @@
     "grade": "Sdt",
     "nom": "Michaud",
     "prenom": "Élise",
-    "permis": ["920"],
+    "permis": [
+      "920"
+    ],
     "notes": "",
     "id": "2001010",
     "conges": [],
@@ -113,7 +145,10 @@
     "grade": "Sdt",
     "nom": "Tornare",
     "prenom": "Baptiste",
-    "permis": ["920", "921"],
+    "permis": [
+      "920",
+      "921"
+    ],
     "notes": "",
     "id": "2001011",
     "conges": [],
@@ -124,10 +159,19 @@
     "grade": "Sdt",
     "nom": "Magnin",
     "prenom": "Nathalie",
-    "permis": ["920E", "921E"],
+    "permis": [
+      "920E",
+      "921E"
+    ],
     "notes": "",
     "id": "2001012",
-    "conges": [],
+    "conges": [
+      {
+        "id": "5001002",
+        "dateDebut": "2026-05-22T00:00",
+        "dateFin": "2026-05-27T23:59"
+      }
+    ],
     "indisponible": false,
     "commentaireIndisponible": ""
   },
@@ -135,7 +179,10 @@
     "grade": "Sdt",
     "nom": "Blanchard",
     "prenom": "Sébastien",
-    "permis": ["930", "920"],
+    "permis": [
+      "930",
+      "920"
+    ],
     "notes": "",
     "id": "2001013",
     "conges": [],

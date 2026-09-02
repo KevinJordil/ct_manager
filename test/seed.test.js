@@ -57,4 +57,20 @@ describe('amorçage des données de démonstration', () => {
     const res = await fetch(`${BASE}/api/persons`)
     expect(res.status).toBe(200)
   })
+
+  it('recale les dates pour qu\'une mission soit en cours dès l\'installation', async () => {
+    const missions = await (await fetch(`${BASE}/api/missions`)).json()
+    const maintenant = new Date()
+    const pad = n => String(n).padStart(2, '0')
+    const now = `${maintenant.getFullYear()}-${pad(maintenant.getMonth() + 1)}-${pad(maintenant.getDate())}` +
+      `T${pad(maintenant.getHours())}:${pad(maintenant.getMinutes())}`
+
+    const enCours = missions.filter(m => m.dateDebut <= now && now <= m.dateFin)
+    const passees = missions.filter(m => m.dateFin < now)
+    const aVenir = missions.filter(m => m.dateDebut > now)
+
+    expect(enCours.length).toBeGreaterThan(0)
+    expect(passees.length).toBeGreaterThan(0)
+    expect(aVenir.length).toBeGreaterThan(0)
+  })
 })

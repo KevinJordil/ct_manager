@@ -4,6 +4,7 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { ENTITES, valideCollection } from './validation.js'
+import { recaler } from './seed.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, 'data')
@@ -184,22 +185,35 @@ app.use((err, _req, res, _next) => {
 })
 
 /**
- * Au premier lancement, recopie les données de démonstration.
- * Une collection déjà présente n'est jamais écrasée.
+ * Au premier lancement, installe les données de démonstration.
+ * Une collection déjà présente n'est jamais écrasée. Les dates du jeu
+ * d'exemple sont recalées sur la date du jour (voir seed.js), sans quoi une
+ * installation faite longtemps après n'afficherait que des missions passées.
  */
 async function amorcerDonnees() {
+  const aAmorcer = []
   for (const entity of ENTITES) {
-    const cible = fichierDe(entity)
     try {
-      await fs.access(cible)
-      continue // déjà présent
-    } catch { /* à amorcer */ }
-    try {
-      await fs.copyFile(path.join(SEED_DIR, `${entity}.json`), cible)
-      console.log(`Données de démonstration chargées : ${entity}`)
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err // pas de seed disponible : collection vide
+      await fs.access(fichierDe(entity))
+    } catch {
+      aAmorcer.push(entity)
     }
+  }
+  if (!aAmorcer.length) return
+
+  const collections = {}
+  for (const entity of aAmorcer) {
+    try {
+      collections[entity] = JSON.parse(await fs.readFile(path.join(SEED_DIR, `${entity}.json`), 'utf-8'))
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err // pas de jeu d'exemple : collection vide
+    }
+  }
+  if (!Object.keys(collections).length) return
+
+  for (const [entity, données] of Object.entries(recaler(collections))) {
+    await ecrire(entity, JSON.stringify(données, null, 2))
+    console.log(`Données de démonstration chargées : ${entity}`)
   }
 }
 

@@ -166,7 +166,7 @@
     "titre": "Transfert de troupes Frauenfeld",
     "description": "Déplacement de l'ensemble du personnel vers la place d'armes de Frauenfeld pour l'exercice interarmes.",
     "dateDebut": "2026-05-05T07:00",
-    "dateFin": "2026-05-07T18:00",
+    "dateFin": "2026-05-09T18:00",
     "notes": "Convoi en colonne. Vitesse maximale 80 km/h. Pause obligatoire à Winterthour.",
     "vehicules": [
       {

@@ -1,8 +1,39 @@
 # Gestion CT — Application de gestion des ressources
 
-Application web de gestion des ressources d'une compagnie de transport (CT) : personnels, véhicules et missions, avec calendrier intégré.
+Application web de gestion des ressources d'une compagnie de transport (CT) :
+personnels, véhicules et missions, avec calendrier intégré. Les statuts
+(disponible, en mission, en congé, en prêt) se déduisent des dates saisies,
+et les conflits d'affectation sont détectés à la saisie.
 
-Auteur: Kévin Jordil
+Vue 3 · Pinia · Tailwind · Express · stockage en fichiers JSON, sans base de
+données à installer.
+
+Auteur : Kévin Jordil
+
+## Aperçu
+
+**Tableau de bord** — disponibilités en un coup d'œil, missions en cours et
+alertes automatiques (chauffeur en congé, véhicule prêté pendant une mission).
+
+![Tableau de bord](docs/dashboard.png)
+
+**Calendrier** — vues jour, semaine et mois, sur les véhicules ou le
+personnel. Les chevauchements sont empilés sur plusieurs pistes et la ligne
+rouge marque l'heure actuelle.
+
+![Calendrier](docs/calendrier.png)
+
+**Missions** — filtrage par statut, affectation de plusieurs véhicules avec
+ou sans chauffeur, et contrôle des permis requis par catégorie de véhicule.
+
+![Missions](docs/missions.png)
+
+**Personnes** — permis militaires suisses, congés et indisponibilités.
+
+![Personnes](docs/personnes.png)
+
+> Les captures utilisent le jeu de démonstration livré avec le projet, dont
+> les dates sont recalées sur le jour de l'installation.
 
 ## Fonctionnalités
 
@@ -88,7 +119,11 @@ Cette commande démarre en parallèle :
 
 Ouvrir **http://localhost:5173** dans le navigateur.
 
-> Les données sont stockées dans le dossier `data/` à la racine du projet (créé automatiquement, non versionné). Au premier lancement, chaque collection absente est initialisée depuis `data.example/`.
+> Les données sont stockées dans le dossier `data/` à la racine du projet
+> (créé automatiquement, non versionné). Au premier lancement, chaque
+> collection absente est initialisée depuis `data.example/`, avec les dates
+> recalées sur le jour de l'installation : le tableau de bord et le calendrier
+> montrent donc immédiatement une activité réaliste.
 
 ---
 
@@ -100,9 +135,10 @@ npm run test:watch
 ```
 
 La suite couvre les helpers de date et la logique de disponibilité, la
-validation côté serveur, le store de collection (versions, conflits, garde
-anti-écrasement), la navigation du calendrier et le serveur de bout en bout
-(authentification, validation, concurrence).
+validation côté serveur, le recalage du jeu de démonstration, le store de
+collection (versions, conflits, garde anti-écrasement), la navigation du
+calendrier, les vues, et le serveur de bout en bout (authentification,
+validation, concurrence).
 
 ---
 
@@ -170,6 +206,7 @@ silencieusement le travail du premier.
 ct_manager/
 ├── data/                  # Données de travail (créé au 1er lancement, non versionné)
 ├── data.example/          # Données de démonstration servant d'amorçage
+├── docs/                  # Captures d'écran du README
 ├── src/
 │   ├── api.js             # Client HTTP (clé d'accès, versions, erreurs typées)
 │   ├── datetime.js        # Dates en heure locale (jamais toISOString)
@@ -198,6 +235,7 @@ ct_manager/
 ├── test/                  # Tests d'intégration du serveur
 ├── server.js              # Serveur Express
 ├── validation.js          # Validation des collections reçues par l'API
+├── seed.js                # Recalage des dates du jeu de démonstration
 ├── vite.config.js
 ├── vitest.config.js
 ├── tailwind.config.js

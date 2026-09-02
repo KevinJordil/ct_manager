@@ -174,8 +174,8 @@
     "nom": "Renault Mégane",
     "immatriculation": "M89309",
     "categorie": "léger-route",
-    "statut": "libre",
-    "commentairePret": "",
+    "statut": "en prêt",
+    "commentairePret": "Prêté à la cp EM jusqu'à fin de semaine",
     "places": 4,
     "id": "3001020"
   }
