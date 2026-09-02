@@ -109,7 +109,8 @@
       "reason": "Motif d'indisponibilité",
       "placeholder": "Ex : Assigné à la garde, affecté à une section, formation…",
       "person": "Personne :"
-    }
+    },
+    "deleteImpact": "Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} missions. Elle en sera retirée."
   },
   "vehicles": {
     "title": "Véhicules",
@@ -148,7 +149,8 @@
       "note": "Commentaire de prêt",
       "notePlaceholder": "À qui, jusqu'à quand…",
       "vehicle": "Véhicule :"
-    }
+    },
+    "deleteImpact": "Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} missions. Il en sera retiré."
   },
   "missions": {
     "title": "Missions",
@@ -184,8 +186,9 @@
     "noDriver": "sans chauffeur",
     "requiredLicenses": "Permis requis : {list}",
     "noQualifiedDriver": "Aucun chauffeur qualifié disponible sur ces dates",
-    "capacity": "{seats} places",
-    "drivers": "{count} conducteur | {count} conducteur | {count} conducteurs"
+    "capacity": "{seats} place | {seats} place | {seats} places",
+    "drivers": "{count} conducteur | {count} conducteur | {count} conducteurs",
+    "droppedAssignments": "Les nouvelles dates ne conviennent plus à {count} affectation, qui a été retirée. | Les nouvelles dates ne conviennent plus à {count} affectation, qui a été retirée. | Les nouvelles dates ne conviennent plus à {count} affectations, qui ont été retirées."
   },
   "calendar": {
     "title": "Calendrier",
@@ -267,7 +270,8 @@
     },
     "tooManyRequests": "Trop de demandes envoyées. Réessayez dans quelques minutes.",
     "requestsFull": "La file de demandes est pleine. Contactez l'administration.",
-    "noImage": "Aucun plan enregistré"
+    "noImage": "Aucun plan enregistré",
+    "tooManyAttempts": "Trop de tentatives. Réessayez dans {seconds} secondes."
   },
   "auth": {
     "title": "Connexion",
@@ -336,7 +340,8 @@
       "truck-personnel": "Camion — personnes",
       "truck-cargo": "Camion — matériel",
       "other": "Autre (préciser en commentaire)"
-    }
+    },
+    "vehicleCount": "{count} véhicule | {count} véhicule | {count} véhicules"
   },
   "park": {
     "title": "Vue de parc",

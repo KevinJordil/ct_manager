@@ -227,6 +227,7 @@ Ouvrir **http://localhost:3000**.
 | `SEED_DIR` | `./data.example` | Données de démonstration du premier lancement |
 | `CT_PASSWORD` | *(généré)* | Mot de passe de connexion — voir ci-dessous |
 | `CORS_ORIGIN` | *(vide)* | Origine autorisée si le frontend est servi ailleurs |
+| `TRUST_PROXY` | *(vide)* | À définir derrière un reverse proxy — voir ci-dessous |
 
 ```bash
 PORT=8080 CT_PASSWORD=un-mot-de-passe-solide node server.js
@@ -262,6 +263,15 @@ Le navigateur ne conserve jamais le mot de passe. La connexion l'échange
 contre un **jeton de session** aléatoire, sans lien avec lui, valable
 30 jours et révocable côté serveur : se déconnecter invalide immédiatement
 ce jeton sans affecter les autres sessions.
+
+La connexion est **limitée à 10 tentatives par quart d'heure et par adresse**.
+Une tentative réussie remet le compteur à zéro, de sorte qu'un utilisateur
+légitime qui se trompe une fois n'est jamais pénalisé.
+
+> **Derrière un reverse proxy**, définissez `TRUST_PROXY` (par exemple
+> `TRUST_PROXY=1`), sans quoi toutes les requêtes semblent venir de l'adresse
+> du proxy : les utilisateurs se bloqueraient mutuellement, et la limite
+> deviendrait contournable.
 
 En développement, Vite proxifie `/api` vers le serveur Express : les requêtes
 sont de même origine et aucun en-tête CORS n'est nécessaire. `CORS_ORIGIN`

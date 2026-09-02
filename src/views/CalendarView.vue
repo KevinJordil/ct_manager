@@ -195,7 +195,7 @@ const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEven
         <button v-for="mode in VIEW_MODES" :key="mode"
           @click="viewMode = mode"
           :aria-pressed="viewMode === mode"
-          :class="['px-3 py-1.5 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200',
+          :class="['px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200',
             viewMode === mode ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50']">
           {{ $t(`calendar.views.${mode}`) }}
         </button>
@@ -205,7 +205,7 @@ const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEven
         <button v-for="tab in TABS" :key="tab"
           @click="activeTab = tab"
           :aria-pressed="activeTab === tab"
-          :class="['px-3 py-1.5 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200',
+          :class="['px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200',
             activeTab === tab ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50']">
           {{ $t(`calendar.tabs.${tab}`) }}
         </button>
@@ -223,7 +223,7 @@ const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEven
       </button>
       <span class="text-sm font-semibold text-gray-800 min-w-[160px]">{{ periodLabel }}</span>
       <button @click="goToToday"
-        class="text-xs px-2.5 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+        class="text-xs px-3 min-h-[36px] rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
         {{ $t('calendar.today') }}
       </button>
     </div>

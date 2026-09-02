@@ -534,3 +534,27 @@ describe('configuration', () => {
     if (res.status === 400) expect((await res.json()).code).not.toBe('validation.invalidNested')
   })
 })
+
+// ── Brute force ──
+
+describe('login throttling', () => {
+  it('blocks repeated wrong passwords and says how long to wait', async () => {
+    let blocked = null
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const res = await signIn(`wrong-${attempt}`)
+      if (res.status === 429) { blocked = res; break }
+      expect(res.status).toBe(401)
+    }
+    expect(blocked).not.toBeNull()
+
+    const body = await blocked.json()
+    expect(body.code).toBe('tooManyAttempts')
+    expect(body.params.seconds).toBeGreaterThan(0)
+    expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(0)
+  })
+
+  it('refuses the right password too once the budget is spent', async () => {
+    // The previous test exhausted the budget for this client.
+    expect((await signIn()).status).toBe(429)
+  })
+})

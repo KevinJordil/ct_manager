@@ -140,12 +140,12 @@ async function reset() {
             </span>
           </span>
           <button type="button" @click="moveType(index, -1)" :disabled="index === 0"
-            :aria-label="$t('config.moveUp')" class="icon-btn disabled:opacity-30">↑</button>
+            :aria-label="$t('config.moveUp')" class="icon-btn min-w-[36px] disabled:opacity-30">↑</button>
           <button type="button" @click="moveType(index, 1)"
             :disabled="index === draft.requestVehicleTypes.length - 1"
-            :aria-label="$t('config.moveDown')" class="icon-btn disabled:opacity-30">↓</button>
+            :aria-label="$t('config.moveDown')" class="icon-btn min-w-[36px] disabled:opacity-30">↓</button>
           <button type="button" @click="removeType(index)" :aria-label="$t('actions.delete')"
-            class="icon-btn text-red-400 hover:text-red-600">✕</button>
+            class="icon-btn min-w-[36px] text-red-400 hover:text-red-600">✕</button>
         </li>
       </ul>
 
@@ -178,7 +178,7 @@ async function reset() {
           {{ code }}
           <button type="button" @click="removeLicense(code)"
             :aria-label="`${$t('actions.delete')} ${code}`"
-            class="text-red-400 hover:text-red-600">✕</button>
+            class="text-red-400 hover:text-red-600 inline-flex items-center justify-center min-w-[36px] min-h-[36px] -my-2 -mr-2 rounded">✕</button>
         </span>
       </div>
 
@@ -214,12 +214,15 @@ async function reset() {
             <tbody>
               <tr v-for="category in VEHICLE_CATEGORIES" :key="category" class="border-t border-gray-100">
                 <td class="pr-4 py-1.5 text-gray-700">{{ $t(`vehicles.categories.${category}`) }}</td>
-                <td v-for="code in draft.licenses" :key="code" class="px-2 py-1.5 text-center">
-                  <input type="checkbox"
-                    :checked="matrix[category]?.includes(code)"
-                    @change="toggleMatrix(matrix, category, code)"
-                    :aria-label="`${$t(`vehicles.categories.${category}`)} — ${code}`"
-                    class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                <td v-for="code in draft.licenses" :key="code" class="px-1 py-0.5 text-center">
+                  <!-- The label carries the tap area; the box stays small. -->
+                  <label class="flex items-center justify-center min-w-[36px] min-h-[36px] cursor-pointer rounded hover:bg-gray-50">
+                    <input type="checkbox"
+                      :checked="matrix[category]?.includes(code)"
+                      @change="toggleMatrix(matrix, category, code)"
+                      :aria-label="`${$t(`vehicles.categories.${category}`)} — ${code}`"
+                      class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  </label>
                 </td>
               </tr>
             </tbody>

@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePersonsStore } from '../stores/persons.js'
 import { useMissionsStore } from '../stores/missions.js'
 import PersonCard from '../components/persons/PersonCard.vue'
@@ -11,6 +12,7 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
+const { t } = useI18n()
 
 onMounted(() => {
   store.init()
@@ -39,7 +41,21 @@ function onSave(data) {
   showForm.value = false
 }
 
+/** Missions that would be left with a dead reference by this deletion */
+const impactedMissions = computed(() =>
+  deletedId.value ? missionsStore.missionsWithPerson(deletedId.value).length : 0
+)
+
+const deleteMessage = computed(() => {
+  const base = t('persons.deleteConfirm')
+  if (!impactedMissions.value) return base
+  return `${base} ${t('persons.deleteImpact', impactedMissions.value, { count: impactedMissions.value })}`
+})
+
 function onDelete() {
+  // Clear the references first, so no mission is ever left pointing at a
+  // person who no longer exists.
+  missionsStore.forgetPerson(deletedId.value)
   store.remove(deletedId.value)
   deletedId.value = null
 }
@@ -93,7 +109,7 @@ function confirmUnavailable(note) {
     <ConfirmModal
       v-if="deletedId"
       :title="$t('persons.deleteTitle')"
-      :message="$t('persons.deleteConfirm')"
+      :message="deleteMessage"
       @confirm="onDelete"
       @cancel="deletedId = null"
     />

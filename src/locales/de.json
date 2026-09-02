@@ -109,7 +109,8 @@
       "reason": "Grund der Nichtverfügbarkeit",
       "placeholder": "z. B. Wachdienst, einer Sektion zugeteilt, Ausbildung…",
       "person": "Person:"
-    }
+    },
+    "deleteImpact": "Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsatz beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt."
   },
   "vehicles": {
     "title": "Fahrzeuge",
@@ -148,7 +149,8 @@
       "note": "Bemerkung zur Ausleihe",
       "notePlaceholder": "An wen, bis wann…",
       "vehicle": "Fahrzeug:"
-    }
+    },
+    "deleteImpact": "Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsatz eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt."
   },
   "missions": {
     "title": "Einsätze",
@@ -184,8 +186,9 @@
     "noDriver": "ohne Fahrer",
     "requiredLicenses": "Erforderliche Ausweise: {list}",
     "noQualifiedDriver": "Kein qualifizierter Fahrer an diesen Daten verfügbar",
-    "capacity": "{seats} Plätze",
-    "drivers": "{count} Fahrer | {count} Fahrer | {count} Fahrer"
+    "capacity": "{seats} Plätze | {seats} Platz | {seats} Plätze",
+    "drivers": "{count} Fahrer | {count} Fahrer | {count} Fahrer",
+    "droppedAssignments": "Die neuen Daten passen nicht mehr zu {count} Zuteilungen, die entfernt wurden. | Die neuen Daten passen nicht mehr zu {count} Zuteilung, die entfernt wurde. | Die neuen Daten passen nicht mehr zu {count} Zuteilungen, die entfernt wurden."
   },
   "calendar": {
     "title": "Kalender",
@@ -267,7 +270,8 @@
     },
     "tooManyRequests": "Zu viele Anfragen gesendet. Versuchen Sie es in einigen Minuten erneut.",
     "requestsFull": "Die Anfrageliste ist voll. Wenden Sie sich an die Verwaltung.",
-    "noImage": "Kein Plan gespeichert"
+    "noImage": "Kein Plan gespeichert",
+    "tooManyAttempts": "Zu viele Versuche. Versuchen Sie es in {seconds} Sekunden erneut."
   },
   "auth": {
     "title": "Anmeldung",
@@ -336,7 +340,8 @@
       "truck-personnel": "Lastwagen — Personen",
       "truck-cargo": "Lastwagen — Material",
       "other": "Andere (in der Bemerkung angeben)"
-    }
+    },
+    "vehicleCount": "{count} Fahrzeuge | {count} Fahrzeug | {count} Fahrzeuge"
   },
   "park": {
     "title": "Parkübersicht",

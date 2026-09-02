@@ -12,6 +12,7 @@ import {
 import { withDefaults } from './src/config.js'
 import { reanchor } from './seed.js'
 import { createAuth, resolvePassword } from './auth.js'
+import { createRateLimiter } from './rate-limit.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, 'data')
@@ -25,6 +26,9 @@ const auth = createAuth({ password: ADMIN_PASSWORD })
 
 const app = express()
 app.disable('x-powered-by')
+// Behind a reverse proxy, req.ip must come from X-Forwarded-For, otherwise
+// every client shares the proxy's address and they throttle one another.
+if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY)
 // The site plan travels as a data URL and is far larger than any collection,
 // so it gets its own, wider limit.
 app.use('/api/parc/image', express.json({ limit: '16mb' }))
@@ -67,31 +71,18 @@ function localDateTime(date = new Date()) {
     `T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-// ── Rate limiting for the public form ──
-// The submission route is the only one open without a session: without a
-// limit, anyone could grow the file indefinitely.
+// ── Rate limits ──
+// Two routes are reachable without a session and both need a budget: the
+// public submission form, and the login itself — a single password guards
+// the whole application, so unlimited guessing cannot be allowed.
 
 const MAX_STORED_REQUESTS = 2000
-const RATE_WINDOW_MS = 10 * 60 * 1000
-const RATE_MAX_PER_WINDOW = 5
 
-const submissionsByClient = new Map() // client key → timestamps
+const submissionLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 5 })
+const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 })
 
-function rateLimited(key, now = Date.now()) {
-  const recent = (submissionsByClient.get(key) ?? []).filter(at => now - at < RATE_WINDOW_MS)
-  if (recent.length >= RATE_MAX_PER_WINDOW) {
-    submissionsByClient.set(key, recent)
-    return true
-  }
-  recent.push(now)
-  submissionsByClient.set(key, recent)
-  // Keep the map from growing without bound on a long-running server.
-  if (submissionsByClient.size > 10_000) {
-    for (const [client, times] of submissionsByClient) {
-      if (!times.some(at => now - at < RATE_WINDOW_MS)) submissionsByClient.delete(client)
-    }
-  }
-  return false
+function clientKey(req) {
+  return req.ip ?? 'unknown'
 }
 
 // ── Authentication ──
@@ -100,8 +91,18 @@ function rateLimited(key, now = Date.now()) {
 // account.
 
 app.post('/api/auth/login', (req, res) => {
+  const key = clientKey(req)
+  if (loginLimiter.hit(key)) {
+    const seconds = loginLimiter.retryAfter(key)
+    res.set('Retry-After', String(seconds))
+    return fail(res, 429, 'tooManyAttempts', { seconds }, 'Too many attempts')
+  }
+
   const session = auth.login(req.body?.password)
   if (!session) return fail(res, 401, 'auth.invalidPassword', {}, 'Wrong password')
+
+  // Only failed attempts should consume the budget.
+  loginLimiter.reset(key)
   res.json({ token: session.token, expiresAt: session.expiresAt })
 })
 
@@ -146,7 +147,7 @@ app.post('/api/requests', async (req, res, next) => {
   if (invalid) {
     return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid request')
   }
-  if (rateLimited(req.ip ?? 'unknown')) {
+  if (submissionLimiter.hit(clientKey(req))) {
     return fail(res, 429, 'tooManyRequests', {}, 'Too many requests, try again later')
   }
 

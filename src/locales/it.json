@@ -109,7 +109,8 @@
       "reason": "Motivo dell'indisponibilità",
       "placeholder": "Es. assegnato alla guardia, aggregato a una sezione, formazione…",
       "person": "Persona:"
-    }
+    },
+    "deleteImpact": "Questa persona è impiegata in {count} missioni. Ne sarà rimossa. | Questa persona è impiegata in {count} missione. Ne sarà rimossa. | Questa persona è impiegata in {count} missioni. Ne sarà rimossa."
   },
   "vehicles": {
     "title": "Veicoli",
@@ -148,7 +149,8 @@
       "note": "Commento sul prestito",
       "notePlaceholder": "A chi, fino a quando…",
       "vehicle": "Veicolo:"
-    }
+    },
+    "deleteImpact": "Questo veicolo è impiegato in {count} missioni. Ne sarà rimosso. | Questo veicolo è impiegato in {count} missione. Ne sarà rimosso. | Questo veicolo è impiegato in {count} missioni. Ne sarà rimosso."
   },
   "missions": {
     "title": "Missioni",
@@ -184,8 +186,9 @@
     "noDriver": "senza conducente",
     "requiredLicenses": "Licenze richieste: {list}",
     "noQualifiedDriver": "Nessun conducente qualificato disponibile in queste date",
-    "capacity": "{seats} posti",
-    "drivers": "{count} conducenti | {count} conducente | {count} conducenti"
+    "capacity": "{seats} posti | {seats} posto | {seats} posti",
+    "drivers": "{count} conducenti | {count} conducente | {count} conducenti",
+    "droppedAssignments": "Le nuove date non sono più compatibili con {count} assegnazioni, che sono state rimosse. | Le nuove date non sono più compatibili con {count} assegnazione, che è stata rimossa. | Le nuove date non sono più compatibili con {count} assegnazioni, che sono state rimosse."
   },
   "calendar": {
     "title": "Calendario",
@@ -267,7 +270,8 @@
     },
     "tooManyRequests": "Troppe richieste inviate. Riprova tra qualche minuto.",
     "requestsFull": "La coda delle richieste è piena. Contatta l'amministrazione.",
-    "noImage": "Nessuna piantina salvata"
+    "noImage": "Nessuna piantina salvata",
+    "tooManyAttempts": "Troppi tentativi. Riprova tra {seconds} secondi."
   },
   "auth": {
     "title": "Accesso",
@@ -336,7 +340,8 @@
       "truck-personnel": "Camion — persone",
       "truck-cargo": "Camion — materiale",
       "other": "Altro (specificare nel commento)"
-    }
+    },
+    "vehicleCount": "{count} veicoli | {count} veicolo | {count} veicoli"
   },
   "park": {
     "title": "Vista del parco",

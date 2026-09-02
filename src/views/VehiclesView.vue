@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { useMissionsStore } from '../stores/missions.js'
 import VehicleCard from '../components/vehicles/VehicleCard.vue'
@@ -10,6 +11,7 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const store = useVehiclesStore()
 const missionsStore = useMissionsStore()
+const { t } = useI18n()
 
 onMounted(() => {
   store.init()
@@ -37,7 +39,20 @@ function onSave(data) {
   showForm.value = false
 }
 
+const impactedMissions = computed(() =>
+  deletedId.value ? missionsStore.missionsWithVehicle(deletedId.value).length : 0
+)
+
+const deleteMessage = computed(() => {
+  const base = t('vehicles.deleteConfirm')
+  if (!impactedMissions.value) return base
+  return `${base} ${t('vehicles.deleteImpact', impactedMissions.value, { count: impactedMissions.value })}`
+})
+
 function onDelete() {
+  // Clear the references first: a mission must never point at a vehicle that
+  // no longer exists.
+  missionsStore.forgetVehicle(deletedId.value)
   store.remove(deletedId.value)
   deletedId.value = null
 }
@@ -83,7 +98,7 @@ function confirmLoan(note) {
     <ConfirmModal
       v-if="deletedId"
       :title="$t('vehicles.deleteTitle')"
-      :message="$t('vehicles.deleteConfirm')"
+      :message="deleteMessage"
       @confirm="onDelete"
       @cancel="deletedId = null"
     />

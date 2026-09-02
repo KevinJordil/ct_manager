@@ -88,7 +88,8 @@ async function submit() {
         </div>
         <div class="flex items-center gap-3">
           <LanguageSwitcher variant="light" />
-          <RouterLink to="/login" class="text-xs text-gray-400 hover:text-gray-600 underline">
+          <RouterLink to="/login"
+            class="text-xs text-gray-400 hover:text-gray-600 underline py-2.5 px-1 -my-2.5">
             {{ $t('requests.administration') }}
           </RouterLink>
         </div>
@@ -186,7 +187,7 @@ async function submit() {
                   {{ $t('requests.vehicleNumber', { number: index + 1 }) }}
                 </span>
                 <button v-if="vehicles.length > 1" type="button" @click="removeVehicle(row.rowId)"
-                  class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors">
+                  class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors">
                   {{ $t('actions.delete') }}
                 </button>
               </div>
@@ -202,9 +203,11 @@ async function submit() {
                   </select>
                 </div>
                 <div class="flex items-end">
-                  <label class="flex items-center gap-3 cursor-pointer select-none">
+                  <!-- The whole row is the tap target: this page is filled in
+                       on a phone almost every time. -->
+                  <label class="flex items-center gap-3 cursor-pointer select-none w-full min-h-[44px] py-2 -mx-1 px-1 rounded-lg hover:bg-gray-50">
                     <input type="checkbox" v-model="row.driverRequired"
-                      class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      class="w-6 h-6 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                     <span>
                       <span class="text-sm font-medium text-gray-700">{{ $t('requests.driverRequired') }}</span>
                       <span class="block text-xs text-gray-400">{{ $t('requests.driverRequiredHint') }}</span>
@@ -226,7 +229,8 @@ async function submit() {
           </p>
 
           <div class="flex justify-end">
-            <button type="submit" class="btn-primary px-8" :disabled="loading || !canSubmit">
+            <button type="submit" class="btn-primary px-8 w-full sm:w-auto justify-center"
+              :disabled="loading || !canSubmit">
               <svg v-if="loading" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>

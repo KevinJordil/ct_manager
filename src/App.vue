@@ -181,7 +181,8 @@ const NAV_ITEMS = [
       <!-- Header -->
       <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3 lg:hidden">
-          <button @click="sidebarOpen = true" :aria-label="$t('app.openMenu')" class="text-gray-500 hover:text-gray-700">
+          <button @click="sidebarOpen = true" :aria-label="$t('app.openMenu')"
+            class="-m-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
@@ -244,7 +245,10 @@ const NAV_ITEMS = [
 .btn-primary { @apply inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors; }
 .btn-secondary { @apply inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors; }
 .btn-danger { @apply inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors; }
-.icon-btn { @apply p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors; }
+/* The icon keeps its size; the button around it is sized so the target is
+   comfortable on a touch screen. Not conditioned on a media query: pointer
+   detection is unreliable, and a 36px target harms nothing with a mouse. */
+.icon-btn { @apply inline-flex items-center justify-center min-w-[36px] min-h-[36px] p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors; }
 .badge-gray { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700; }
 
 .stat-card { @apply rounded-xl p-4 text-center; }

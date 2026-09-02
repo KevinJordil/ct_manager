@@ -123,7 +123,7 @@ function onDelete() {
               </span>
               <button @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
                 :aria-label="$t('checks.deleteTitle')"
-                class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-0.5 rounded transition-colors">
+                class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 min-h-[36px] rounded transition-colors">
                 {{ $t('actions.delete') }}
               </button>
             </li>

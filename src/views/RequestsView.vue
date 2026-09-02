@@ -121,7 +121,7 @@ async function onDelete() {
     <div class="flex gap-2 mb-6 flex-wrap">
       <button v-for="filter in FILTERS" :key="filter" @click="statusFilter = filter"
         :aria-pressed="statusFilter === filter"
-        :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border',
+        :class="['px-3 py-2 rounded-lg text-sm font-medium transition-colors border',
           statusFilter === filter ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300']">
         {{ $t(`requests.filters.${filter}`) }}
         <span class="ml-1 text-xs opacity-70">({{ counts[filter] }})</span>
@@ -150,25 +150,25 @@ async function onDelete() {
             </p>
             <p class="text-xs text-gray-400 mt-1">
               {{ $t('requests.submittedOn', { date: formatDateTime(request.createdAt) }) }}
-              · {{ $t('requests.count', request.vehicles.length, { count: request.vehicles.length }) }}
+              · {{ $t('requests.vehicleCount', request.vehicles.length, { count: request.vehicles.length }) }}
             </p>
           </button>
 
           <div class="flex flex-col gap-1 shrink-0">
             <button v-if="request.status !== 'approved'" @click="openApproval(request)"
-              class="text-xs px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">
+              class="text-xs px-2.5 min-h-[36px] rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">
               {{ $t('requests.approve') }}
             </button>
             <button v-if="request.status !== 'rejected'" @click="store.setStatus(request.id, 'rejected')"
-              class="text-xs px-2.5 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+              class="text-xs px-2.5 min-h-[36px] rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
               {{ $t('requests.reject') }}
             </button>
             <button v-if="request.status !== 'pending'" @click="store.setStatus(request.id, 'pending')"
-              class="text-xs px-2.5 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+              class="text-xs px-2.5 min-h-[36px] rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
               {{ $t('requests.reopen') }}
             </button>
             <button @click="deletedId = request.id" :aria-label="$t('requests.deleteTitle')"
-              class="text-xs px-2.5 py-1 rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+              class="text-xs px-2.5 min-h-[36px] rounded-lg text-red-500 hover:bg-red-50 transition-colors">
               {{ $t('actions.delete') }}
             </button>
           </div>

@@ -54,7 +54,7 @@ const unavailabilityLabel = computed(() =>
         </div>
 
         <div v-if="currentMission" class="mt-2">
-          <button @click="router.push('/missions')" class="text-sm text-orange-600 hover:text-orange-800 underline underline-offset-2">
+          <button @click="router.push('/missions')" class="text-sm text-orange-600 hover:text-orange-800 underline underline-offset-2 inline-flex items-center min-h-[36px] py-1 text-left">
             {{ currentMission.title }}
           </button>
         </div>

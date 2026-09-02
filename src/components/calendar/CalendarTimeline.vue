@@ -40,6 +40,13 @@ const periodEnd = computed(() =>
 
 const totalMinutes = computed(() => props.view === 'day' ? 24 * 60 : 7 * 24 * 60)
 
+/**
+ * Minimum width the timeline needs for its labels to stay readable. Below it
+ * the container scrolls horizontally, which is far better than a week
+ * squeezed into 250px where the hour ruler turns into a smear.
+ */
+const minWidth = computed(() => props.view === 'day' ? 760 : 1180)
+
 function minutesFromStart(dt) {
   return (parseLocal(dt) - parseLocal(periodStart.value)) / 60000
 }
@@ -208,15 +215,15 @@ function displayMode(event) {
 
 <template>
   <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm bg-white w-full">
-    <div style="min-width: 420px;">
+    <div class="timeline" :style="{ minWidth: minWidth + 'px' }">
 
       <!-- Sticky header, two rows -->
       <div class="sticky top-0 z-10 shadow-sm">
 
         <!-- Days -->
         <div class="flex bg-gray-50 border-b border-gray-200">
-          <div class="shrink-0 sticky left-0 z-20 bg-gray-50 border-r border-gray-200 px-3 flex items-center"
-            style="width: 160px; height: 34px;">
+          <div class="resource-column shrink-0 sticky left-0 z-20 bg-gray-50 border-r border-gray-200 px-3 flex items-center"
+            style="height: 34px;">
             <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ $t('calendar.resource') }}</span>
           </div>
           <div class="flex-1 flex overflow-hidden">
@@ -239,8 +246,8 @@ function displayMode(event) {
 
         <!-- Hours -->
         <div class="flex bg-white border-b-2 border-gray-300">
-          <div class="shrink-0 sticky left-0 z-20 bg-white border-r border-gray-200"
-            style="width: 160px; height: 22px;" />
+          <div class="resource-column shrink-0 sticky left-0 z-20 bg-white border-r border-gray-200"
+            style="height: 22px;" />
           <div class="flex-1 relative overflow-hidden" style="height: 22px;">
             <div v-for="tick in hourTicks" :key="tick.percent"
               :style="{ left: tick.percent + '%' }"
@@ -262,8 +269,7 @@ function displayMode(event) {
         :style="{ height: height + 'px' }"
         class="flex border-b border-gray-100 hover:bg-gray-50/30 transition-colors">
 
-        <div class="shrink-0 sticky left-0 z-10 bg-white border-r border-gray-200 px-3 flex items-center"
-          style="width: 160px;">
+        <div class="resource-column shrink-0 sticky left-0 z-10 bg-white border-r border-gray-200 px-3 flex items-center">
           <div class="min-w-0">
             <p class="font-medium text-gray-800 text-sm truncate leading-tight">{{ row.label }}</p>
             <p v-if="row.sublabel" class="text-[11px] text-gray-400 truncate leading-tight mt-0.5">{{ row.sublabel }}</p>
@@ -327,3 +333,13 @@ function displayMode(event) {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* The resource column is narrower on a phone, leaving more room for the
+   timeline itself. */
+.timeline { --resource-width: 160px; }
+@media (max-width: 640px) {
+  .timeline { --resource-width: 116px; }
+}
+.resource-column { width: var(--resource-width); }
+</style>

@@ -19,12 +19,20 @@ const missionsStore = useMissionsStore()
 const configStore = useConfigStore()
 const { nowString } = useClock()
 
-// The licence rules are configurable, so they are read at use time.
+// The form reads four stores; it loads them itself rather than assuming the
+// view that opened it already did. init() is memoised, so this costs nothing
+// when they are already loaded.
+personsStore.init()
+vehiclesStore.init()
+missionsStore.init()
 configStore.init()
 
 const form = reactive({ title: '', description: '', startDate: '', endDate: '', notes: '' })
 const vehicleRows = ref([])
 const staffRows = ref([])
+
+/** How many people the latest date change removed, surfaced to the user. */
+const droppedAssignments = ref(0)
 
 watch(() => props.mission, mission => {
   if (mission) {
@@ -41,6 +49,7 @@ watch(() => props.mission, mission => {
       withTrailer: entry.withTrailer ?? false,
     }))
     staffRows.value = (mission.staffIds ?? []).map(id => ({ rowId: newId(), personId: id }))
+    droppedAssignments.value = 0
   } else {
     form.title = ''
     form.description = ''
@@ -49,6 +58,7 @@ watch(() => props.mission, mission => {
     form.notes = ''
     vehicleRows.value = []
     staffRows.value = []
+    droppedAssignments.value = 0
   }
 }, { immediate: true })
 
@@ -59,8 +69,17 @@ function availabilityOptions() {
   return { excludeMissionId: props.mission?.id ?? null, now: nowString.value }
 }
 
+/**
+ * `keepPersonId` keeps the person already chosen in a row selectable, so the
+ * current value never vanishes from its own dropdown.
+ */
 function personIsAvailable(person, keepPersonId = null) {
   if (person.id === keepPersonId) return true
+  return isPersonAvailableNow(person)
+}
+
+/** Plain availability, with no exemption — used to re-check existing choices. */
+function isPersonAvailableNow(person) {
   return isPersonAvailable(person, missionsStore.missions, form.startDate, form.endDate, availabilityOptions())
 }
 
@@ -148,19 +167,37 @@ function removeStaffRow(rowId) {
   staffRows.value = staffRows.value.filter(row => row.rowId !== rowId)
 }
 
-// Changing the dates can invalidate people who were already picked.
+/**
+ * Changing the dates can invalidate people who were already picked. They are
+ * dropped — and the count is surfaced, since silently losing an assignment
+ * the user had made is worse than the conflict itself.
+ */
 watch([() => form.startDate, () => form.endDate], () => {
   if (!form.startDate || !form.endDate) return
+  let dropped = 0
+
+  // The exemption used by the dropdowns must not apply here: the whole point
+  // is to re-examine the people already chosen.
   vehicleRows.value.forEach(row => {
     if (!row.driverId) return
     const person = personsStore.persons.find(p => p.id === row.driverId)
-    if (!person || !personIsAvailable(person, row.driverId)) row.driverId = null
+    if (!person || !isPersonAvailableNow(person)) {
+      row.driverId = null
+      dropped++
+    }
   })
-  staffRows.value = staffRows.value.filter(row => {
+
+  const keptStaff = staffRows.value.filter(row => {
     if (!row.personId) return true
     const person = personsStore.persons.find(p => p.id === row.personId)
-    return person && personIsAvailable(person, row.personId)
+    return person && isPersonAvailableNow(person)
   })
+  dropped += staffRows.value.length - keptStaff.length
+  staffRows.value = keptStaff
+
+  // Accumulated, not replaced: setting the start date then the end date runs
+  // this twice, and the second pass would otherwise erase the first warning.
+  droppedAssignments.value += dropped
 })
 
 // ── Total capacity ──
@@ -192,6 +229,18 @@ function submit() {
 <template>
   <BaseModal :title="mission?.id ? $t('missions.edit') : $t('missions.new')" @close="$emit('close')">
     <form @submit.prevent="submit" class="space-y-5">
+
+      <p v-if="droppedAssignments" role="status"
+        class="flex items-start gap-2 px-3 py-2 rounded-lg bg-orange-50 border border-orange-200 text-sm text-orange-800">
+        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span class="flex-1">
+          {{ $t('missions.droppedAssignments', droppedAssignments, { count: droppedAssignments }) }}
+        </span>
+        <button type="button" @click="droppedAssignments = 0" :aria-label="$t('actions.hide')"
+          class="shrink-0 text-orange-500 hover:text-orange-700">✕</button>
+      </p>
 
       <div class="space-y-3">
         <div>
@@ -227,7 +276,7 @@ function submit() {
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
-              {{ $t('missions.capacity', { seats: capacity.seats }) }}
+              {{ $t('missions.capacity', capacity.seats, { seats: capacity.seats }) }}
               <span class="text-blue-400">+</span>
               {{ $t('missions.drivers', capacity.drivers, { count: capacity.drivers }) }}
             </span>
@@ -247,7 +296,7 @@ function submit() {
                 :aria-label="$t('missions.vehiclesSection')">
                 <option value="">{{ $t('common.selectVehicle') }}</option>
                 <option v-for="vehicle in availableVehiclesFor(row)" :key="vehicle.id" :value="vehicle.id">
-                  {{ vehicle.name }} {{ vehicle.plate }}{{ vehicle.seats ? ` — ${$t('missions.capacity', { seats: vehicle.seats })}` : '' }}
+                  {{ vehicle.name }} {{ vehicle.plate }}{{ vehicle.seats ? ` — ${$t('missions.capacity', vehicle.seats, { seats: vehicle.seats })}` : '' }}
                 </option>
               </select>
               <button type="button" @click="removeVehicleRow(row.rowId)" :aria-label="$t('missions.removeVehicle')"

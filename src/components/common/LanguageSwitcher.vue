@@ -33,7 +33,7 @@ const styles = computed(() => props.variant === 'light'
       @click="setLocale(option.code)"
       :aria-pressed="locale === option.code"
       :title="option.label"
-      :class="['px-2 py-1 text-xs font-semibold uppercase transition-colors',
+      :class="['px-3 min-h-[36px] flex items-center text-xs font-semibold uppercase leading-none transition-colors',
         locale === option.code ? styles.active : styles.idle]">
       {{ option.code }}
     </button>
