@@ -13,6 +13,13 @@ const MAX_TEXT = 5000
 
 const CATEGORIES = ['light-road', 'light-offroad', 'medium', 'heavy']
 const VEHICLE_STATUSES = ['free', 'on-loan']
+const REQUEST_STATUSES = ['pending', 'approved', 'rejected']
+const REQUEST_VEHICLE_TYPES = [
+  'car', 'van-9', 'class-g', 'duro-personnel', 'duro-cargo',
+  'truck-personnel', 'truck-cargo', 'other',
+]
+
+const MAX_REQUEST_VEHICLES = 20
 
 const isText = v => typeof v === 'string' && v.length <= MAX_TEXT
 const isOptionalText = v => v === undefined || v === null || isText(v)
@@ -117,6 +124,86 @@ const VALIDATORS = {
 }
 
 export const ENTITIES = Object.keys(VALIDATORS)
+
+// ── Public request form ──
+
+const isRequired = v => typeof v === 'string' && v.trim() !== '' && v.length <= 200
+const isDateTime = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)
+
+/**
+ * Validates a submission from the public form.
+ *
+ * This is the only route open without a session, so it is validated more
+ * strictly than the rest: every field is bounded, and only known vehicle
+ * types are accepted.
+ *
+ * @returns {{code: string, params: object}|null}
+ */
+export function validateRequestSubmission(body) {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return { code: 'notAnObject', params: {} }
+  }
+
+  const contact = body.contact
+  if (contact === null || typeof contact !== 'object' || Array.isArray(contact)) {
+    return invalidField('contact')
+  }
+  for (const field of ['firstName', 'lastName', 'company', 'phone']) {
+    if (!isRequired(contact[field])) return invalidField(field)
+  }
+  if (contact.section !== undefined && !isOptionalText(contact.section)) return invalidField('section')
+
+  if (!isDateTime(body.startDate) || !isDateTime(body.endDate)) {
+    return { code: 'invalidDates', params: {} }
+  }
+  if (body.endDate < body.startDate) return { code: 'endBeforeStart', params: {} }
+  if (!isRequired(body.meetingPoint)) return invalidField('meetingPoint')
+  if (body.comment !== undefined && !isOptionalText(body.comment)) return invalidField('comment')
+
+  if (!Array.isArray(body.vehicles) || body.vehicles.length === 0) {
+    return invalidField('vehicles')
+  }
+  if (body.vehicles.length > MAX_REQUEST_VEHICLES) {
+    return { code: 'tooManyItems', params: { max: MAX_REQUEST_VEHICLES } }
+  }
+  for (const [position, entry] of body.vehicles.entries()) {
+    if (entry === null || typeof entry !== 'object') {
+      return { code: 'invalidNested', params: { list: 'vehicles', position, field: '' } }
+    }
+    if (!REQUEST_VEHICLE_TYPES.includes(entry.type)) {
+      return { code: 'invalidNested', params: { list: 'vehicles', position, field: 'type' } }
+    }
+    if (!isOptionalBoolean(entry.driverRequired)) {
+      return { code: 'invalidNested', params: { list: 'vehicles', position, field: 'driverRequired' } }
+    }
+  }
+  return null
+}
+
+/** Keeps only the known fields, so nothing extra reaches the stored file. */
+export function sanitizeRequestSubmission(body) {
+  return {
+    contact: {
+      firstName: body.contact.firstName.trim(),
+      lastName: body.contact.lastName.trim(),
+      company: body.contact.company.trim(),
+      section: (body.contact.section ?? '').trim(),
+      phone: body.contact.phone.trim(),
+    },
+    startDate: body.startDate,
+    endDate: body.endDate,
+    meetingPoint: body.meetingPoint.trim(),
+    comment: (body.comment ?? '').trim(),
+    vehicles: body.vehicles.map(entry => ({
+      type: entry.type,
+      driverRequired: Boolean(entry.driverRequired),
+    })),
+  }
+}
+
+export function isValidRequestStatus(status) {
+  return REQUEST_STATUSES.includes(status)
+}
 
 /**
  * Validates a whole collection.

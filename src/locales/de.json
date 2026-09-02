@@ -11,7 +11,8 @@
     "persons": "Personen",
     "vehicles": "Fahrzeuge",
     "missions": "Einsätze",
-    "calendar": "Kalender"
+    "calendar": "Kalender",
+    "requests": "Anfragen"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -48,7 +49,10 @@
     "planned": "geplant",
     "ongoing": "laufend",
     "completed": "abgeschlossen",
-    "leave": "Urlaub"
+    "leave": "Urlaub",
+    "pending": "ausstehend",
+    "approved": "genehmigt",
+    "rejected": "abgelehnt"
   },
   "dashboard": {
     "title": "Übersicht",
@@ -251,8 +255,11 @@
       "invalidField": "Eintrag {index}: Feld «{field}» ungültig",
       "invalidNested": "Eintrag {index}: {list}, Position {position}, Feld «{field}» ungültig",
       "invalidDates": "Eintrag {index}: ungültige Daten",
-      "unknownValue": "Eintrag {index}: unbekannter Wert für «{field}»"
-    }
+      "unknownValue": "Eintrag {index}: unbekannter Wert für «{field}»",
+      "endBeforeStart": "Das Enddatum liegt vor dem Startdatum"
+    },
+    "tooManyRequests": "Zu viele Anfragen gesendet. Versuchen Sie es in einigen Minuten erneut.",
+    "requestsFull": "Die Anfrageliste ist voll. Wenden Sie sich an die Verwaltung."
   },
   "auth": {
     "title": "Anmeldung",
@@ -262,5 +269,65 @@
     "logout": "Abmelden",
     "sessionExpired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",
     "makeRequest": "Eine Fahrzeuganfrage stellen"
+  },
+  "requests": {
+    "title": "Fahrzeuganfragen",
+    "publicTitle": "Anfrage für ein Militärfahrzeug",
+    "publicIntro": "Füllen Sie dieses Formular aus, um ein oder mehrere Fahrzeuge zu reservieren.",
+    "administration": "Verwaltung",
+    "empty": "Keine Anfrage",
+    "submit": "Anfrage senden",
+    "sent": "Anfrage gesendet",
+    "sentDetail": "Ihre Anfrage wurde übermittelt. Sie werden zur Bestätigung kontaktiert.",
+    "newRequest": "Neue Anfrage",
+    "contactSection": "Kontaktangaben",
+    "planningSection": "Planung",
+    "vehiclesSection": "Angefragte Fahrzeuge",
+    "firstName": "Vorname",
+    "lastName": "Name",
+    "company": "Kompanie",
+    "companyPlaceholder": "z. B. Kp 4",
+    "section": "Zug",
+    "sectionPlaceholder": "z. B. Zug 2",
+    "phone": "Telefonnummer",
+    "phonePlaceholder": "+41 79 000 00 00",
+    "pickup": "Datum und Uhrzeit der Übernahme",
+    "dropoff": "Datum und Uhrzeit der Rückgabe",
+    "meetingPoint": "Treffpunkt",
+    "meetingPointPlaceholder": "z. B. Waffenplatz, Haupteingang",
+    "comment": "Bemerkung",
+    "commentPlaceholder": "Weitere Angaben, Anzahl Passagiere, transportiertes Material…",
+    "vehicleType": "Fahrzeugtyp",
+    "selectType": "Typ auswählen…",
+    "driverRequired": "Fahrer erforderlich",
+    "driverRequiredHint": "Ein Fahrer muss zur Verfügung gestellt werden",
+    "vehicleNumber": "Fahrzeug {number}",
+    "addVehicle": "Fahrzeug hinzufügen",
+    "count": "{count} Anfrage | {count} Anfrage | {count} Anfragen",
+    "submittedOn": "Eingegangen am {date}",
+    "approve": "Genehmigen und Einsatz erstellen",
+    "reject": "Ablehnen",
+    "reopen": "Wieder auf ausstehend setzen",
+    "deleteTitle": "Anfrage löschen",
+    "deleteConfirm": "Möchten Sie diese Anfrage wirklich löschen?",
+    "loadFailed": "Anfragen konnten nicht geladen werden: {reason}",
+    "updateFailed": "Anfrage konnte nicht aktualisiert werden: {reason}",
+    "deleteFailed": "Anfrage konnte nicht gelöscht werden: {reason}",
+    "filters": {
+      "all": "Alle",
+      "pending": "Ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt"
+    },
+    "types": {
+      "car": "Personenwagen",
+      "van-9": "Fahrzeug mit 9 Plätzen",
+      "class-g": "Class G (leichter 4×4)",
+      "duro-personnel": "Duro — Personen",
+      "duro-cargo": "Duro — Material",
+      "truck-personnel": "Lastwagen — Personen",
+      "truck-cargo": "Lastwagen — Material",
+      "other": "Andere (in der Bemerkung angeben)"
+    }
   }
 }

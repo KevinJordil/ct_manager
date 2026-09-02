@@ -3,7 +3,10 @@ import crypto from 'crypto'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { ENTITIES, validateCollection } from './validation.js'
+import {
+  ENTITIES, validateCollection,
+  validateRequestSubmission, sanitizeRequestSubmission, isValidRequestStatus,
+} from './validation.js'
 import { reanchor } from './seed.js'
 import { createAuth, resolvePassword } from './auth.js'
 
@@ -47,6 +50,44 @@ if (CORS_ORIGIN) {
   })
 }
 
+// ── Local timestamps ──
+// Stored dates are naive local strings throughout the application; a request's
+// creation time follows the same convention so it sorts and displays like the
+// rest.
+
+function localDateTime(date = new Date()) {
+  const pad = n => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+// ── Rate limiting for the public form ──
+// The submission route is the only one open without a session: without a
+// limit, anyone could grow the file indefinitely.
+
+const MAX_STORED_REQUESTS = 2000
+const RATE_WINDOW_MS = 10 * 60 * 1000
+const RATE_MAX_PER_WINDOW = 5
+
+const submissionsByClient = new Map() // client key → timestamps
+
+function rateLimited(key, now = Date.now()) {
+  const recent = (submissionsByClient.get(key) ?? []).filter(at => now - at < RATE_WINDOW_MS)
+  if (recent.length >= RATE_MAX_PER_WINDOW) {
+    submissionsByClient.set(key, recent)
+    return true
+  }
+  recent.push(now)
+  submissionsByClient.set(key, recent)
+  // Keep the map from growing without bound on a long-running server.
+  if (submissionsByClient.size > 10_000) {
+    for (const [client, times] of submissionsByClient) {
+      if (!times.some(at => now - at < RATE_WINDOW_MS)) submissionsByClient.delete(client)
+    }
+  }
+  return false
+}
+
 // ── Authentication ──
 // Everything under /api is private except the few routes mounted before the
 // guard below: the public request form needs to reach the API without an
@@ -65,8 +106,87 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/auth/check', auth.requireAuth, (_req, res) => res.json({ ok: true }))
 
+/**
+ * Public submission of a vehicle request. Deliberately the only write open
+ * without a session, hence the rate limit, the size cap and the strict
+ * validation.
+ */
+app.post('/api/requests', async (req, res, next) => {
+  const invalid = validateRequestSubmission(req.body)
+  if (invalid) {
+    return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid request')
+  }
+  if (rateLimited(req.ip ?? 'unknown')) {
+    return fail(res, 429, 'tooManyRequests', {}, 'Too many requests, try again later')
+  }
+
+  try {
+    await withLock('requests', async () => {
+      const stored = JSON.parse(await readRaw('requests'))
+      if (stored.length >= MAX_STORED_REQUESTS) {
+        return fail(res, 503, 'requestsFull', {}, 'The request queue is full')
+      }
+      const request = {
+        id: crypto.randomUUID(),
+        createdAt: localDateTime(),
+        status: 'pending',
+        ...sanitizeRequestSubmission(req.body),
+      }
+      await write('requests', JSON.stringify([...stored, request], null, 2))
+      res.status(201).json({ ok: true, id: request.id })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
 // Everything below this point requires a session.
 app.use('/api', auth.requireAuth)
+
+// ── Requests, management side ──
+
+app.get('/api/requests', async (_req, res, next) => {
+  try {
+    res.type('application/json').send(await readRaw('requests'))
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.put('/api/requests/:id/status', async (req, res, next) => {
+  const { status } = req.body ?? {}
+  if (!isValidRequestStatus(status)) {
+    return fail(res, 400, 'validation.unknownValue', { field: 'status' }, 'Unknown status')
+  }
+  try {
+    await withLock('requests', async () => {
+      const stored = JSON.parse(await readRaw('requests'))
+      const index = stored.findIndex(request => request.id === req.params.id)
+      if (index === -1) return fail(res, 404, 'notFound', {}, 'Unknown request')
+      stored[index] = { ...stored[index], status }
+      await write('requests', JSON.stringify(stored, null, 2))
+      res.json({ ok: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.delete('/api/requests/:id', async (req, res, next) => {
+  try {
+    await withLock('requests', async () => {
+      const stored = JSON.parse(await readRaw('requests'))
+      const remaining = stored.filter(request => request.id !== req.params.id)
+      if (remaining.length === stored.length) {
+        return fail(res, 404, 'notFound', {}, 'Unknown request')
+      }
+      await write('requests', JSON.stringify(remaining, null, 2))
+      res.json({ ok: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
 
 // ── Per-entity mutex ──
 // Node.js is single-threaded: this async mutex is enough to serialise

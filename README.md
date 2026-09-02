@@ -65,6 +65,11 @@ mois du calendrier.
 - Les personnes en congé, indisponibles ou déjà affectées sont exclues des listes de sélection
 - Les véhicules en prêt ou déjà engagés sur la même période sont exclus
 
+### Demandes de véhicules
+- **Page publique** `/#/request`, accessible sans compte : formulaire de contact, dates, point de rendez-vous et liste des véhicules souhaités, chacun avec ou sans chauffeur
+- **File de traitement** côté gestion : filtrage par statut, détail dépliable, compteur des demandes en attente dans la barre latérale
+- **Approuver crée la mission** : le formulaire de mission s'ouvre pré-rempli depuis la demande (titre, contact, dates, point de rendez-vous et véhicules en notes) ; la demande ne passe à *approuvée* qu'une fois la mission enregistrée
+
 ### Tableau de bord
 - Vue synthétique : disponibilités personnes et véhicules, missions en cours
 - Alertes automatiques (chauffeur en congé pendant une mission, véhicule en prêt sur une mission active, etc.)
@@ -213,6 +218,13 @@ L'application est protégée par un **mot de passe unique**. À la première
 visite, l'utilisateur arrive sur `/login` ; toutes les autres pages et toutes
 les routes de l'API lui sont fermées tant qu'il n'est pas connecté.
 
+Deux pages échappent à cette règle, par nécessité : l'écran de connexion et
+le formulaire public de demande de véhicule. Ce dernier est la seule écriture
+ouverte sans session, il est donc le plus strictement encadré — validation
+complète de chaque champ, types de véhicules limités à une liste connue,
+maximum 5 envois par période de 10 minutes et par adresse, et plafond global
+sur le nombre de demandes conservées.
+
 ```bash
 CT_PASSWORD="$(openssl rand -base64 18)" node server.js
 ```
@@ -274,10 +286,14 @@ ct_manager/
 │   │   ├── PersonsView.vue
 │   │   ├── VehiclesView.vue
 │   │   ├── MissionsView.vue
-│   │   └── CalendarView.vue
+│   │   ├── CalendarView.vue
+│   │   ├── LoginView.vue      # publique
+│   │   ├── RequestView.vue    # publique : formulaire de demande
+│   │   └── RequestsView.vue   # file de traitement
 │   └── __tests__/         # Tests unitaires et de composants
 ├── test/                  # Tests d'intégration du serveur
 ├── server.js              # Serveur Express
+├── auth.js                # Connexion par mot de passe et sessions
 ├── validation.js          # Validation des collections reçues par l'API
 ├── seed.js                # Recalage des dates du jeu de démonstration
 ├── vite.config.js

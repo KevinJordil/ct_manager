@@ -53,5 +53,29 @@ export const TRAILER_LICENSES_BY_CATEGORY = {
   [VEHICLE_CATEGORY.HEAVY]: ['930E'],
 }
 
+/** Status of a vehicle request submitted from the public form. */
+export const REQUEST_STATUS = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+}
+
+export const REQUEST_STATUSES = Object.values(REQUEST_STATUS)
+
+/**
+ * Vehicle kinds offered on the public request form. Requesters think in
+ * concrete vehicles, not in the licence categories used internally.
+ */
+export const REQUEST_VEHICLE_TYPES = [
+  'car',
+  'van-9',
+  'class-g',
+  'duro-personnel',
+  'duro-cargo',
+  'truck-personnel',
+  'truck-cargo',
+  'other',
+]
+
 /** Collections persisted by the API. */
 export const ENTITIES = ['persons', 'vehicles', 'missions']

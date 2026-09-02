@@ -6,10 +6,13 @@ import VehiclesView from '../views/VehiclesView.vue'
 import MissionsView from '../views/MissionsView.vue'
 import CalendarView from '../views/CalendarView.vue'
 import LoginView from '../views/LoginView.vue'
+import RequestView from '../views/RequestView.vue'
+import RequestsView from '../views/RequestsView.vue'
 
 const routes = [
   // ── Public ──
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
+  { path: '/request', name: 'request', component: RequestView, meta: { public: true } },
 
   // ── Behind the login ──
   { path: '/', name: 'dashboard', component: DashboardView },
@@ -17,6 +20,7 @@ const routes = [
   { path: '/vehicles', name: 'vehicles', component: VehiclesView },
   { path: '/missions', name: 'missions', component: MissionsView },
   { path: '/calendar', name: 'calendar', component: CalendarView },
+  { path: '/requests', name: 'requests', component: RequestsView },
 ]
 
 const router = createRouter({

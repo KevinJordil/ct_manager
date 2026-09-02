@@ -107,6 +107,34 @@ export const api = {
     }
   },
 
+  // ── Vehicle requests ──
+  // Submission is public; everything else needs a session.
+
+  async submitRequest(payload) {
+    const res = await request(`${BASE}/requests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    return res.json()
+  },
+
+  async loadRequests() {
+    return (await request(`${BASE}/requests`)).json()
+  },
+
+  async setRequestStatus(id, status) {
+    await request(`${BASE}/requests/${encodeURIComponent(id)}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+  },
+
+  async deleteRequest(id) {
+    await request(`${BASE}/requests/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  },
+
   /** @returns {{ data: Array, version: string }} */
   async load(entity) {
     const res = await request(`${BASE}/${entity}`)

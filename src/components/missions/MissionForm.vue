@@ -186,7 +186,7 @@ function submit() {
 </script>
 
 <template>
-  <BaseModal :title="mission ? $t('missions.edit') : $t('missions.new')" @close="$emit('close')">
+  <BaseModal :title="mission?.id ? $t('missions.edit') : $t('missions.new')" @close="$emit('close')">
     <form @submit.prevent="submit" class="space-y-5">
 
       <div class="space-y-3">
@@ -318,7 +318,7 @@ function submit() {
 
       <div class="flex justify-end gap-3 pt-1">
         <button type="button" @click="$emit('close')" class="btn-secondary">{{ $t('actions.cancel') }}</button>
-        <button type="submit" class="btn-primary">{{ mission ? $t('actions.save') : $t('actions.create') }}</button>
+        <button type="submit" class="btn-primary">{{ mission?.id ? $t('actions.save') : $t('actions.create') }}</button>
       </div>
     </form>
   </BaseModal>

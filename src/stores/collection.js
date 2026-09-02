@@ -47,6 +47,9 @@ export function useCollection(entity, migrate = data => data) {
       } catch (err) {
         loadError.value = err.message
         handleError(err, 'load')
+        // A failed load must not be memoised: the next attempt — after a
+        // login, or once the server is back — has to hit the network again.
+        initPromise = null
       } finally {
         loading.value = false
         loaded.value = true

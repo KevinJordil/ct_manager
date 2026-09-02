@@ -253,3 +253,126 @@ describe('protection against concurrent overwrites', () => {
     expect(first).not.toBe(second)
   })
 })
+
+// ── Vehicle requests ──
+
+const submission = (over = {}) => ({
+  contact: { firstName: 'Jean', lastName: 'Dupont', company: 'Cp 4', section: '', phone: '+41 79 000 00 00' },
+  startDate: '2026-09-10T08:00',
+  endDate: '2026-09-10T17:00',
+  meetingPoint: "Place d'armes",
+  comment: '',
+  vehicles: [{ type: 'duro-personnel', driverRequired: true }],
+  ...over,
+})
+
+function submitRequest(body = submission(), headers = {}) {
+  return fetch(`${BASE}/api/requests`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify(body),
+  })
+}
+
+describe('public request submission', () => {
+  it('accepts a submission without any session', async () => {
+    const res = await submitRequest()
+    expect(res.status).toBe(201)
+    expect((await res.json()).id).toMatch(/^[0-9a-f-]{36}$/)
+  })
+
+  it('rejects a malformed submission', async () => {
+    const res = await submitRequest({ contact: { firstName: 'X' } })
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toMatch(/^validation\./)
+  })
+
+  it('stamps the status and the creation time server-side', async () => {
+    await submitRequest()
+    const stored = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    const last = stored[stored.length - 1]
+    expect(last.status).toBe('pending')
+    expect(last.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
+  })
+
+  it('ignores a status or id supplied by the client', async () => {
+    await submitRequest(submission({ status: 'approved', id: 'forged' }))
+    const stored = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    const forged = stored.find(request => request.id === 'forged')
+    expect(forged).toBeUndefined()
+    expect(stored[stored.length - 1].status).toBe('pending')
+  })
+
+  it('rate-limits repeated submissions from the same client', async () => {
+    // The first submissions above already consumed part of the window.
+    let sawLimit = false
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const res = await submitRequest()
+      if (res.status === 429) {
+        expect((await res.json()).code).toBe('tooManyRequests')
+        sawLimit = true
+        break
+      }
+    }
+    expect(sawLimit).toBe(true)
+  })
+})
+
+describe('request management', () => {
+  it('requires a session to read the queue', async () => {
+    expect((await fetch(`${BASE}/api/requests`)).status).toBe(401)
+    expect((await fetch(`${BASE}/api/requests`, { headers: auth() })).status).toBe(200)
+  })
+
+  it('changes a status', async () => {
+    const stored = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    const { id } = stored[0]
+
+    const res = await fetch(`${BASE}/api/requests/${id}/status`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'approved' }),
+    })
+    expect(res.status).toBe(200)
+
+    const updated = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    expect(updated.find(request => request.id === id).status).toBe('approved')
+  })
+
+  it('refuses an unknown status', async () => {
+    const stored = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    const res = await fetch(`${BASE}/api/requests/${stored[0].id}/status`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'maybe' }),
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('answers 404 on an unknown request', async () => {
+    const res = await fetch(`${BASE}/api/requests/does-not-exist/status`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'approved' }),
+    })
+    expect(res.status).toBe(404)
+  })
+
+  it('deletes a request', async () => {
+    const before = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    const { id } = before[0]
+
+    const res = await fetch(`${BASE}/api/requests/${id}`, { method: 'DELETE', headers: auth() })
+    expect(res.status).toBe(200)
+
+    const after = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    expect(after.find(request => request.id === id)).toBeUndefined()
+    expect(after).toHaveLength(before.length - 1)
+  })
+
+  it('requires a session to delete', async () => {
+    const stored = await (await fetch(`${BASE}/api/requests`, { headers: auth() })).json()
+    const res = await fetch(`${BASE}/api/requests/${stored[0].id}`, { method: 'DELETE' })
+    expect(res.status).toBe(401)
+  })
+})

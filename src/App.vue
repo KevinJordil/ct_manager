@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useClock } from './stores/clock.js'
 import { useSync } from './stores/sync.js'
 import { useAuthStore } from './stores/auth.js'
+import { useRequestsStore } from './stores/requests.js'
 import { localeTag } from './i18n/index.js'
 import { formatLongDate, formatClock } from './i18n/formats.js'
 import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
@@ -12,6 +13,7 @@ import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const requestsStore = useRequestsStore()
 const { t, te, locale } = useI18n()
 const sidebarOpen = ref(false)
 
@@ -30,6 +32,13 @@ watch(authRequired, required => {
     router.replace({ path: '/login', query: { redirect: route.fullPath } })
   }
 })
+
+// The pending count is shown as a badge in the sidebar. Loading it before
+// the session exists would only produce a 401.
+const shellVisible = computed(() => !isPublicPage.value && auth.isAuthenticated)
+watch(shellVisible, visible => {
+  if (visible) requestsStore.init()
+}, { immediate: true })
 
 async function signOut() {
   await auth.logout()
@@ -87,6 +96,12 @@ const NAV_ITEMS = [
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>`,
   },
   {
+    to: '/requests',
+    key: 'requests',
+    badge: () => requestsStore.pendingCount,
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>`,
+  },
+  {
     to: '/calendar',
     key: 'calendar',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>`,
@@ -121,7 +136,11 @@ const NAV_ITEMS = [
           @click="sidebarOpen = false"
           :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors', (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white']">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" v-html="item.icon" aria-hidden="true" />
-          {{ $t(`nav.${item.key}`) }}
+          <span class="flex-1">{{ $t(`nav.${item.key}`) }}</span>
+          <span v-if="item.badge && item.badge() > 0"
+            class="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-bold">
+            {{ item.badge() }}
+          </span>
         </RouterLink>
       </nav>
 

@@ -11,7 +11,8 @@
     "persons": "Persone",
     "vehicles": "Veicoli",
     "missions": "Missioni",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "requests": "Richieste"
   },
   "actions": {
     "add": "Aggiungi",
@@ -48,7 +49,10 @@
     "planned": "pianificata",
     "ongoing": "in corso",
     "completed": "conclusa",
-    "leave": "Congedo"
+    "leave": "Congedo",
+    "pending": "in attesa",
+    "approved": "approvata",
+    "rejected": "rifiutata"
   },
   "dashboard": {
     "title": "Cruscotto",
@@ -251,8 +255,11 @@
       "invalidField": "Elemento {index}: campo «{field}» non valido",
       "invalidNested": "Elemento {index}: {list}, posizione {position}, campo «{field}» non valido",
       "invalidDates": "Elemento {index}: date non valide",
-      "unknownValue": "Elemento {index}: valore sconosciuto per «{field}»"
-    }
+      "unknownValue": "Elemento {index}: valore sconosciuto per «{field}»",
+      "endBeforeStart": "La data di fine precede la data di inizio"
+    },
+    "tooManyRequests": "Troppe richieste inviate. Riprova tra qualche minuto.",
+    "requestsFull": "La coda delle richieste è piena. Contatta l'amministrazione."
   },
   "auth": {
     "title": "Accesso",
@@ -262,5 +269,65 @@
     "logout": "Esci",
     "sessionExpired": "Sessione scaduta. Effettua di nuovo l'accesso.",
     "makeRequest": "Inviare una richiesta di veicolo"
+  },
+  "requests": {
+    "title": "Richieste di veicoli",
+    "publicTitle": "Richiesta di veicolo militare",
+    "publicIntro": "Compila questo modulo per riservare uno o più veicoli.",
+    "administration": "Amministrazione",
+    "empty": "Nessuna richiesta",
+    "submit": "Invia la richiesta",
+    "sent": "Richiesta inviata",
+    "sentDetail": "La tua richiesta è stata trasmessa. Sarai contattato per conferma.",
+    "newRequest": "Nuova richiesta",
+    "contactSection": "Informazioni di contatto",
+    "planningSection": "Pianificazione",
+    "vehiclesSection": "Veicoli richiesti",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "company": "Compagnia",
+    "companyPlaceholder": "Es. Cp 4",
+    "section": "Sezione",
+    "sectionPlaceholder": "Es. Sez 2",
+    "phone": "Numero di telefono",
+    "phonePlaceholder": "+41 79 000 00 00",
+    "pickup": "Data e ora di ritiro",
+    "dropoff": "Data e ora di riconsegna",
+    "meetingPoint": "Punto d'incontro",
+    "meetingPointPlaceholder": "Es. piazza d'armi, ingresso principale",
+    "comment": "Commento",
+    "commentPlaceholder": "Informazioni aggiuntive, numero di passeggeri, materiale trasportato…",
+    "vehicleType": "Tipo di veicolo",
+    "selectType": "Seleziona un tipo…",
+    "driverRequired": "Conducente richiesto",
+    "driverRequiredHint": "Deve essere messo a disposizione un conducente",
+    "vehicleNumber": "Veicolo {number}",
+    "addVehicle": "Aggiungi un veicolo",
+    "count": "{count} richiesta | {count} richiesta | {count} richieste",
+    "submittedOn": "Ricevuta il {date}",
+    "approve": "Approva e crea la missione",
+    "reject": "Rifiuta",
+    "reopen": "Rimetti in attesa",
+    "deleteTitle": "Elimina la richiesta",
+    "deleteConfirm": "Vuoi davvero eliminare questa richiesta?",
+    "loadFailed": "Impossibile caricare le richieste: {reason}",
+    "updateFailed": "Impossibile aggiornare la richiesta: {reason}",
+    "deleteFailed": "Impossibile eliminare la richiesta: {reason}",
+    "filters": {
+      "all": "Tutte",
+      "pending": "In attesa",
+      "approved": "Approvate",
+      "rejected": "Rifiutate"
+    },
+    "types": {
+      "car": "Automobile",
+      "van-9": "Veicolo da 9 posti",
+      "class-g": "Class G (4×4 leggero)",
+      "duro-personnel": "Duro — persone",
+      "duro-cargo": "Duro — materiale",
+      "truck-personnel": "Camion — persone",
+      "truck-cargo": "Camion — materiale",
+      "other": "Altro (specificare nel commento)"
+    }
   }
 }
