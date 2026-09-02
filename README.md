@@ -70,6 +70,15 @@ mois du calendrier.
 - **File de traitement** côté gestion : filtrage par statut, détail dépliable, compteur des demandes en attente dans la barre latérale
 - **Approuver crée la mission** : le formulaire de mission s'ouvre pré-rempli depuis la demande (titre, contact, dates, point de rendez-vous et véhicules en notes) ; la demande ne passe à *approuvée* qu'une fois la mission enregistrée
 
+### Configuration
+- **Types de véhicules** proposés sur le formulaire public : réordonnables, supprimables, et extensibles par des types propres à l'unité
+- **Permis** et **matrice permis/catégorie** (avec et sans remorque) modifiables ; ce sont ces règles qui déterminent quels chauffeurs sont proposés pour un véhicule
+- Les catégories de véhicules ne sont pas modifiables : elles suivent la réglementation et toute la logique de disponibilité repose sur elles
+
+> Les types fournis avec l'application sont traduits dans les trois langues.
+> Un type ajouté par l'utilisateur garde l'étiquette saisie, telle quelle,
+> quelle que soit la langue affichée.
+
 ### SPH — service de parc hebdomadaire
 - Historique des contrôles par véhicule, chacun daté et attribué soit à une personne, soit à un commentaire libre (atelier, contrôle externe…)
 - Statut calculé depuis la date du dernier contrôle : *à jour* en deçà de sept jours, *à refaire* le septième, *en retard* au-delà, *jamais effectué* si aucun n'existe
@@ -280,6 +289,7 @@ ct_manager/
 │   ├── datetime.js        # Dates en heure locale (jamais toISOString)
 │   ├── availability.js    # Règles métier : statuts et disponibilité
 │   ├── checks.js          # Échéances des contrôles hebdomadaires
+│   ├── config.js          # Réglages modifiables et valeurs par défaut
 │   ├── migrations.js      # Lecture des formats de données antérieurs
 │   ├── labels.js          # Helpers d'affichage partagés
 │   ├── id.js              # Génération d'identifiants
@@ -308,7 +318,8 @@ ct_manager/
 │   │   ├── RequestView.vue    # publique : formulaire de demande
 │   │   ├── RequestsView.vue   # file de traitement
 │   │   ├── ParkView.vue       # plan du parc et zones
-│   │   └── ChecksView.vue     # SPH
+│   │   ├── ChecksView.vue     # SPH
+│   │   └── ConfigView.vue     # configuration
 │   └── __tests__/         # Tests unitaires et de composants
 ├── test/                  # Tests d'intégration du serveur
 ├── server.js              # Serveur Express

@@ -5,8 +5,8 @@ import { usePersonsStore } from '../../stores/persons.js'
 import { useVehiclesStore } from '../../stores/vehicles.js'
 import { useMissionsStore } from '../../stores/missions.js'
 import { useClock } from '../../stores/clock.js'
+import { useConfigStore } from '../../stores/config.js'
 import { isPersonAvailable, isVehicleAvailable } from '../../availability.js'
-import { LICENSES_BY_CATEGORY, TRAILER_LICENSES_BY_CATEGORY } from '../../constants.js'
 import { personName } from '../../labels.js'
 import { newId } from '../../id.js'
 
@@ -16,7 +16,11 @@ const emit = defineEmits(['save', 'close'])
 const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
 const missionsStore = useMissionsStore()
+const configStore = useConfigStore()
 const { nowString } = useClock()
+
+// The licence rules are configurable, so they are read at use time.
+configStore.init()
 
 const form = reactive({ title: '', description: '', startDate: '', endDate: '', notes: '' })
 const vehicleRows = ref([])
@@ -93,8 +97,8 @@ function requiredLicensesFor(row) {
   const vehicle = vehiclesStore.vehicles.find(v => v.id === row.vehicleId)
   if (!vehicle) return null
   return row.withTrailer
-    ? TRAILER_LICENSES_BY_CATEGORY[vehicle.category]
-    : LICENSES_BY_CATEGORY[vehicle.category]
+    ? configStore.trailerLicensesByCategory[vehicle.category]
+    : configStore.licensesByCategory[vehicle.category]
 }
 
 function availableDriversFor(row) {

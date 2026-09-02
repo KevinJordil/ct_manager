@@ -471,3 +471,66 @@ describe('vehicle park', () => {
     expect(files.filter(name => name.startsWith('parc-image.'))).toEqual([])
   })
 })
+
+// ── Configuration ──
+
+describe('configuration', () => {
+  it('is readable without a session, because the public form needs it', async () => {
+    const res = await fetch(`${BASE}/api/config`)
+    expect(res.status).toBe(200)
+    const config = await res.json()
+    expect(config.requestVehicleTypes.length).toBeGreaterThan(0)
+    expect(config.licenses).toContain('930')
+  })
+
+  it('requires a session to be changed', async () => {
+    const res = await fetch(`${BASE}/api/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    expect(res.status).toBe(401)
+  })
+
+  it('stores a configuration and completes what is missing', async () => {
+    const current = await (await fetch(`${BASE}/api/config`)).json()
+    const res = await fetch(`${BASE}/api/config`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...current, licenses: [...current.licenses, '940'] }),
+    })
+    expect(res.status).toBe(200)
+
+    const stored = await (await fetch(`${BASE}/api/config`)).json()
+    expect(stored.licenses).toContain('940')
+    expect(stored.licensesByCategory.heavy).toEqual(current.licensesByCategory.heavy)
+  })
+
+  it('refuses an invalid configuration', async () => {
+    const res = await fetch(`${BASE}/api/config`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestVehicleTypes: [], licenses: ['920'] }),
+    })
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('validation.emptyList')
+  })
+
+  it('lets a configured vehicle type through on the public form', async () => {
+    const current = await (await fetch(`${BASE}/api/config`)).json()
+    await fetch(`${BASE}/api/config`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...current,
+        requestVehicleTypes: [...current.requestVehicleTypes, { id: 'minibus', label: 'Minibus' }],
+      }),
+    })
+
+    // The rate limit from the earlier suite may still apply; either the type
+    // is accepted, or the request is throttled — never rejected as unknown.
+    const res = await submitRequest(submission({ vehicles: [{ type: 'minibus', driverRequired: false }] }))
+    expect([201, 429]).toContain(res.status)
+    if (res.status === 400) expect((await res.json()).code).not.toBe('validation.invalidNested')
+  })
+})

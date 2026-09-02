@@ -5,6 +5,7 @@ import { useRequestsStore } from '../stores/requests.js'
 import { useMissionsStore } from '../stores/missions.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
+import { useConfigStore } from '../stores/config.js'
 import { REQUEST_STATUS, REQUEST_STATUSES } from '../constants.js'
 import { formatDateTime } from '../datetime.js'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
@@ -15,13 +16,21 @@ const store = useRequestsStore()
 const missionsStore = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
+const configStore = useConfigStore()
 const { t } = useI18n()
+
+/** A configured type may be custom, so its label comes from the store. */
+function typeLabel(id) {
+  const type = configStore.requestVehicleTypes.find(entry => entry.id === id)
+  return type ? configStore.requestTypeLabel(type, t) : id
+}
 
 onMounted(() => {
   store.init()
   missionsStore.init()
   vehiclesStore.init()
   personsStore.init()
+  configStore.init()
 })
 
 const statusFilter = ref('all')
@@ -64,7 +73,7 @@ function missionFromRequest(request) {
   const { contact } = request
   const section = contact.section ? ` / ${contact.section}` : ''
   const vehicleLines = request.vehicles.map((entry, index) => {
-    const label = t(`requests.types.${entry.type}`)
+    const label = typeLabel(entry.type)
     const driver = entry.driverRequired ? ` · ${t('requests.driverRequired')}` : ''
     return `${t('requests.vehicleNumber', { number: index + 1 })} : ${label}${driver}`
   })
@@ -173,7 +182,7 @@ async function onDelete() {
           <ul class="space-y-1">
             <li v-for="(entry, index) in request.vehicles" :key="index" class="flex items-center gap-2 text-gray-600">
               <span class="text-xs text-gray-400">{{ $t('requests.vehicleNumber', { number: index + 1 }) }}</span>
-              <span class="font-medium">{{ $t(`requests.types.${entry.type}`) }}</span>
+              <span class="font-medium">{{ typeLabel(entry.type) }}</span>
               <span v-if="entry.driverRequired"
                 class="text-xs bg-blue-100 text-blue-700 rounded px-1.5 py-0.5">
                 {{ $t('requests.driverRequired') }}

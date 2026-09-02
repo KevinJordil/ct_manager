@@ -10,6 +10,7 @@ import RequestView from '../views/RequestView.vue'
 import RequestsView from '../views/RequestsView.vue'
 import ParkView from '../views/ParkView.vue'
 import ChecksView from '../views/ChecksView.vue'
+import ConfigView from '../views/ConfigView.vue'
 
 const routes = [
   // ── Public ──
@@ -25,6 +26,7 @@ const routes = [
   { path: '/requests', name: 'requests', component: RequestsView },
   { path: '/park', name: 'park', component: ParkView },
   { path: '/checks', name: 'checks', component: ChecksView },
+  { path: '/config', name: 'config', component: ConfigView },
 ]
 
 const router = createRouter({

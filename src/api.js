@@ -107,6 +107,21 @@ export const api = {
     }
   },
 
+  // ── Configuration ──
+  // Readable without a session, since the public request form needs it.
+
+  async loadConfig() {
+    return (await request(`${BASE}/config`)).json()
+  },
+
+  async saveConfig(config) {
+    await request(`${BASE}/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    })
+  },
+
   // ── Vehicle park ──
 
   async loadParkLayout() {

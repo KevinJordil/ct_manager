@@ -7,7 +7,9 @@ import {
   ENTITIES, validateCollection,
   validateRequestSubmission, sanitizeRequestSubmission, isValidRequestStatus,
   validateParkLayout, sanitizeParkLayout, decodeImageDataUrl, IMAGE_EXTENSIONS,
+  validateConfig,
 } from './validation.js'
+import { withDefaults } from './src/config.js'
 import { reanchor } from './seed.js'
 import { createAuth, resolvePassword } from './auth.js'
 
@@ -111,12 +113,36 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/auth/check', auth.requireAuth, (_req, res) => res.json({ ok: true }))
 
 /**
+ * The configuration is readable without a session: the public request form
+ * needs the list of vehicle types. Writing it requires one.
+ */
+app.get('/api/config', async (_req, res, next) => {
+  try {
+    const raw = await readRaw('config')
+    res.json(withDefaults(raw === '[]' ? {} : JSON.parse(raw)))
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
  * Public submission of a vehicle request. Deliberately the only write open
  * without a session, hence the rate limit, the size cap and the strict
  * validation.
  */
 app.post('/api/requests', async (req, res, next) => {
-  const invalid = validateRequestSubmission(req.body)
+  // The accepted vehicle types follow the configuration, so a type added by
+  // an operator is not rejected here.
+  let allowedTypes
+  try {
+    const raw = await readRaw('config')
+    allowedTypes = withDefaults(raw === '[]' ? {} : JSON.parse(raw))
+      .requestVehicleTypes.map(type => type.id)
+  } catch (err) {
+    return next(err)
+  }
+
+  const invalid = validateRequestSubmission(req.body, allowedTypes)
   if (invalid) {
     return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid request')
   }
@@ -286,6 +312,23 @@ for (const entity of ENTITIES) {
     }
   })
 }
+
+// ── Configuration ──
+
+app.put('/api/config', async (req, res, next) => {
+  const invalid = validateConfig(req.body)
+  if (invalid) {
+    return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid configuration')
+  }
+  try {
+    await withLock('config', async () => {
+      await write('config', JSON.stringify(withDefaults(req.body), null, 2))
+      res.json({ ok: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
 
 // ── Vehicle park ──
 // The layout holds zones drawn over the site plan; the plan itself is a

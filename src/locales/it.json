@@ -14,7 +14,8 @@
     "calendar": "Calendario",
     "requests": "Richieste",
     "park": "Vista del parco",
-    "checks": "SPH"
+    "checks": "SPH",
+    "config": "Configurazione"
   },
   "actions": {
     "add": "Aggiungi",
@@ -260,7 +261,9 @@
       "unknownValue": "Elemento {index}: valore sconosciuto per «{field}»",
       "endBeforeStart": "La data di fine precede la data di inizio",
       "invalidImage": "Immagine non valida. Usa JPEG, PNG o WebP.",
-      "imageTooLarge": "Immagine troppo grande (massimo {max} MB)."
+      "imageTooLarge": "Immagine troppo grande (massimo {max} MB).",
+      "emptyList": "L'elenco «{field}» non può essere vuoto",
+      "unknownLicense": "Licenza sconosciuta per la categoria «{field}»"
     },
     "tooManyRequests": "Troppe richieste inviate. Riprova tra qualche minuto.",
     "requestsFull": "La coda delle richieste è piena. Contatta l'amministrazione.",
@@ -395,5 +398,33 @@
       "due": "7 g fa — da rifare",
       "overdue": "{days} g fa — in ritardo"
     }
+  },
+  "config": {
+    "title": "Configurazione",
+    "intro": "Queste impostazioni si applicano subito a tutta l'applicazione.",
+    "requestTypes": "Tipi di veicolo nel modulo di richiesta",
+    "requestTypesHint": "I tipi forniti con l'applicazione sono tradotti automaticamente. Un tipo aggiunto qui mantiene l'etichetta inserita, in tutte le lingue.",
+    "builtIn": "fornito",
+    "custom": "personalizzato",
+    "identifier": "Identificatore",
+    "identifierHint": "lettere, cifre, trattino o trattino basso",
+    "labelOptional": "Etichetta (facoltativa per un tipo fornito)",
+    "addType": "Aggiungi un tipo",
+    "licenses": "Licenze di condurre",
+    "licensesHint": "Codici delle licenze militari svizzere usati nelle schede delle persone.",
+    "addLicense": "Aggiungi una licenza",
+    "matrix": "Licenze accettate per categoria",
+    "matrixHint": "Senza e con rimorchio. Queste regole determinano quali conducenti vengono proposti per un veicolo.",
+    "withoutTrailer": "Senza rimorchio",
+    "withTrailer": "Con rimorchio",
+    "categoriesFixed": "Le categorie di veicoli seguono la regolamentazione e non sono modificabili.",
+    "moveUp": "Sposta su",
+    "moveDown": "Sposta giù",
+    "save": "Salva la configurazione",
+    "saved": "Configurazione salvata",
+    "reset": "Ripristina i valori predefiniti",
+    "resetConfirm": "Ripristinare tutta la configurazione ai valori predefiniti?",
+    "loadFailed": "Impossibile caricare la configurazione: {reason}",
+    "saveFailed": "Impossibile salvare la configurazione: {reason}"
   }
 }

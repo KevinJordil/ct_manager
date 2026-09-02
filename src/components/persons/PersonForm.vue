@@ -1,11 +1,14 @@
 <script setup>
 import { reactive, watch } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
-import { LICENSES } from '../../constants.js'
+import { useConfigStore } from '../../stores/config.js'
 import { LICENSE_PICKER_COLORS } from '../../labels.js'
 
 const props = defineProps({ person: { type: Object, default: null } })
 const emit = defineEmits(['save', 'close'])
+
+const configStore = useConfigStore()
+configStore.init()
 
 const form = reactive({ rank: '', firstName: '', lastName: '', licenses: [], notes: '' })
 
@@ -52,7 +55,7 @@ function submit() {
       <div>
         <span class="label" id="person-licenses-label">{{ $t('persons.licenses') }}</span>
         <div class="flex flex-wrap gap-2 mt-1" role="group" aria-labelledby="person-licenses-label">
-          <button v-for="license in LICENSES" :key="license" type="button"
+          <button v-for="license in configStore.licenses" :key="license" type="button"
             @click="toggleLicense(license)"
             :aria-pressed="form.licenses.includes(license)"
             :class="['px-3 py-1.5 rounded-lg text-sm font-medium border transition-all',

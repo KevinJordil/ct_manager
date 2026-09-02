@@ -14,7 +14,8 @@
     "calendar": "Kalender",
     "requests": "Anfragen",
     "park": "Parkübersicht",
-    "checks": "SPH"
+    "checks": "SPH",
+    "config": "Konfiguration"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -260,7 +261,9 @@
       "unknownValue": "Eintrag {index}: unbekannter Wert für «{field}»",
       "endBeforeStart": "Das Enddatum liegt vor dem Startdatum",
       "invalidImage": "Ungültiges Bild. Verwenden Sie JPEG, PNG oder WebP.",
-      "imageTooLarge": "Bild zu gross (maximal {max} MB)."
+      "imageTooLarge": "Bild zu gross (maximal {max} MB).",
+      "emptyList": "Die Liste «{field}» darf nicht leer sein",
+      "unknownLicense": "Unbekannter Ausweis für die Kategorie «{field}»"
     },
     "tooManyRequests": "Zu viele Anfragen gesendet. Versuchen Sie es in einigen Minuten erneut.",
     "requestsFull": "Die Anfrageliste ist voll. Wenden Sie sich an die Verwaltung.",
@@ -395,5 +398,33 @@
       "due": "vor 7 T — erneut fällig",
       "overdue": "vor {days} T — überfällig"
     }
+  },
+  "config": {
+    "title": "Konfiguration",
+    "intro": "Diese Einstellungen gelten sofort für die ganze Anwendung.",
+    "requestTypes": "Fahrzeugtypen im Anfrageformular",
+    "requestTypesHint": "Mitgelieferte Typen werden automatisch übersetzt. Ein hier hinzugefügter Typ behält die eingegebene Bezeichnung in allen Sprachen.",
+    "builtIn": "mitgeliefert",
+    "custom": "eigen",
+    "identifier": "Kennung",
+    "identifierHint": "Buchstaben, Ziffern, Bindestrich oder Unterstrich",
+    "labelOptional": "Bezeichnung (bei mitgelieferten Typen optional)",
+    "addType": "Typ hinzufügen",
+    "licenses": "Führerausweise",
+    "licensesHint": "Codes der Schweizer Militärführerausweise, wie sie in den Personendaten verwendet werden.",
+    "addLicense": "Ausweis hinzufügen",
+    "matrix": "Zugelassene Ausweise pro Kategorie",
+    "matrixHint": "Ohne und mit Anhänger. Diese Regeln bestimmen, welche Fahrer für ein Fahrzeug vorgeschlagen werden.",
+    "withoutTrailer": "Ohne Anhänger",
+    "withTrailer": "Mit Anhänger",
+    "categoriesFixed": "Die Fahrzeugkategorien folgen der Regelung und sind nicht änderbar.",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "save": "Konfiguration speichern",
+    "saved": "Konfiguration gespeichert",
+    "reset": "Standardwerte wiederherstellen",
+    "resetConfirm": "Die gesamte Konfiguration auf die Standardwerte zurücksetzen?",
+    "loadFailed": "Konfiguration konnte nicht geladen werden: {reason}",
+    "saveFailed": "Konfiguration konnte nicht gespeichert werden: {reason}"
   }
 }

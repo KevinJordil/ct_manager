@@ -2,13 +2,17 @@
 import { ref, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRequestsStore } from '../stores/requests.js'
-import { REQUEST_VEHICLE_TYPES } from '../constants.js'
+import { useConfigStore } from '../stores/config.js'
 import { newId } from '../id.js'
 import LanguageSwitcher from '../components/common/LanguageSwitcher.vue'
 
 /** Public form: reachable without a session, so it carries its own layout. */
 const store = useRequestsStore()
+const configStore = useConfigStore()
 const { t, te } = useI18n()
+
+// Readable without a session, which is what lets this public page work.
+configStore.init()
 
 const contact = reactive({ firstName: '', lastName: '', company: '', section: '', phone: '' })
 const planning = reactive({ startDate: '', endDate: '', meetingPoint: '' })
@@ -192,8 +196,8 @@ async function submit() {
                   <label class="label" :for="`request-type-${row.rowId}`">{{ $t('requests.vehicleType') }} *</label>
                   <select :id="`request-type-${row.rowId}`" v-model="row.type" class="input" required>
                     <option value="" disabled>{{ $t('requests.selectType') }}</option>
-                    <option v-for="type in REQUEST_VEHICLE_TYPES" :key="type" :value="type">
-                      {{ $t(`requests.types.${type}`) }}
+                    <option v-for="type in configStore.requestVehicleTypes" :key="type.id" :value="type.id">
+                      {{ configStore.requestTypeLabel(type, $t) }}
                     </option>
                   </select>
                 </div>

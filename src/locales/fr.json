@@ -14,7 +14,8 @@
     "calendar": "Calendrier",
     "requests": "Demandes",
     "park": "Vue de parc",
-    "checks": "SPH"
+    "checks": "SPH",
+    "config": "Configuration"
   },
   "actions": {
     "add": "Ajouter",
@@ -260,7 +261,9 @@
       "unknownValue": "Élément {index} : valeur inconnue pour « {field} »",
       "endBeforeStart": "La date de fin précède la date de début",
       "invalidImage": "Image invalide. Utilisez JPEG, PNG ou WebP.",
-      "imageTooLarge": "Image trop volumineuse (maximum {max} Mo)."
+      "imageTooLarge": "Image trop volumineuse (maximum {max} Mo).",
+      "emptyList": "La liste « {field} » ne peut pas être vide",
+      "unknownLicense": "Permis inconnu pour la catégorie « {field} »"
     },
     "tooManyRequests": "Trop de demandes envoyées. Réessayez dans quelques minutes.",
     "requestsFull": "La file de demandes est pleine. Contactez l'administration.",
@@ -395,5 +398,33 @@
       "due": "il y a 7 j — à refaire",
       "overdue": "il y a {days} j — en retard"
     }
+  },
+  "config": {
+    "title": "Configuration",
+    "intro": "Ces réglages s'appliquent immédiatement à toute l'application.",
+    "requestTypes": "Types de véhicules du formulaire de demande",
+    "requestTypesHint": "Les types fournis avec l'application sont traduits automatiquement. Un type ajouté ici garde l'étiquette saisie, dans toutes les langues.",
+    "builtIn": "fourni",
+    "custom": "personnalisé",
+    "identifier": "Identifiant",
+    "identifierHint": "lettres, chiffres, tiret ou souligné",
+    "labelOptional": "Étiquette (facultative pour un type fourni)",
+    "addType": "Ajouter un type",
+    "licenses": "Permis de conduire",
+    "licensesHint": "Codes des permis militaires suisses utilisés dans les fiches personnes.",
+    "addLicense": "Ajouter un permis",
+    "matrix": "Permis acceptés par catégorie",
+    "matrixHint": "Sans remorque, puis avec remorque. Ces règles déterminent quels chauffeurs sont proposés pour un véhicule.",
+    "withoutTrailer": "Sans remorque",
+    "withTrailer": "Avec remorque",
+    "categoriesFixed": "Les catégories de véhicules suivent la réglementation et ne sont pas modifiables.",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "save": "Enregistrer la configuration",
+    "saved": "Configuration enregistrée",
+    "reset": "Rétablir les valeurs par défaut",
+    "resetConfirm": "Rétablir toute la configuration par défaut ?",
+    "loadFailed": "Chargement de la configuration impossible : {reason}",
+    "saveFailed": "Enregistrement de la configuration impossible : {reason}"
   }
 }

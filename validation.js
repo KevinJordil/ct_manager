@@ -14,7 +14,7 @@ const MAX_TEXT = 5000
 const CATEGORIES = ['light-road', 'light-offroad', 'medium', 'heavy']
 const VEHICLE_STATUSES = ['free', 'on-loan']
 const REQUEST_STATUSES = ['pending', 'approved', 'rejected']
-const REQUEST_VEHICLE_TYPES = [
+const BUILT_IN_REQUEST_VEHICLE_TYPES = [
   'car', 'van-9', 'class-g', 'duro-personnel', 'duro-cargo',
   'truck-personnel', 'truck-cargo', 'other',
 ]
@@ -158,9 +158,10 @@ const isDateTime = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}
  * strictly than the rest: every field is bounded, and only known vehicle
  * types are accepted.
  *
+ * @param allowedTypes the configured type ids; defaults to the built-in set
  * @returns {{code: string, params: object}|null}
  */
-export function validateRequestSubmission(body) {
+export function validateRequestSubmission(body, allowedTypes = BUILT_IN_REQUEST_VEHICLE_TYPES) {
   if (body === null || typeof body !== 'object' || Array.isArray(body)) {
     return { code: 'notAnObject', params: {} }
   }
@@ -191,7 +192,7 @@ export function validateRequestSubmission(body) {
     if (entry === null || typeof entry !== 'object') {
       return { code: 'invalidNested', params: { list: 'vehicles', position, field: '' } }
     }
-    if (!REQUEST_VEHICLE_TYPES.includes(entry.type)) {
+    if (!allowedTypes.includes(entry.type)) {
       return { code: 'invalidNested', params: { list: 'vehicles', position, field: 'type' } }
     }
     if (!isOptionalBoolean(entry.driverRequired)) {
@@ -338,3 +339,53 @@ export function decodeImageDataUrl(dataUrl) {
 }
 
 export const IMAGE_EXTENSIONS = Object.values(IMAGE_TYPES)
+
+// ── Runtime configuration ──
+
+const CONFIGURABLE_CATEGORIES = ['light-road', 'light-offroad', 'medium', 'heavy']
+const MAX_CONFIG_ENTRIES = 100
+const ID_PATTERN = /^[a-zA-Z0-9_-]{1,40}$/
+
+/**
+ * Validates the configuration an operator may edit.
+ * @returns {{code: string, params: object}|null}
+ */
+export function validateConfig(body) {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return { code: 'notAnObject', params: {} }
+  }
+
+  const types = body.requestVehicleTypes
+  if (!Array.isArray(types)) return invalidField('requestVehicleTypes')
+  if (types.length === 0) return { code: 'emptyList', params: { field: 'requestVehicleTypes' } }
+  if (types.length > MAX_CONFIG_ENTRIES) return { code: 'tooManyItems', params: { max: MAX_CONFIG_ENTRIES } }
+
+  const seen = new Set()
+  for (const [index, type] of types.entries()) {
+    if (type === null || typeof type !== 'object') return { code: 'notAnObject', params: { index } }
+    if (!ID_PATTERN.test(type.id ?? '')) return { code: 'invalidField', params: { index, field: 'id' } }
+    if (seen.has(type.id)) return { code: 'duplicateId', params: { index, id: type.id } }
+    seen.add(type.id)
+    if (type.label !== undefined && !isText(type.label)) {
+      return { code: 'invalidField', params: { index, field: 'label' } }
+    }
+  }
+
+  if (!Array.isArray(body.licenses)) return invalidField('licenses')
+  if (body.licenses.length === 0) return { code: 'emptyList', params: { field: 'licenses' } }
+  if (!body.licenses.every(code => ID_PATTERN.test(code ?? ''))) return invalidField('licenses')
+
+  for (const field of ['licensesByCategory', 'trailerLicensesByCategory']) {
+    const matrix = body[field]
+    if (matrix === null || typeof matrix !== 'object' || Array.isArray(matrix)) return invalidField(field)
+    for (const [category, codes] of Object.entries(matrix)) {
+      if (!CONFIGURABLE_CATEGORIES.includes(category)) {
+        return { code: 'unknownValue', params: { field: category } }
+      }
+      if (!Array.isArray(codes) || !codes.every(code => body.licenses.includes(code))) {
+        return { code: 'unknownLicense', params: { field: category } }
+      }
+    }
+  }
+  return null
+}
