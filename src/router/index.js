@@ -9,6 +9,7 @@ import LoginView from '../views/LoginView.vue'
 import RequestView from '../views/RequestView.vue'
 import RequestsView from '../views/RequestsView.vue'
 import ParkView from '../views/ParkView.vue'
+import ChecksView from '../views/ChecksView.vue'
 
 const routes = [
   // ── Public ──
@@ -23,6 +24,7 @@ const routes = [
   { path: '/calendar', name: 'calendar', component: CalendarView },
   { path: '/requests', name: 'requests', component: RequestsView },
   { path: '/park', name: 'park', component: ParkView },
+  { path: '/checks', name: 'checks', component: ChecksView },
 ]
 
 const router = createRouter({

@@ -13,7 +13,8 @@
     "missions": "Einsätze",
     "calendar": "Kalender",
     "requests": "Anfragen",
-    "park": "Parkübersicht"
+    "park": "Parkübersicht",
+    "checks": "SPH"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -367,6 +368,32 @@
       "resize": "Grösse ändern: Ecken",
       "rotate": "Drehen: runder Griff",
       "delete": "Löschen: Entf"
+    }
+  },
+  "checks": {
+    "title": "SPH — wöchentlicher Parkdienst",
+    "shortTitle": "SPH",
+    "record": "SPH erfassen",
+    "vehicle": "Fahrzeug:",
+    "date": "Datum der Kontrolle",
+    "doneBy": "Durchgeführt von",
+    "byPerson": "Einer Person",
+    "byNote": "Einer Bemerkung",
+    "selectPerson": "— Person auswählen —",
+    "notePlaceholder": "z. B. durch die Stabskp, Werkstatt, externe Kontrolle…",
+    "history": "Verlauf",
+    "noHistory": "Keine Kontrolle erfasst",
+    "empty": "Kein Fahrzeug erfasst",
+    "total": "Fahrzeuge",
+    "upToDate": "Aktuell",
+    "toDo": "Zu erledigen",
+    "deleteTitle": "Kontrolle löschen",
+    "deleteConfirm": "Diesen Kontrolleintrag löschen?",
+    "status": {
+      "never": "Nie durchgeführt",
+      "ok": "vor {days} T",
+      "due": "vor 7 T — erneut fällig",
+      "overdue": "vor {days} T — überfällig"
     }
   }
 }

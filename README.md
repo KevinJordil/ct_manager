@@ -70,6 +70,11 @@ mois du calendrier.
 - **File de traitement** côté gestion : filtrage par statut, détail dépliable, compteur des demandes en attente dans la barre latérale
 - **Approuver crée la mission** : le formulaire de mission s'ouvre pré-rempli depuis la demande (titre, contact, dates, point de rendez-vous et véhicules en notes) ; la demande ne passe à *approuvée* qu'une fois la mission enregistrée
 
+### SPH — service de parc hebdomadaire
+- Historique des contrôles par véhicule, chacun daté et attribué soit à une personne, soit à un commentaire libre (atelier, contrôle externe…)
+- Statut calculé depuis la date du dernier contrôle : *à jour* en deçà de sept jours, *à refaire* le septième, *en retard* au-delà, *jamais effectué* si aucun n'existe
+- Liste triée par urgence — jamais contrôlés d'abord, puis du plus ancien au plus récent
+
 ### Vue de parc
 - Plan du parc **téléversé depuis le navigateur** (JPEG, PNG ou WebP), redimensionné et recompressé côté client avant l'envoi
 - **Zones dessinées sur le plan** au cliquer-glisser, déplaçables, redimensionnables par les coins et inclinables à la poignée
@@ -274,6 +279,7 @@ ct_manager/
 │   ├── constants.js       # Vocabulaire métier : statuts, catégories, permis
 │   ├── datetime.js        # Dates en heure locale (jamais toISOString)
 │   ├── availability.js    # Règles métier : statuts et disponibilité
+│   ├── checks.js          # Échéances des contrôles hebdomadaires
 │   ├── migrations.js      # Lecture des formats de données antérieurs
 │   ├── labels.js          # Helpers d'affichage partagés
 │   ├── id.js              # Génération d'identifiants
@@ -301,7 +307,8 @@ ct_manager/
 │   │   ├── LoginView.vue      # publique
 │   │   ├── RequestView.vue    # publique : formulaire de demande
 │   │   ├── RequestsView.vue   # file de traitement
-│   │   └── ParkView.vue       # plan du parc et zones
+│   │   ├── ParkView.vue       # plan du parc et zones
+│   │   └── ChecksView.vue     # SPH
 │   └── __tests__/         # Tests unitaires et de composants
 ├── test/                  # Tests d'intégration du serveur
 ├── server.js              # Serveur Express

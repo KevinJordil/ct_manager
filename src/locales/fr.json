@@ -13,7 +13,8 @@
     "missions": "Missions",
     "calendar": "Calendrier",
     "requests": "Demandes",
-    "park": "Vue de parc"
+    "park": "Vue de parc",
+    "checks": "SPH"
   },
   "actions": {
     "add": "Ajouter",
@@ -367,6 +368,32 @@
       "resize": "Redimensionner : coins",
       "rotate": "Incliner : poignée ronde",
       "delete": "Supprimer : Suppr"
+    }
+  },
+  "checks": {
+    "title": "SPH — service de parc hebdomadaire",
+    "shortTitle": "SPH",
+    "record": "Enregistrer un SPH",
+    "vehicle": "Véhicule :",
+    "date": "Date du contrôle",
+    "doneBy": "Réalisé par",
+    "byPerson": "Une personne",
+    "byNote": "Un commentaire",
+    "selectPerson": "— Sélectionner une personne —",
+    "notePlaceholder": "Ex : effectué par la cp EM, atelier, contrôle externe…",
+    "history": "Historique",
+    "noHistory": "Aucun contrôle enregistré",
+    "empty": "Aucun véhicule enregistré",
+    "total": "Véhicules",
+    "upToDate": "À jour",
+    "toDo": "À faire",
+    "deleteTitle": "Supprimer le contrôle",
+    "deleteConfirm": "Supprimer cet enregistrement de contrôle ?",
+    "status": {
+      "never": "Jamais effectué",
+      "ok": "il y a {days} j",
+      "due": "il y a 7 j — à refaire",
+      "overdue": "il y a {days} j — en retard"
     }
   }
 }

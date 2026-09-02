@@ -6,7 +6,15 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 38
+    "seats": 38,
+    "checks": [
+      {
+        "id": "6001001",
+        "date": "2026-05-07",
+        "personId": "2001001",
+        "note": ""
+      }
+    ]
   },
   {
     "id": "3001002",
@@ -15,7 +23,15 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 38
+    "seats": 38,
+    "checks": [
+      {
+        "id": "6001003",
+        "date": "2026-05-05",
+        "personId": "2001001",
+        "note": ""
+      }
+    ]
   },
   {
     "id": "3001003",
@@ -24,7 +40,15 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 38
+    "seats": 38,
+    "checks": [
+      {
+        "id": "6001005",
+        "date": "2026-05-03",
+        "personId": "2001001",
+        "note": ""
+      }
+    ]
   },
   {
     "id": "3001004",
@@ -33,7 +57,15 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 38
+    "seats": 38,
+    "checks": [
+      {
+        "id": "6001009",
+        "date": "2026-04-29",
+        "personId": "2001001",
+        "note": ""
+      }
+    ]
   },
   {
     "id": "3001005",
@@ -42,7 +74,15 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 46
+    "seats": 46,
+    "checks": [
+      {
+        "id": "6001014",
+        "date": "2026-04-24",
+        "personId": "2001001",
+        "note": ""
+      }
+    ]
   },
   {
     "id": "3001006",
@@ -51,7 +91,8 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 46
+    "seats": 46,
+    "checks": []
   },
   {
     "id": "3001007",
@@ -60,7 +101,8 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 46
+    "seats": 46,
+    "checks": []
   },
   {
     "id": "3001008",
@@ -69,7 +111,8 @@
     "category": "heavy",
     "status": "free",
     "loanNote": "",
-    "seats": 46
+    "seats": 46,
+    "checks": []
   },
   {
     "id": "3001009",
@@ -78,7 +121,8 @@
     "category": "medium",
     "status": "free",
     "loanNote": "",
-    "seats": 13
+    "seats": 13,
+    "checks": []
   },
   {
     "id": "3001010",
@@ -87,7 +131,8 @@
     "category": "medium",
     "status": "free",
     "loanNote": "",
-    "seats": 13
+    "seats": 13,
+    "checks": []
   },
   {
     "id": "3001011",
@@ -96,7 +141,8 @@
     "category": "medium",
     "status": "free",
     "loanNote": "",
-    "seats": 13
+    "seats": 13,
+    "checks": []
   },
   {
     "id": "3001012",
@@ -105,7 +151,8 @@
     "category": "medium",
     "status": "free",
     "loanNote": "",
-    "seats": 13
+    "seats": 13,
+    "checks": []
   },
   {
     "id": "3001013",
@@ -114,7 +161,8 @@
     "category": "light-offroad",
     "status": "free",
     "loanNote": "",
-    "seats": 3
+    "seats": 3,
+    "checks": []
   },
   {
     "id": "3001014",
@@ -123,7 +171,8 @@
     "category": "light-offroad",
     "status": "free",
     "loanNote": "",
-    "seats": 3
+    "seats": 3,
+    "checks": []
   },
   {
     "id": "3001015",
@@ -132,7 +181,8 @@
     "category": "light-offroad",
     "status": "free",
     "loanNote": "",
-    "seats": 3
+    "seats": 3,
+    "checks": []
   },
   {
     "id": "3001016",
@@ -141,7 +191,8 @@
     "category": "light-offroad",
     "status": "free",
     "loanNote": "",
-    "seats": 3
+    "seats": 3,
+    "checks": []
   },
   {
     "id": "3001017",
@@ -150,7 +201,8 @@
     "category": "light-road",
     "status": "free",
     "loanNote": "",
-    "seats": 4
+    "seats": 4,
+    "checks": []
   },
   {
     "id": "3001018",
@@ -159,7 +211,8 @@
     "category": "light-road",
     "status": "free",
     "loanNote": "",
-    "seats": 4
+    "seats": 4,
+    "checks": []
   },
   {
     "id": "3001019",
@@ -168,7 +221,8 @@
     "category": "light-road",
     "status": "free",
     "loanNote": "",
-    "seats": 4
+    "seats": 4,
+    "checks": []
   },
   {
     "id": "3001020",
@@ -177,6 +231,7 @@
     "category": "light-road",
     "status": "on-loan",
     "loanNote": "Prêté à la cp EM jusqu'à fin de semaine",
-    "seats": 4
+    "seats": 4,
+    "checks": []
   }
 ]

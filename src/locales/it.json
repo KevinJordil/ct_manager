@@ -13,7 +13,8 @@
     "missions": "Missioni",
     "calendar": "Calendario",
     "requests": "Richieste",
-    "park": "Vista del parco"
+    "park": "Vista del parco",
+    "checks": "SPH"
   },
   "actions": {
     "add": "Aggiungi",
@@ -367,6 +368,32 @@
       "resize": "Ridimensionare: angoli",
       "rotate": "Ruotare: maniglia rotonda",
       "delete": "Eliminare: Canc"
+    }
+  },
+  "checks": {
+    "title": "SPH — servizio di parco settimanale",
+    "shortTitle": "SPH",
+    "record": "Registrare un SPH",
+    "vehicle": "Veicolo:",
+    "date": "Data del controllo",
+    "doneBy": "Eseguito da",
+    "byPerson": "Una persona",
+    "byNote": "Un commento",
+    "selectPerson": "— Seleziona una persona —",
+    "notePlaceholder": "Es. eseguito dalla cp SM, officina, controllo esterno…",
+    "history": "Cronologia",
+    "noHistory": "Nessun controllo registrato",
+    "empty": "Nessun veicolo registrato",
+    "total": "Veicoli",
+    "upToDate": "Aggiornati",
+    "toDo": "Da fare",
+    "deleteTitle": "Elimina il controllo",
+    "deleteConfirm": "Eliminare questa registrazione di controllo?",
+    "status": {
+      "never": "Mai eseguito",
+      "ok": "{days} g fa",
+      "due": "7 g fa — da rifare",
+      "overdue": "{days} g fa — in ritardo"
     }
   }
 }

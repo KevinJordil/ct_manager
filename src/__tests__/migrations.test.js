@@ -86,6 +86,7 @@ describe('migrateVehicles — French schema', () => {
       status: 'on-loan',
       loanNote: 'Prêté à la cp EM',
       seats: 8,
+      checks: [],
     })
   })
 
@@ -104,6 +105,31 @@ describe('migrateVehicles — French schema', () => {
   it('defaults the seat count', () => {
     const [vehicle] = migrateVehicles([{ id: 'v1', nom: 'X', categorie: 'moyen' }])
     expect(vehicle.seats).toBe(4)
+  })
+
+  it('renames the weekly checks and their comment field', () => {
+    const [vehicle] = migrateVehicles([{
+      ...legacy,
+      sph: [{ id: 's1', date: '2026-09-01', personId: 'p1', commentaire: 'Atelier' }],
+    }])
+    expect(vehicle.checks).toEqual([
+      { id: 's1', date: '2026-09-01', personId: 'p1', note: 'Atelier' },
+    ])
+    expect(vehicle).not.toHaveProperty('sph')
+  })
+
+  it('gives a vehicle without checks an empty list', () => {
+    const [vehicle] = migrateVehicles([legacy])
+    expect(vehicle.checks).toEqual([])
+  })
+
+  it('drops a leftover sph field from data already in the new schema', () => {
+    const [vehicle] = migrateVehicles([{
+      id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', status: 'free',
+      sph: [{ id: 's1', date: '2026-09-01', personId: 'p1', commentaire: 'X' }],
+    }])
+    expect(vehicle).not.toHaveProperty('sph')
+    expect(vehicle.checks).toEqual([{ id: 's1', date: '2026-09-01', personId: 'p1', note: 'X' }])
   })
 })
 
@@ -171,6 +197,7 @@ describe('idempotence', () => {
     }]
     const vehicles = [{
       id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', status: 'free', loanNote: '', seats: 8,
+      checks: [],
     }]
     const missions = [{
       id: 'm1', title: 'T', description: '', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',

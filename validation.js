@@ -83,6 +83,27 @@ function validateVehicle(v) {
   if (v.seats !== undefined && (!Number.isInteger(v.seats) || v.seats < 0 || v.seats > 200)) {
     return invalidField('seats')
   }
+
+  if (v.checks !== undefined) {
+    if (!Array.isArray(v.checks)) return invalidField('checks')
+    for (const [i, check] of v.checks.entries()) {
+      if (check === null || typeof check !== 'object') {
+        return { code: 'invalidNested', params: { list: 'checks', position: i, field: '' } }
+      }
+      if (!isText(check.id)) {
+        return { code: 'invalidNested', params: { list: 'checks', position: i, field: 'id' } }
+      }
+      if (typeof check.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(check.date)) {
+        return { code: 'invalidNested', params: { list: 'checks', position: i, field: 'date' } }
+      }
+      if (check.personId !== null && check.personId !== undefined && !isText(check.personId)) {
+        return { code: 'invalidNested', params: { list: 'checks', position: i, field: 'personId' } }
+      }
+      if (!isOptionalText(check.note)) {
+        return { code: 'invalidNested', params: { list: 'checks', position: i, field: 'note' } }
+      }
+    }
+  }
   return null
 }
 

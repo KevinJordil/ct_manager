@@ -80,15 +80,28 @@ export function migratePersons(data) {
 
 // ── Vehicles ──
 
+/** Weekly checks were stored as "sph", with a French comment field. */
+function migrateChecks(raw) {
+  const source = raw.checks ?? raw.sph ?? []
+  return source.map(check => ({
+    id: check.id,
+    date: check.date,
+    personId: check.personId ?? null,
+    note: check.note ?? check.commentaire ?? '',
+  }))
+}
+
 function migrateVehicle(raw) {
   if (raw.plate !== undefined || raw.category !== undefined) {
+    const { sph: _dropped, ...rest } = raw
     return {
-      ...raw,
-      name: raw.name ?? '',
-      plate: raw.plate ?? '',
-      status: raw.status === VEHICLE_STATUS.ON_LOAN ? VEHICLE_STATUS.ON_LOAN : VEHICLE_STATUS.FREE,
-      loanNote: raw.loanNote ?? '',
-      seats: raw.seats ?? 4,
+      ...rest,
+      name: rest.name ?? '',
+      plate: rest.plate ?? '',
+      status: rest.status === VEHICLE_STATUS.ON_LOAN ? VEHICLE_STATUS.ON_LOAN : VEHICLE_STATUS.FREE,
+      loanNote: rest.loanNote ?? '',
+      seats: rest.seats ?? 4,
+      checks: migrateChecks(raw),
     }
   }
 
@@ -100,6 +113,7 @@ function migrateVehicle(raw) {
     status: LEGACY_VEHICLE_STATUSES[raw.statut] ?? VEHICLE_STATUS.FREE,
     loanNote: raw.commentairePret ?? '',
     seats: raw.places ?? 4,
+    checks: migrateChecks(raw),
   }
 }
 

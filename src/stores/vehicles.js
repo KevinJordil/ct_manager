@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { VEHICLE_STATUS } from '../constants.js'
+import { newId } from '../id.js'
 import { migrateVehicles } from '../migrations.js'
 import { useCollection } from './collection.js'
 
@@ -20,6 +21,19 @@ export const useVehiclesStore = defineStore('vehicles', () => {
     })
   }
 
+  function addCheck(vehicleId, check) {
+    collection.mutate(vehicleId, vehicle => {
+      if (!vehicle.checks) vehicle.checks = []
+      vehicle.checks.push({ ...check, id: newId() })
+    })
+  }
+
+  function removeCheck(vehicleId, checkId) {
+    collection.mutate(vehicleId, vehicle => {
+      vehicle.checks = (vehicle.checks ?? []).filter(check => check.id !== checkId)
+    })
+  }
+
   return {
     vehicles: collection.items,
     loading: collection.loading,
@@ -29,6 +43,6 @@ export const useVehiclesStore = defineStore('vehicles', () => {
     add: collection.add,
     update: collection.update,
     remove: collection.remove,
-    lend, release,
+    lend, release, addCheck, removeCheck,
   }
 })
