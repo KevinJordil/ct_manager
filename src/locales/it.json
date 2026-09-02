@@ -197,13 +197,6 @@
     },
     "noResource": "Nessuna risorsa da visualizzare"
   },
-  "accessKey": {
-    "title": "Chiave d'accesso",
-    "description": "Questo server richiede una chiave d'accesso (variabile {variable}). Viene conservata in questo browser.",
-    "label": "Chiave",
-    "placeholder": "Chiave d'accesso",
-    "enter": "Inserisci la chiave"
-  },
   "fields": {
     "id": "identificatore",
     "firstName": "nome",
@@ -234,13 +227,13 @@
     "saveFailed": "Salvataggio impossibile ({entity}): {reason}",
     "conflict": "Le {entity} sono state modificate altrove. Ricarica la pagina per ripartire dalla versione del server.",
     "notLoaded": "Dati non caricati ({entity}): salvataggio annullato per non sovrascrivere il server.",
-    "accessKeyRequired": "Chiave d'accesso richiesta o non valida",
     "unsavedSuffix": "Le tue ultime modifiche non sono state salvate."
   },
   "server": {
     "unreachable": "Server irraggiungibile",
     "auth": {
-      "required": "Chiave d'accesso richiesta o non valida"
+      "required": "Chiave d'accesso richiesta o non valida",
+      "invalidPassword": "Password errata"
     },
     "conflict": "I dati sono stati modificati altrove dopo il tuo caricamento",
     "preconditionRequired": "Richiesta incompleta inviata al server",
@@ -260,5 +253,14 @@
       "invalidDates": "Elemento {index}: date non valide",
       "unknownValue": "Elemento {index}: valore sconosciuto per «{field}»"
     }
+  },
+  "auth": {
+    "title": "Accesso",
+    "subtitle": "Accesso riservato al personale autorizzato",
+    "password": "Password",
+    "submit": "Accedi",
+    "logout": "Esci",
+    "sessionExpired": "Sessione scaduta. Effettua di nuovo l'accesso.",
+    "makeRequest": "Inviare una richiesta di veicolo"
   }
 }

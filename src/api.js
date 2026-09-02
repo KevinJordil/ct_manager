@@ -1,5 +1,5 @@
 const BASE = '/api'
-const STORAGE_KEY = 'ct_manager_token'
+const STORAGE_KEY = 'ct_manager_session'
 
 /**
  * API failure. `code` and `params` come from the server and are rendered in
@@ -16,10 +16,10 @@ export class ApiError extends Error {
   }
 }
 
-// ── Access key ──
-// The server only requires it when CT_TOKEN is set on its side.
+// ── Session token ──
+// Obtained by logging in; unrelated to the password, and revocable server-side.
 
-function readKey() {
+function readStoredToken() {
   try {
     return localStorage.getItem(STORAGE_KEY) ?? ''
   } catch {
@@ -27,18 +27,18 @@ function readKey() {
   }
 }
 
-let accessKey = readKey()
+let sessionToken = readStoredToken()
 
-export function setAccessKey(value) {
-  accessKey = value ?? ''
+export function setSessionToken(value) {
+  sessionToken = value ?? ''
   try {
-    if (accessKey) localStorage.setItem(STORAGE_KEY, accessKey)
+    if (sessionToken) localStorage.setItem(STORAGE_KEY, sessionToken)
     else localStorage.removeItem(STORAGE_KEY)
-  } catch { /* storage may be unavailable: the key lasts for this session */ }
+  } catch { /* storage may be unavailable: the session lasts for this tab */ }
 }
 
-export function hasAccessKey() {
-  return Boolean(accessKey)
+export function hasSessionToken() {
+  return Boolean(sessionToken)
 }
 
 // ── Requests ──
@@ -56,7 +56,7 @@ async function readError(res) {
 
 async function request(url, options = {}) {
   const headers = { ...options.headers }
-  if (accessKey) headers.Authorization = `Bearer ${accessKey}`
+  if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`
 
   let res
   try {
@@ -77,6 +77,36 @@ function versionOf(res) {
 }
 
 export const api = {
+  /**
+   * Exchanges the password for a session token.
+   * @returns {{ token: string, expiresAt: number }}
+   */
+  async login(password) {
+    const res = await request(`${BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+    return res.json()
+  },
+
+  /** Revokes the session server-side; ignores a failure, the client leaves anyway */
+  async logout() {
+    try {
+      await request(`${BASE}/auth/logout`, { method: 'POST' })
+    } catch { /* the local token is dropped regardless */ }
+  },
+
+  /** Is the stored token still accepted? */
+  async check() {
+    try {
+      await request(`${BASE}/auth/check`)
+      return true
+    } catch {
+      return false
+    }
+  },
+
   /** @returns {{ data: Array, version: string }} */
   async load(entity) {
     const res = await request(`${BASE}/${entity}`)

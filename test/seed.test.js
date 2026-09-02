@@ -5,61 +5,78 @@ import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-const RACINE = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
+const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const PORT = 4500 + Math.floor(Math.random() * 200)
+const PASSWORD = 'seed-test-password'
 const BASE = `http://127.0.0.1:${PORT}`
 
-let serveur
+let server
 let dataDir
+let token
+
+/** Every /api route below the login requires a session. */
+function authorized(routePath) {
+  return fetch(`${BASE}${routePath}`, { headers: { Authorization: `Bearer ${token}` } })
+}
 
 beforeAll(async () => {
   dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ct-manager-seed-'))
-  serveur = spawn('node', ['server.js'], {
-    cwd: RACINE,
-    env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir },
+  server = spawn('node', ['server.js'], {
+    cwd: ROOT,
+    env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir, CT_PASSWORD: PASSWORD },
     stdio: 'ignore',
   })
-  for (let i = 0; i < 100; i++) {
-    try { await fetch(`${BASE}/api/persons`); break }
-    catch { await new Promise(r => setTimeout(r, 100)) }
+  for (let attempt = 0; attempt < 100; attempt++) {
+    try {
+      await fetch(`${BASE}/api/auth/check`)
+      break
+    } catch {
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
   }
+  const res = await fetch(`${BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: PASSWORD }),
+  })
+  token = (await res.json()).token
 }, 30000)
 
 afterAll(async () => {
-  serveur?.kill()
+  server?.kill()
   if (dataDir) await fs.rm(dataDir, { recursive: true, force: true })
 })
 
 describe('demonstration data seeding', () => {
   it('fills an empty data directory on first launch', async () => {
-    const persons = await (await fetch(`${BASE}/api/persons`)).json()
-    const vehicles = await (await fetch(`${BASE}/api/vehicles`)).json()
-    const missions = await (await fetch(`${BASE}/api/missions`)).json()
+    const persons = await (await authorized('/api/persons')).json()
+    const vehicles = await (await authorized('/api/vehicles')).json()
+    const missions = await (await authorized('/api/missions')).json()
     expect(persons.length).toBeGreaterThan(0)
     expect(vehicles.length).toBeGreaterThan(0)
     expect(missions.length).toBeGreaterThan(0)
   })
 
   it('writes the files into the data directory', async () => {
-    const fichiers = await fs.readdir(dataDir)
-    expect(fichiers.sort()).toEqual(['missions.json', 'persons.json', 'vehicles.json'])
+    const files = await fs.readdir(dataDir)
+    expect(files).toEqual(expect.arrayContaining(['missions.json', 'persons.json', 'vehicles.json']))
   })
 
   it('produces data the server validation accepts', async () => {
     const { validateCollection } = await import('../validation.js')
     for (const entity of ['persons', 'vehicles', 'missions']) {
-      const data = await (await fetch(`${BASE}/api/${entity}`)).json()
+      const data = await (await authorized(`/api/${entity}`)).json()
       expect(validateCollection(entity, data)).toBeNull()
     }
   })
 
-  it('does not require a key when CT_TOKEN is unset', async () => {
-    const res = await fetch(`${BASE}/api/persons`)
-    expect(res.status).toBe(200)
+  it('protects the collections behind the login', async () => {
+    expect((await fetch(`${BASE}/api/persons`)).status).toBe(401)
+    expect((await authorized('/api/persons')).status).toBe(200)
   })
 
   it('re-anchors the dates so a mission is ongoing right after install', async () => {
-    const missions = await (await fetch(`${BASE}/api/missions`)).json()
+    const missions = await (await authorized('/api/missions')).json()
     const nowDate = new Date()
     const pad = n => String(n).padStart(2, '0')
     const now = `${nowDate.getFullYear()}-${pad(nowDate.getMonth() + 1)}-${pad(nowDate.getDate())}` +

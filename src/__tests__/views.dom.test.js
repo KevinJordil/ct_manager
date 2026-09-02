@@ -11,8 +11,8 @@ const data = vi.hoisted(() => ({ persons: [], vehicles: [], missions: [] }))
 
 vi.mock('../api.js', () => ({
   ApiError: class ApiError extends Error {},
-  setAccessKey: () => {},
-  hasAccessKey: () => false,
+  setSessionToken: () => {},
+  hasSessionToken: () => true,
   api: {
     load: async entity => ({ data: data[entity], version: 'v1' }),
     save: async () => ({ version: 'v2' }),

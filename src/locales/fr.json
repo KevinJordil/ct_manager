@@ -197,13 +197,6 @@
     },
     "noResource": "Aucune ressource à afficher"
   },
-  "accessKey": {
-    "title": "Clé d'accès",
-    "description": "Ce serveur demande une clé d'accès (variable {variable}). Elle est conservée dans ce navigateur.",
-    "label": "Clé",
-    "placeholder": "Clé d'accès",
-    "enter": "Saisir la clé"
-  },
   "fields": {
     "id": "identifiant",
     "firstName": "prénom",
@@ -234,13 +227,13 @@
     "saveFailed": "Enregistrement impossible ({entity}) : {reason}",
     "conflict": "Les {entity} ont été modifiées ailleurs. Rechargez la page pour repartir de la version du serveur.",
     "notLoaded": "Données non chargées ({entity}) : enregistrement annulé pour ne pas écraser le serveur.",
-    "accessKeyRequired": "Clé d'accès requise ou invalide",
     "unsavedSuffix": "Vos dernières modifications ne sont pas enregistrées."
   },
   "server": {
     "unreachable": "Serveur injoignable",
     "auth": {
-      "required": "Clé d'accès requise ou invalide"
+      "required": "Clé d'accès requise ou invalide",
+      "invalidPassword": "Mot de passe incorrect"
     },
     "conflict": "Les données ont été modifiées ailleurs depuis votre chargement",
     "preconditionRequired": "Requête incomplète envoyée au serveur",
@@ -260,5 +253,14 @@
       "invalidDates": "Élément {index} : dates invalides",
       "unknownValue": "Élément {index} : valeur inconnue pour « {field} »"
     }
+  },
+  "auth": {
+    "title": "Connexion",
+    "subtitle": "Accès réservé au personnel autorisé",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "logout": "Se déconnecter",
+    "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
+    "makeRequest": "Faire une demande de véhicule"
   }
 }

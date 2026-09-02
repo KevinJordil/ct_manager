@@ -13,7 +13,7 @@ import { ref, readonly } from 'vue'
 
 const error = ref(null)
 const conflict = ref(false)
-const keyRequired = ref(false)
+const authRequired = ref(false)
 const saving = ref(0)
 
 /**
@@ -27,15 +27,15 @@ export function reportError(key, params = {}, { isConflict = false, context = nu
   if (isConflict) conflict.value = true
 }
 
-export function reportKeyRequired() {
-  keyRequired.value = true
-  error.value = { key: 'errors.accessKeyRequired', params: {}, context: null }
+export function reportAuthRequired() {
+  authRequired.value = true
+  error.value = { key: 'auth.sessionExpired', params: {}, context: null }
 }
 
 export function clearError() {
   error.value = null
   conflict.value = false
-  keyRequired.value = false
+  authRequired.value = false
 }
 
 export function startSaving() { saving.value++ }
@@ -45,7 +45,7 @@ export function useSync() {
   return {
     error: readonly(error),
     conflict: readonly(conflict),
-    keyRequired: readonly(keyRequired),
+    authRequired: readonly(authRequired),
     saving: readonly(saving),
     clearError,
   }

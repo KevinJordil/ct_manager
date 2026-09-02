@@ -5,14 +5,17 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { ENTITIES, validateCollection } from './validation.js'
 import { reanchor } from './seed.js'
+import { createAuth, resolvePassword } from './auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, 'data')
 const DIST_DIR = path.join(__dirname, 'dist')
 const SEED_DIR = process.env.SEED_DIR ?? path.join(__dirname, 'data.example')
 const PORT = process.env.PORT ?? 3000
-const TOKEN = process.env.CT_TOKEN ?? ''
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? ''
+
+const { password: ADMIN_PASSWORD, generated: PASSWORD_GENERATED } = resolvePassword()
+const auth = createAuth({ password: ADMIN_PASSWORD })
 
 const app = express()
 app.disable('x-powered-by')
@@ -45,26 +48,25 @@ if (CORS_ORIGIN) {
 }
 
 // ── Authentication ──
-// Optional: without CT_TOKEN the API is open, which suits local use. As soon
-// as the application is reachable over a network the token is essential — an
-// unauthenticated PUT replaces a whole collection.
+// Everything under /api is private except the few routes mounted before the
+// guard below: the public request form needs to reach the API without an
+// account.
 
-function constantTimeEquals(a, b) {
-  const ba = Buffer.from(a)
-  const bb = Buffer.from(b)
-  if (ba.length !== bb.length) return false
-  return crypto.timingSafeEqual(ba, bb)
-}
-
-app.use('/api', (req, res, next) => {
-  if (!TOKEN) return next()
-  const header = req.get('Authorization') ?? ''
-  const provided = header.startsWith('Bearer ') ? header.slice(7) : ''
-  if (!provided || !constantTimeEquals(provided, TOKEN)) {
-    return fail(res, 401, 'auth.required', {}, 'Access key required or invalid')
-  }
-  next()
+app.post('/api/auth/login', (req, res) => {
+  const session = auth.login(req.body?.password)
+  if (!session) return fail(res, 401, 'auth.invalidPassword', {}, 'Wrong password')
+  res.json({ token: session.token, expiresAt: session.expiresAt })
 })
+
+app.post('/api/auth/logout', (req, res) => {
+  auth.logout(auth.tokenFrom(req))
+  res.json({ ok: true })
+})
+
+app.get('/api/auth/check', auth.requireAuth, (_req, res) => res.json({ ok: true }))
+
+// Everything below this point requires a session.
+app.use('/api', auth.requireAuth)
 
 // ── Per-entity mutex ──
 // Node.js is single-threaded: this async mutex is enough to serialise
@@ -227,9 +229,8 @@ async function start() {
   await seedData()
   app.listen(PORT, () => {
     console.log(`Server → http://localhost:${PORT}`)
-    if (!TOKEN) {
-      console.warn('⚠  CT_TOKEN is not set: the API accepts unauthenticated requests.')
-      console.warn('   Set CT_TOKEN before exposing the application on a network.')
+    if (PASSWORD_GENERATED) {
+      console.warn('   (the generated password above is valid until the next restart)')
     }
   })
 }

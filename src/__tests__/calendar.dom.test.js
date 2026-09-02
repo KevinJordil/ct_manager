@@ -12,8 +12,8 @@ import StatusBadge from '../components/common/StatusBadge.vue'
 // Views load their data on mount: neutralise the network.
 vi.mock('../api.js', () => ({
   ApiError: class ApiError extends Error {},
-  setAccessKey: () => {},
-  hasAccessKey: () => false,
+  setSessionToken: () => {},
+  hasSessionToken: () => true,
   api: {
     load: async () => ({ data: [], version: 'v0' }),
     save: async () => ({ version: 'v1' }),

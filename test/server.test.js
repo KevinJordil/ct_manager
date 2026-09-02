@@ -7,22 +7,32 @@ import { fileURLToPath } from 'url'
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const PORT = 4173 + Math.floor(Math.random() * 200)
-const TOKEN = 'test-token'
+const PASSWORD = 'test-password'
 const BASE = `http://127.0.0.1:${PORT}`
 
 let server
 let dataDir
+let token
 
 async function waitForServer() {
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      await fetch(`${BASE}/api/persons`, { headers: { Authorization: `Bearer ${TOKEN}` } })
+      await fetch(`${BASE}/api/auth/check`)
       return
     } catch {
       await new Promise(resolve => setTimeout(resolve, 100))
     }
   }
   throw new Error('the server did not start')
+}
+
+async function signIn(password = PASSWORD) {
+  const res = await fetch(`${BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  })
+  return res
 }
 
 beforeAll(async () => {
@@ -32,10 +42,11 @@ beforeAll(async () => {
   await fs.mkdir(emptySeed)
   server = spawn('node', ['server.js'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir, SEED_DIR: emptySeed, CT_TOKEN: TOKEN },
+    env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir, SEED_DIR: emptySeed, CT_PASSWORD: PASSWORD },
     stdio: 'ignore',
   })
   await waitForServer()
+  token = (await (await signIn()).json()).token
 }, 30000)
 
 afterAll(async () => {
@@ -43,13 +54,13 @@ afterAll(async () => {
   if (dataDir) await fs.rm(dataDir, { recursive: true, force: true })
 })
 
-const auth = { Authorization: `Bearer ${TOKEN}` }
+const auth = () => ({ Authorization: `Bearer ${token}` })
 
-function get(entity, headers = auth) {
+function get(entity, headers = auth()) {
   return fetch(`${BASE}/api/${entity}`, { headers })
 }
 
-function put(entity, data, { version = '*', headers = auth } = {}) {
+function put(entity, data, { version = '*', headers = auth() } = {}) {
   return fetch(`${BASE}/api/${entity}`, {
     method: 'PUT',
     headers: {
@@ -69,12 +80,12 @@ const person = (over = {}) => ({
 const versionFrom = res => res.headers.get('ETag').replace(/"/g, '')
 
 describe('authentication', () => {
-  it('rejects a request without a key', async () => {
+  it('rejects a request without a token', async () => {
     expect((await get('persons', {})).status).toBe(401)
   })
 
-  it('rejects a wrong key', async () => {
-    expect((await get('persons', { Authorization: 'Bearer wrong-token' })).status).toBe(401)
+  it('rejects an invented token', async () => {
+    expect((await get('persons', { Authorization: 'Bearer not-a-real-token' })).status).toBe(401)
   })
 
   it('returns a translatable code, not prose', async () => {
@@ -82,7 +93,44 @@ describe('authentication', () => {
     expect(body.code).toBe('auth.required')
   })
 
-  it('accepts the right key', async () => {
+  it('accepts a token obtained by logging in', async () => {
+    expect((await get('persons')).status).toBe(200)
+  })
+
+  it('refuses the wrong password', async () => {
+    const res = await signIn('wrong-password')
+    expect(res.status).toBe(401)
+    expect((await res.json()).code).toBe('auth.invalidPassword')
+  })
+
+  it('never hands the password back as the token', async () => {
+    const body = await (await signIn()).json()
+    expect(body.token).not.toBe(PASSWORD)
+    expect(body.token).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('issues a different token on each login', async () => {
+    const first = (await (await signIn()).json()).token
+    const second = (await (await signIn()).json()).token
+    expect(first).not.toBe(second)
+  })
+
+  it('keeps earlier sessions valid after a new login', async () => {
+    const other = (await (await signIn()).json()).token
+    expect((await get('persons', { Authorization: `Bearer ${other}` })).status).toBe(200)
+    expect((await get('persons')).status).toBe(200)
+  })
+
+  it('invalidates a token on logout', async () => {
+    const temporary = (await (await signIn()).json()).token
+    expect((await get('persons', { Authorization: `Bearer ${temporary}` })).status).toBe(200)
+
+    await fetch(`${BASE}/api/auth/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${temporary}` },
+    })
+    expect((await get('persons', { Authorization: `Bearer ${temporary}` })).status).toBe(401)
+    // The other sessions are untouched.
     expect((await get('persons')).status).toBe(200)
   })
 })
@@ -97,7 +145,7 @@ describe('reading', () => {
   })
 
   it('answers in JSON on an unknown route', async () => {
-    const res = await fetch(`${BASE}/api/unknown`, { headers: auth })
+    const res = await fetch(`${BASE}/api/unknown`, { headers: auth() })
     expect(res.status).toBe(404)
     expect((await res.json()).code).toBe('notFound')
   })
@@ -161,7 +209,7 @@ describe('validation', () => {
   it('rejects invalid JSON', async () => {
     const res = await fetch(`${BASE}/api/persons`, {
       method: 'PUT',
-      headers: { ...auth, 'Content-Type': 'application/json', 'If-Match': '*' },
+      headers: { ...auth(), 'Content-Type': 'application/json', 'If-Match': '*' },
       body: '{ not json',
     })
     expect(res.status).toBe(400)

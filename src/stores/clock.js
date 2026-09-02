@@ -20,6 +20,10 @@ const todayString = computed(() => toDateString(now.value))
 let timer = null
 
 export function useClock() {
+  // Refreshed on every call rather than only at module load: the value must
+  // reflect the moment the component mounts, not the moment the bundle was
+  // first evaluated.
+  now.value = new Date()
   if (timer === null && typeof window !== 'undefined') {
     timer = setInterval(() => { now.value = new Date() }, 1000)
   }

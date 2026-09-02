@@ -120,13 +120,14 @@ describe('useCollection — saving', () => {
     expect(sync.error.value.key).toBe('errors.conflict')
   })
 
-  it('reports a missing access key', async () => {
-    calls.save = async () => { throw new ApiError('key', { status: 401, code: 'auth.required' }) }
+  it('reports an expired session', async () => {
+    calls.save = async () => { throw new ApiError('session', { status: 401, code: 'auth.required' }) }
     const collection = useCollection('persons')
     await collection.init()
     collection.add({ lastName: 'X' })
     await settle()
-    expect(sync.keyRequired.value).toBe(true)
+    expect(sync.authRequired.value).toBe(true)
+    expect(sync.error.value.key).toBe('auth.sessionExpired')
   })
 
   it('clears the error after a successful save', async () => {

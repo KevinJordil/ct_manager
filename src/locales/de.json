@@ -197,13 +197,6 @@
     },
     "noResource": "Keine Ressource anzuzeigen"
   },
-  "accessKey": {
-    "title": "Zugangsschlüssel",
-    "description": "Dieser Server verlangt einen Zugangsschlüssel (Variable {variable}). Er wird in diesem Browser gespeichert.",
-    "label": "Schlüssel",
-    "placeholder": "Zugangsschlüssel",
-    "enter": "Schlüssel eingeben"
-  },
   "fields": {
     "id": "Identifikator",
     "firstName": "Vorname",
@@ -234,13 +227,13 @@
     "saveFailed": "Speichern nicht möglich ({entity}): {reason}",
     "conflict": "Die {entity} wurden anderswo geändert. Laden Sie die Seite neu, um mit der Serverversion weiterzuarbeiten.",
     "notLoaded": "Daten nicht geladen ({entity}): Speichern abgebrochen, um den Server nicht zu überschreiben.",
-    "accessKeyRequired": "Zugangsschlüssel erforderlich oder ungültig",
     "unsavedSuffix": "Ihre letzten Änderungen sind nicht gespeichert."
   },
   "server": {
     "unreachable": "Server nicht erreichbar",
     "auth": {
-      "required": "Zugangsschlüssel erforderlich oder ungültig"
+      "required": "Zugangsschlüssel erforderlich oder ungültig",
+      "invalidPassword": "Falsches Passwort"
     },
     "conflict": "Die Daten wurden seit Ihrem Laden anderswo geändert",
     "preconditionRequired": "Unvollständige Anfrage an den Server gesendet",
@@ -260,5 +253,14 @@
       "invalidDates": "Eintrag {index}: ungültige Daten",
       "unknownValue": "Eintrag {index}: unbekannter Wert für «{field}»"
     }
+  },
+  "auth": {
+    "title": "Anmeldung",
+    "subtitle": "Zugang nur für berechtigtes Personal",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "logout": "Abmelden",
+    "sessionExpired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",
+    "makeRequest": "Eine Fahrzeuganfrage stellen"
   }
 }

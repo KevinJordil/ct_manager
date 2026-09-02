@@ -200,25 +200,31 @@ Ouvrir **http://localhost:3000**.
 | `PORT` | `3000` | Port d'écoute |
 | `DATA_DIR` | `./data` | Dossier des fichiers JSON |
 | `SEED_DIR` | `./data.example` | Données de démonstration du premier lancement |
-| `CT_TOKEN` | *(vide)* | Clé d'accès à l'API — voir ci-dessous |
+| `CT_PASSWORD` | *(généré)* | Mot de passe de connexion — voir ci-dessous |
 | `CORS_ORIGIN` | *(vide)* | Origine autorisée si le frontend est servi ailleurs |
 
 ```bash
-PORT=8080 CT_TOKEN=une-cle-longue-et-aleatoire node server.js
+PORT=8080 CT_PASSWORD=un-mot-de-passe-solide node server.js
 ```
 
 ### Sécurité
 
-L'API n'est **pas** protégée par défaut : c'est confortable en local, mais un
-`PUT /api/persons` remplace l'intégralité d'une collection. Dès que
-l'application est accessible depuis un réseau, définissez `CT_TOKEN` :
+L'application est protégée par un **mot de passe unique**. À la première
+visite, l'utilisateur arrive sur `/login` ; toutes les autres pages et toutes
+les routes de l'API lui sont fermées tant qu'il n'est pas connecté.
 
 ```bash
-CT_TOKEN="$(openssl rand -hex 24)" node server.js
+CT_PASSWORD="$(openssl rand -base64 18)" node server.js
 ```
 
-Le navigateur demande alors la clé au premier accès et la conserve
-localement. Sans `CT_TOKEN`, le serveur affiche un avertissement au démarrage.
+Sans `CT_PASSWORD`, le serveur **génère un mot de passe aléatoire** et
+l'affiche au démarrage. Il change à chaque redémarrage : c'est fait pour
+dépanner, pas pour durer. Il n'existe aucun mot de passe par défaut.
+
+Le navigateur ne conserve jamais le mot de passe. La connexion l'échange
+contre un **jeton de session** aléatoire, sans lien avec lui, valable
+30 jours et révocable côté serveur : se déconnecter invalide immédiatement
+ce jeton sans affecter les autres sessions.
 
 En développement, Vite proxifie `/api` vers le serveur Express : les requêtes
 sont de même origine et aucun en-tête CORS n'est nécessaire. `CORS_ORIGIN`

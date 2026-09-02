@@ -1,21 +1,41 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { RouterView, RouterLink, useRoute } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useClock } from './stores/clock.js'
 import { useSync } from './stores/sync.js'
+import { useAuthStore } from './stores/auth.js'
 import { localeTag } from './i18n/index.js'
 import { formatLongDate, formatClock } from './i18n/formats.js'
-import AccessKeyModal from './components/common/AccessKeyModal.vue'
 import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
 
 const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
 const { t, te, locale } = useI18n()
 const sidebarOpen = ref(false)
-const askForKey = ref(false)
 
 const { now } = useClock()
-const { error: syncError, conflict, keyRequired, saving, clearError } = useSync()
+const { error: syncError, conflict, authRequired, saving, clearError } = useSync()
+
+/** Public pages (login, request form) are rendered without the app shell. */
+const isPublicPage = computed(() => Boolean(route.meta.public))
+
+// An expired or revoked session is only discovered on an API call: send the
+// user back to the login page as soon as one reports it.
+watch(authRequired, required => {
+  if (!required) return
+  auth.clear()
+  if (!route.meta.public) {
+    router.replace({ path: '/login', query: { redirect: route.fullPath } })
+  }
+})
+
+async function signOut() {
+  await auth.logout()
+  clearError()
+  router.replace('/login')
+}
 
 const tag = computed(() => localeTag(locale.value))
 const currentDate = computed(() => formatLongDate(now.value, tag.value))
@@ -75,7 +95,10 @@ const NAV_ITEMS = [
 </script>
 
 <template>
-  <div class="min-h-screen flex">
+  <!-- Public pages carry their own full-page layout. -->
+  <RouterView v-if="isPublicPage" />
+
+  <div v-else class="min-h-screen flex">
     <!-- Mobile overlay -->
     <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-20 lg:hidden" @click="sidebarOpen = false" />
 
@@ -101,6 +124,17 @@ const NAV_ITEMS = [
           {{ $t(`nav.${item.key}`) }}
         </RouterLink>
       </nav>
+
+      <div class="px-3 pb-2">
+        <button @click="signOut"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          {{ $t('auth.logout') }}
+        </button>
+      </div>
 
       <div class="px-6 py-4 border-t border-gray-700 flex items-center justify-between gap-2">
         <span class="text-xs text-gray-500 truncate">{{ $t('app.tagline') }}</span>
@@ -146,11 +180,7 @@ const NAV_ITEMS = [
           {{ errorMessage }}
           <template v-if="showUnsavedHint"> — {{ $t('errors.unsavedSuffix') }}</template>
         </span>
-        <button v-if="keyRequired" @click="askForKey = true"
-          class="shrink-0 underline underline-offset-2 hover:no-underline">
-          {{ $t('accessKey.enter') }}
-        </button>
-        <button v-else-if="conflict" @click="reloadPage"
+        <button v-if="conflict" @click="reloadPage"
           class="shrink-0 underline underline-offset-2 hover:no-underline">
           {{ $t('actions.reload') }}
         </button>
@@ -158,8 +188,6 @@ const NAV_ITEMS = [
           {{ $t('actions.hide') }}
         </button>
       </div>
-
-      <AccessKeyModal v-if="askForKey" @close="askForKey = false" />
 
       <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
         <RouterView v-slot="{ Component }">

@@ -2,7 +2,7 @@ import { ref, readonly } from 'vue'
 import { api } from '../api.js'
 import { newId } from '../id.js'
 import {
-  reportError, reportKeyRequired, clearError, startSaving, endSaving,
+  reportError, reportAuthRequired, clearError, startSaving, endSaving,
 } from './sync.js'
 
 /**
@@ -23,7 +23,7 @@ export function useCollection(entity, migrate = data => data) {
   let initPromise = null
 
   function handleError(err, context) {
-    if (err.status === 401) return reportKeyRequired()
+    if (err.status === 401) return reportAuthRequired()
     if (err.status === 409) {
       version = err.params?.version ?? version
       return reportError('errors.conflict', { entity }, { isConflict: true, context })
