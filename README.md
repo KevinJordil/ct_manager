@@ -303,7 +303,15 @@ un nom de famille pour la connexion — le formulaire le signale au lieu
 d'écraser un compte.
 
 Le compte créé depuis une fiche a le rôle *utilisateur* ; seul un
-administrateur peut le promouvoir, depuis la page Comptes. Les mots de passe sont stockés hachés
+administrateur peut le promouvoir, depuis la page Comptes.
+
+**Aucune contrainte sur les mots de passe** : ni longueur minimale, ni
+composition imposée. L'application tourne sur un réseau fermé, et une règle
+que l'on contourne en ajoutant un chiffre à la fin n'apporte rien. La seule
+exigence est qu'il y en ait un — un compte sans mot de passe est précisément
+la manière dont s'exprime « ne peut pas encore se connecter ».
+
+Les mots de passe sont stockés hachés
 (scrypt, sel propre à chaque compte) ; ils ne ressortent jamais du serveur.
 Réinitialiser un mot de passe ou changer un rôle **met fin à toutes les
 sessions** du compte concerné.

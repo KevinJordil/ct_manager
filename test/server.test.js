@@ -586,11 +586,15 @@ describe('accounts', () => {
     expect((await res.json()).code).toBe('users.usernameTaken')
   })
 
-  it('refuses a malformed username or a short password', async () => {
+  it('refuses a malformed username', async () => {
     expect((await (await createAccount({ username: 'A Muller', password: 'motdepasse1' })).json()).code)
       .toBe('users.invalidUsername')
-    expect((await (await createAccount({ username: 'cfavre', password: 'court' })).json()).code)
-      .toBe('users.passwordTooShort')
+  })
+
+  it('accepts a short password, and refuses only an empty one', async () => {
+    expect((await createAccount({ username: 'cfavre', password: 'x' })).status).toBe(201)
+    expect((await (await createAccount({ username: 'jrossier', password: '' })).json()).code)
+      .toBe('users.passwordEmpty')
   })
 
   it('lets the new account sign in', async () => {

@@ -335,7 +335,7 @@
     "users": {
       "invalidUsername": "Nom d'utilisateur invalide : minuscules, chiffres, point, tiret ou souligné, 3 à 32 caractères",
       "usernameTaken": "Le nom d'utilisateur « {username} » est déjà pris",
-      "passwordTooShort": "Le mot de passe doit compter au moins {min} caractères",
+      "passwordEmpty": "Un mot de passe est nécessaire",
       "lastAdmin": "Il doit rester au moins un administrateur",
       "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
       "invalidLastName": "Le nom de famille ne permet pas de créer un identifiant (au moins trois lettres)"
@@ -536,7 +536,7 @@
     "you": "vous",
     "invalidUsername": "Nom d'utilisateur invalide : minuscules, chiffres, point, tiret ou souligné, 3 à 32 caractères",
     "usernameTaken": "Le nom d'utilisateur « {username} » est déjà pris",
-    "passwordTooShort": "Le mot de passe doit compter au moins {min} caractères",
+    "passwordEmpty": "Un mot de passe est nécessaire",
     "lastAdmin": "Il doit rester au moins un administrateur",
     "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
     "loadFailed": "Chargement des comptes impossible : {reason}",

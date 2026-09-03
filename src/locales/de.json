@@ -335,7 +335,7 @@
     "users": {
       "invalidUsername": "Ungültiger Benutzername: Kleinbuchstaben, Ziffern, Punkt, Bindestrich oder Unterstrich, 3 bis 32 Zeichen",
       "usernameTaken": "Der Benutzername «{username}» ist bereits vergeben",
-      "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein",
+      "passwordEmpty": "Ein Passwort ist erforderlich",
       "lastAdmin": "Es muss mindestens ein Administrator bleiben",
       "selfDelete": "Sie können Ihr eigenes Konto nicht löschen",
       "invalidLastName": "Aus dem Familiennamen lässt sich keine Kennung bilden (mindestens drei Buchstaben)"
@@ -536,7 +536,7 @@
     "you": "Sie",
     "invalidUsername": "Ungültiger Benutzername: Kleinbuchstaben, Ziffern, Punkt, Bindestrich oder Unterstrich, 3 bis 32 Zeichen",
     "usernameTaken": "Der Benutzername «{username}» ist bereits vergeben",
-    "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein",
+    "passwordEmpty": "Ein Passwort ist erforderlich",
     "lastAdmin": "Es muss mindestens ein Administrator bleiben",
     "selfDelete": "Sie können Ihr eigenes Konto nicht löschen",
     "loadFailed": "Konten konnten nicht geladen werden: {reason}",

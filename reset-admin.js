@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { ROLES, hashPassword, validatePassword } from './users.js'
+import { ROLES, hashPassword } from './users.js'
 
 /**
  * Recovery command, to be run on the server.
@@ -38,14 +38,6 @@ async function main() {
     console.error('The password cannot be empty.')
     process.exit(1)
   }
-  // The length rule guards the forms; this command runs on the server, where
-  // a short password is a deliberate choice — warned about, not refused.
-  const weak = validatePassword(password)
-  if (weak) {
-    console.warn(`⚠  Shorter than the ${weak.params.min} characters the interface requires.`)
-    console.warn('   Fine for a development machine, not for anything reachable.')
-  }
-
   const users = await readUsers()
   const index = users.findIndex(user => user.username === username)
 

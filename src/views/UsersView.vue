@@ -6,7 +6,7 @@ import { usePersonsStore } from '../stores/persons.js'
 import { useAuthStore } from '../stores/auth.js'
 import { formatDateTime } from '../datetime.js'
 import { personName } from '../labels.js'
-import { suggestUsername, MIN_PASSWORD_LENGTH } from '../../users.js'
+import { suggestUsername } from '../../users.js'
 import BaseModal from '../components/common/BaseModal.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
@@ -67,7 +67,7 @@ function openEdit(user) {
 const canSubmit = computed(() => {
   if (!form.username.trim()) return false
   if (editedUser.value) return true
-  return form.password.length >= MIN_PASSWORD_LENGTH
+  return Boolean(form.password)
 })
 
 async function submit() {
@@ -179,8 +179,7 @@ async function onDelete() {
             {{ editedUser ? $t('users.newPasswordOptional') : `${$t('users.password')} *` }}
           </label>
           <input id="user-password" v-model="form.password" type="password" class="input"
-            autocomplete="new-password" :minlength="MIN_PASSWORD_LENGTH"
-            :required="!editedUser" />
+            autocomplete="new-password" :required="!editedUser" />
         </div>
 
         <div>

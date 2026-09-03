@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   hashPassword, verifyPassword, suggestUsername, validateUsername, validatePassword,
-  publicUser, isLastAdmin, ROLES, MIN_PASSWORD_LENGTH,
+  publicUser, isLastAdmin, ROLES,
 } from '../../users.js'
 
 describe('password hashing', () => {
@@ -78,10 +78,16 @@ describe('validateUsername', () => {
 })
 
 describe('validatePassword', () => {
-  it('demands a minimum length', () => {
-    expect(validatePassword('x'.repeat(MIN_PASSWORD_LENGTH))).toBeNull()
-    expect(validatePassword('short')).toMatchObject({ code: 'passwordTooShort' })
-    expect(validatePassword(undefined)).toMatchObject({ code: 'passwordTooShort' })
+  it('asks for a password and nothing more about it', () => {
+    expect(validatePassword('x')).toBeNull()
+    expect(validatePassword('court')).toBeNull()
+    expect(validatePassword('un mot de passe entier, avec des espaces')).toBeNull()
+  })
+
+  it('refuses an absent password, which means no account at all', () => {
+    expect(validatePassword('')).toMatchObject({ code: 'passwordEmpty' })
+    expect(validatePassword(undefined)).toMatchObject({ code: 'passwordEmpty' })
+    expect(validatePassword(null)).toMatchObject({ code: 'passwordEmpty' })
   })
 })
 

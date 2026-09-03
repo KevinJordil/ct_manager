@@ -335,7 +335,7 @@
     "users": {
       "invalidUsername": "Nome utente non valido: minuscole, cifre, punto, trattino o trattino basso, da 3 a 32 caratteri",
       "usernameTaken": "Il nome utente «{username}» è già in uso",
-      "passwordTooShort": "La password deve contenere almeno {min} caratteri",
+      "passwordEmpty": "È necessaria una password",
       "lastAdmin": "Deve restare almeno un amministratore",
       "selfDelete": "Non puoi eliminare il tuo account",
       "invalidLastName": "Il cognome non permette di creare un identificatore (almeno tre lettere)"
@@ -536,7 +536,7 @@
     "you": "tu",
     "invalidUsername": "Nome utente non valido: minuscole, cifre, punto, trattino o trattino basso, da 3 a 32 caratteri",
     "usernameTaken": "Il nome utente «{username}» è già in uso",
-    "passwordTooShort": "La password deve contenere almeno {min} caratteri",
+    "passwordEmpty": "È necessaria una password",
     "lastAdmin": "Deve restare almeno un amministratore",
     "selfDelete": "Non puoi eliminare il tuo account",
     "loadFailed": "Impossibile caricare gli account: {reason}",

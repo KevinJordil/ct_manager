@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseModal from './BaseModal.vue'
 import { useAuthStore } from '../../stores/auth.js'
-import { MIN_PASSWORD_LENGTH } from '../../../users.js'
 
 const emit = defineEmits(['close'])
 const auth = useAuthStore()
@@ -21,7 +20,7 @@ const mismatch = computed(() =>
 )
 
 const canSubmit = computed(() =>
-  Boolean(current.value) && next.value.length >= MIN_PASSWORD_LENGTH && !mismatch.value
+  Boolean(current.value) && Boolean(next.value) && !mismatch.value
 )
 
 async function submit() {
@@ -58,12 +57,9 @@ async function submit() {
           autocomplete="current-password" required />
       </div>
       <div>
-        <label class="label" for="new-password">
-          {{ $t('auth.newPassword') }}
-          <span class="font-normal text-gray-400">({{ $t('users.passwordTooShort', { min: MIN_PASSWORD_LENGTH }) }})</span>
-        </label>
+        <label class="label" for="new-password">{{ $t('auth.newPassword') }}</label>
         <input id="new-password" v-model="next" type="password" class="input"
-          autocomplete="new-password" :minlength="MIN_PASSWORD_LENGTH" required />
+          autocomplete="new-password" required />
       </div>
       <div>
         <label class="label" for="confirm-password">{{ $t('auth.confirmPassword') }}</label>

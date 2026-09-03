@@ -4,7 +4,7 @@ import BaseModal from '../common/BaseModal.vue'
 import { useConfigStore } from '../../stores/config.js'
 import { usePersonsStore } from '../../stores/persons.js'
 import { LICENSE_PICKER_COLORS } from '../../labels.js'
-import { usernameFromLastName, MIN_PASSWORD_LENGTH } from '../../../users.js'
+import { usernameFromLastName } from '../../../users.js'
 
 const props = defineProps({
   person: { type: Object, default: null },
@@ -46,8 +46,7 @@ function toggleLicense(license) {
 
 function submit() {
   if (!form.firstName.trim() || !form.lastName.trim()) return
-  if (passwordRequired.value && form.password.length < MIN_PASSWORD_LENGTH) return
-  if (form.password && form.password.length < MIN_PASSWORD_LENGTH) return
+  if (passwordRequired.value && !form.password) return
   const { password, ...person } = form
   emit('save', { person, password })
 }
@@ -101,8 +100,7 @@ function submit() {
           <span v-if="passwordRequired"> *</span>
         </label>
         <input id="person-password" v-model="form.password" type="password" class="input"
-          autocomplete="new-password" :minlength="MIN_PASSWORD_LENGTH"
-          :required="passwordRequired" />
+          autocomplete="new-password" :required="passwordRequired" />
         <p class="mt-1 text-xs text-gray-400">
           {{ $t('persons.passwordHint') }}
           <span v-if="futureUsername.length >= 3">

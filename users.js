@@ -18,8 +18,6 @@ export const ROLE_VALUES = Object.values(ROLES)
 /** Usernames are lowercase and unambiguous, since they are typed at login. */
 export const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,31}$/
 
-export const MIN_PASSWORD_LENGTH = 8
-
 export function hashPassword(password, salt = crypto.randomBytes(SALT_BYTES).toString('hex')) {
   const digest = crypto.scryptSync(password, salt, KEY_LENGTH, { N: SCRYPT_COST }).toString('hex')
   return { salt, digest }
@@ -66,10 +64,17 @@ export function validateUsername(username, existing = [], selfId = null) {
   return null
 }
 
-/** @returns {{code: string, params: object}|null} */
+/**
+ * Passwords carry no length or composition rule: this runs on a closed
+ * network, and a rule people work around with a suffix buys nothing. The
+ * only requirement is that there is one — an account without a password is
+ * how "cannot sign in yet" is expressed.
+ *
+ * @returns {{code: string, params: object}|null}
+ */
 export function validatePassword(password) {
-  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
-    return { code: 'passwordTooShort', params: { min: MIN_PASSWORD_LENGTH } }
+  if (typeof password !== 'string' || password === '') {
+    return { code: 'passwordEmpty', params: {} }
   }
   return null
 }
