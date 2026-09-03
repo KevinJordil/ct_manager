@@ -299,6 +299,21 @@ sur le nombre de demandes conservées.
 CT_PASSWORD="$(openssl rand -base64 18)" node server.js
 ```
 
+#### Mot de passe administrateur perdu
+
+```bash
+npm run reset-admin                  # compte « admin », mot de passe généré
+npm run reset-admin -- cfavre        # un autre compte, mot de passe généré
+npm run reset-admin -- cfavre secret # mot de passe choisi
+```
+
+La commande réinitialise le mot de passe du compte visé — ou le recrée s'il a
+disparu — **sans toucher aux autres comptes**, et lui rend le rôle
+administrateur. Elle s'exécute sur le serveur : y accéder suppose déjà un
+accès shell à la machine.
+
+#### Premier démarrage
+
 Au tout premier démarrage, un administrateur nommé **`admin`** est créé.
 Son mot de passe vient de `CT_PASSWORD` ; sans cette variable, le serveur en
 **génère un aléatoire** et l'affiche une fois dans la console. Il n'existe

@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "reset-admin": "node reset-admin.js"
   },
   "dependencies": {
     "express": "^4.18.2",
