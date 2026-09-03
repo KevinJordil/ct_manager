@@ -149,12 +149,12 @@ const NAV_ITEMS = [
   <!-- Public and printable pages carry their own full-page layout. -->
   <RouterView v-if="isPublicPage || isBarePage" />
 
-  <div v-else class="min-h-screen flex">
+  <div v-else class="h-screen flex overflow-hidden">
     <!-- Mobile overlay -->
     <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-20 lg:hidden" @click="sidebarOpen = false" />
 
     <!-- Sidebar -->
-    <aside :class="['fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
+    <aside :class="['fixed inset-y-0 left-0 z-30 w-64 h-full shrink-0 bg-gray-900 text-white flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
       <div class="px-6 py-5 border-b border-gray-700">
         <div class="flex items-center gap-2">
           <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -164,7 +164,7 @@ const NAV_ITEMS = [
         </div>
       </div>
 
-      <nav class="flex-1 px-3 py-4 space-y-1">
+      <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
         <RouterLink
           v-for="item in visibleNavItems"
           :key="item.to"
@@ -200,16 +200,16 @@ const NAV_ITEMS = [
         </button>
       </div>
 
-      <div class="px-6 py-4 border-t border-gray-700 flex items-center justify-between gap-2">
-        <span class="text-xs text-gray-500 truncate">{{ $t('app.tagline') }}</span>
+      <div class="px-4 py-3 border-t border-gray-700 space-y-2">
+        <p class="text-xs text-gray-500 px-2">{{ $t('app.tagline') }}</p>
         <LanguageSwitcher />
       </div>
     </aside>
 
     <!-- Main -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 h-full">
       <!-- Header -->
-      <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <header class="shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3 lg:hidden">
           <button @click="sidebarOpen = true" :aria-label="$t('app.openMenu')"
             class="-m-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
@@ -237,7 +237,7 @@ const NAV_ITEMS = [
 
       <!-- Saves happen in the background: a failure has to be visible. -->
       <div v-if="syncError" role="alert"
-        class="flex items-start gap-2 px-4 py-3 bg-red-600 text-white text-sm">
+        class="shrink-0 flex items-start gap-2 px-4 py-3 bg-red-600 text-white text-sm">
         <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>
@@ -256,7 +256,7 @@ const NAV_ITEMS = [
 
       <PasswordModal v-if="changingPassword" @close="changingPassword = false" />
 
-      <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+      <main class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <RouterView v-slot="{ Component }">
           <Transition name="fade" mode="out-in">
             <component :is="Component" :key="route.path" />
