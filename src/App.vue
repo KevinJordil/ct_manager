@@ -44,11 +44,6 @@ watch(shellVisible, visible => {
   if (visible) requestsStore.init()
 }, { immediate: true })
 
-// The account is re-read on start: a role may have changed since last visit.
-watch(isPublicPage, publicPage => {
-  if (!publicPage && !auth.user) auth.verify()
-}, { immediate: true })
-
 /** Configuration and accounts are hidden from ordinary users. */
 const visibleNavItems = computed(() =>
   NAV_ITEMS.filter(item => !item.admin || auth.isAdmin)

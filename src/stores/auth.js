@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api, setSessionToken, hasSessionToken } from '../api.js'
+import { clearError } from './sync.js'
 
 const ADMIN = 'admin'
 
@@ -23,6 +24,10 @@ export const useAuthStore = defineStore('auth', () => {
     const { token, user: account } = await api.login(name, password)
     setSessionToken(token)
     user.value = account
+    // Signing in answers whatever the previous session was complaining
+    // about — typically "session expired", raised by the loads that ran
+    // with the stale token still in storage.
+    clearError()
   }
 
   async function logout() {
@@ -40,6 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
     checking.value = true
     try {
       user.value = await api.me()
+      clearError()
       return true
     } catch {
       setSessionToken(null)

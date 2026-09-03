@@ -42,10 +42,10 @@ const router = createRouter({
 })
 
 /**
- * Authentication is judged on the presence of a token, not its validity:
- * checking with the server on every navigation would add a round trip, and an
- * expired token is caught by the first API call, which sends the user back
- * here. The role, however, has to be known, so the account is fetched once.
+ * No token, no protected page. When there is one, the account is read from
+ * the server once per page load — which both validates the session and gives
+ * the role. Later navigations reuse it, so this costs one request, not one
+ * per move.
  */
 router.beforeEach(async to => {
   const signedIn = hasSessionToken()
@@ -54,10 +54,16 @@ router.beforeEach(async to => {
   }
   if (to.path === '/login' && signedIn) return '/'
 
-  if (to.meta.admin) {
+  if (!to.meta.public) {
+    // A stored token proves nothing: the server keeps sessions in memory, so
+    // a restart leaves every browser holding one it no longer knows. Settle
+    // that here, before the page mounts and its stores fire loads that would
+    // all fail at once.
     const auth = useAuthStore()
-    if (!auth.user) await auth.verify()
-    if (!auth.isAdmin) return '/'
+    if (!auth.user && !await auth.verify()) {
+      return { path: '/login', query: to.fullPath === '/' ? {} : { redirect: to.fullPath } }
+    }
+    if (to.meta.admin && !auth.isAdmin) return '/'
   }
 })
 
