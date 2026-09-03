@@ -76,7 +76,12 @@
       "driverOnLeave": "Einsatz «{mission}»: {person} (Fahrer) ist während des Einsatzes im Urlaub",
       "staffOnLeave": "Einsatz «{mission}»: {person} ist während des Einsatzes im Urlaub",
       "vehicleOnLoan": "Einsatz «{mission}»: Fahrzeug {vehicle} ist als «ausgeliehen» markiert"
-    }
+    },
+    "attention": "Zu erledigen",
+    "pendingRequests": "ausstehende Anfragen | ausstehende Anfrage | ausstehende Anfragen",
+    "overdueChecks": "fällige SPH | fälliger SPH | fällige SPH",
+    "overdueLoans": "überfällige Ausleihen | überfällige Ausleihe | überfällige Ausleihen",
+    "nothingPending": "Nichts zu erledigen"
   },
   "persons": {
     "title": "Personen",

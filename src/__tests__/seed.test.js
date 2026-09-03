@@ -51,6 +51,25 @@ describe('reanchor', () => {
     expect(shifted[0].leaves[0].endDate).toBe('2026-09-06T23:59')
   })
 
+  it('re-anchors bare dates too, such as weekly checks and loan deadlines', () => {
+    const vehicles = [{
+      id: 'v1', name: 'Duro',
+      checks: [{ id: 'c1', date: '2026-05-07' }],
+      loanUntil: '2026-05-20',
+    }]
+    const { vehicles: shifted } = reanchor({ missions, vehicles }, REFERENCE)
+    // 117 days, the same shift as the missions.
+    expect(shifted[0].checks[0].date).toBe('2026-09-01')
+    expect(shifted[0].loanUntil).toBe('2026-09-14')
+  })
+
+  it('keeps each date in the shape it came in', () => {
+    const vehicles = [{ id: 'v1', checks: [{ id: 'c1', date: '2026-05-07' }] }]
+    const shifted = reanchor({ missions, vehicles }, REFERENCE)
+    expect(shifted.vehicles[0].checks[0].date).not.toContain('T')
+    expect(shifted.missions[0].startDate).toContain('T')
+  })
+
   it('leaves strings that are not dates alone', () => {
     const vehicles = [{ id: 'v1', name: 'Duro', plate: 'M12345', loanNote: '' }]
     const { vehicles: shifted } = reanchor({ missions, vehicles }, REFERENCE)
@@ -96,5 +115,13 @@ describe('shipped demonstration set', () => {
   it('includes a vehicle on loan, so every status is represented', async () => {
     const vehicles = await read('vehicles')
     expect(vehicles.some(v => v.status === 'on-loan')).toBe(true)
+  })
+
+  it('leaves some vehicles checked recently, so the SPH page is not all red', async () => {
+    const { needsCheck } = await import('../checks.js')
+    const { vehicles } = reanchor({ missions: await read('missions'), vehicles: await read('vehicles') }, REFERENCE)
+    const today = '2026-09-02'
+    expect(vehicles.some(vehicle => !needsCheck(vehicle, today))).toBe(true)
+    expect(vehicles.some(vehicle => needsCheck(vehicle, today))).toBe(true)
   })
 })

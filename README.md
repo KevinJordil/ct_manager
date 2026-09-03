@@ -93,6 +93,7 @@ mois du calendrier.
 - Les zones sont enregistrées en **fractions de l'image**, donc indépendantes de sa résolution et de la taille d'affichage
 
 ### Tableau de bord
+- Bandeau **À traiter** en tête de page : demandes en attente, SPH à faire, prêts en retard — chaque tuile mène à la page concernée, et disparaît quand il n'y a rien
 - Vue synthétique : disponibilités personnes et véhicules, missions en cours
 - Alertes automatiques (chauffeur en congé pendant une mission, véhicule en prêt sur une mission active, etc.)
 

@@ -76,7 +76,12 @@
       "driverOnLeave": "Missione «{mission}»: {person} (conducente) è in congedo durante la missione",
       "staffOnLeave": "Missione «{mission}»: {person} è in congedo durante la missione",
       "vehicleOnLoan": "Missione «{mission}»: il veicolo {vehicle} è indicato come «in prestito»"
-    }
+    },
+    "attention": "Da trattare",
+    "pendingRequests": "richieste in attesa | richiesta in attesa | richieste in attesa",
+    "overdueChecks": "SPH da fare | SPH da fare | SPH da fare",
+    "overdueLoans": "prestiti in ritardo | prestito in ritardo | prestiti in ritardo",
+    "nothingPending": "Niente da trattare"
   },
   "persons": {
     "title": "Persone",

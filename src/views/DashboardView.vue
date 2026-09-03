@@ -1,16 +1,19 @@
 <script setup>
 import { computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePersonsStore } from '../stores/persons.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { useMissionsStore } from '../stores/missions.js'
+import { useRequestsStore } from '../stores/requests.js'
 import { useClock } from '../stores/clock.js'
 import { formatDateTime } from '../datetime.js'
 import {
   getPersonStatus, getVehicleStatus, isOnLeaveDuring,
   missionInvolvesPerson, ongoingMissions,
 } from '../availability.js'
-import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS } from '../constants.js'
+import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS, REQUEST_STATUS } from '../constants.js'
+import { needsCheck } from '../checks.js'
 import { personName } from '../labels.js'
 import StatusBadge from '../components/common/StatusBadge.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
@@ -18,14 +21,47 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
 const missionsStore = useMissionsStore()
-const { nowString } = useClock()
+const requestsStore = useRequestsStore()
+const { nowString, todayString } = useClock()
 const { t } = useI18n()
 
 onMounted(() => {
   personsStore.init()
   vehiclesStore.init()
   missionsStore.init()
+  requestsStore.init()
 })
+
+/**
+ * The three things that actually call for a decision. The dashboard is the
+ * landing page, so they belong here rather than buried in their own pages.
+ */
+const attention = computed(() => [
+  {
+    key: 'pendingRequests',
+    to: '/requests',
+    count: requestsStore.requests.filter(request => request.status === REQUEST_STATUS.PENDING).length,
+    frame: 'bg-amber-50 border-amber-200 text-amber-800 hover:border-amber-400',
+    value: 'text-amber-700',
+  },
+  {
+    key: 'overdueChecks',
+    to: '/checks',
+    count: vehiclesStore.vehicles.filter(vehicle => needsCheck(vehicle, todayString.value)).length,
+    frame: 'bg-red-50 border-red-200 text-red-800 hover:border-red-400',
+    value: 'text-red-700',
+  },
+  {
+    key: 'overdueLoans',
+    to: '/vehicles',
+    count: vehiclesStore.vehicles.filter(vehicle =>
+      vehicle.status === VEHICLE_STATUS.ON_LOAN &&
+      vehicle.loanUntil &&
+      vehicle.loanUntil < todayString.value).length,
+    frame: 'bg-orange-50 border-orange-200 text-orange-800 hover:border-orange-400',
+    value: 'text-orange-700',
+  },
+].filter(item => item.count > 0))
 
 const ongoing = computed(() => ongoingMissions(missionsStore.missions, nowString.value))
 
@@ -113,6 +149,20 @@ const alerts = computed(() => {
 <template>
   <div>
     <h1 class="page-title">{{ $t('dashboard.title') }}</h1>
+
+    <!-- What needs a decision, before anything else -->
+    <section v-if="attention.length" class="mb-6">
+      <h2 class="section-title">{{ $t('dashboard.attention') }}</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <RouterLink v-for="item in attention" :key="item.key" :to="item.to"
+          :class="['rounded-xl border p-4 flex items-center gap-3 transition-colors', item.frame]">
+          <span :class="['text-3xl font-bold', item.value]">{{ item.count }}</span>
+          <span class="text-sm font-medium">
+            {{ $t('dashboard.' + item.key, item.count, { count: item.count }) }}
+          </span>
+        </RouterLink>
+      </div>
+    </section>
 
     <div v-if="alerts.length" class="mb-6 space-y-2">
       <div v-for="alert in alerts" :key="alert" role="alert"

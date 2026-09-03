@@ -9,26 +9,34 @@
  */
 
 const DAY_MS = 24 * 60 * 60 * 1000
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+// Both shapes occur: mission bounds and leaves carry a time, weekly checks
+// and loan deadlines are bare dates. Both have to be re-anchored.
+const DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+function isDateLike(value) {
+  return DATE_TIME_PATTERN.test(value) || DATE_PATTERN.test(value)
+}
 
 const pad = n => String(n).padStart(2, '0')
 
 function toDate(str) {
-  const [date, time] = str.split('T')
+  const [date, time = '00:00'] = str.split('T')
   const [y, m, d] = date.split('-').map(Number)
   const [hh, mm] = time.split(':').map(Number)
   return new Date(y, m - 1, d, hh, mm)
 }
 
-function toString_(d) {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
-    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+/** Renders back in the shape it came in: with a time, or without. */
+function toString_(d, withTime) {
+  const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  return withTime ? `${date}T${pad(d.getHours())}:${pad(d.getMinutes())}` : date
 }
 
-/** Every "YYYY-MM-DDTHH:mm" string found anywhere in a structure */
+/** Every date string found anywhere in a structure */
 function collectDates(value, acc = []) {
   if (typeof value === 'string') {
-    if (DATE_PATTERN.test(value)) acc.push(value)
+    if (isDateLike(value)) acc.push(value)
   } else if (Array.isArray(value)) {
     for (const v of value) collectDates(v, acc)
   } else if (value && typeof value === 'object') {
@@ -40,10 +48,10 @@ function collectDates(value, acc = []) {
 /** Deep copy with every date shifted by `days` days */
 function shift(value, days) {
   if (typeof value === 'string') {
-    if (!DATE_PATTERN.test(value)) return value
+    if (!isDateLike(value)) return value
     const d = toDate(value)
     d.setDate(d.getDate() + days)
-    return toString_(d)
+    return toString_(d, DATE_TIME_PATTERN.test(value))
   }
   if (Array.isArray(value)) return value.map(v => shift(v, days))
   if (value && typeof value === 'object') {
