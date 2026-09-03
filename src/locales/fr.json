@@ -16,7 +16,8 @@
     "park": "Vue de parc",
     "checks": "SPH",
     "config": "Configuration",
-    "users": "Comptes"
+    "users": "Comptes",
+    "log": "Journal de combat"
   },
   "actions": {
     "add": "Ajouter",
@@ -187,7 +188,6 @@
     "vehicle": "Véhicule :",
     "takeTitle": "Prendre la clé",
     "transferTitle": "Transférer la clé",
-    "returnTitle": "Rendre la clé",
     "currentHolder": "Actuellement chez {name} depuis le {date}.",
     "aPerson": "Une personne",
     "outside": "Hors système",
@@ -207,7 +207,18 @@
       "taken": "{name} a pris la clé",
       "transferred": "Clé transférée de {from} à {name}",
       "returned": "{name} a rendu la clé"
-    }
+    },
+    "you": " (vous)",
+    "returnFor": "Rendre la clé de {name}"
+  },
+  "log": {
+    "title": "Journal de combat",
+    "subtitle": "Les mouvements de clés de toute la flotte, du plus récent au plus ancien.",
+    "searchPlaceholder": "Véhicule, personne…",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "undated": "Sans date",
+    "empty": "Aucun mouvement de clé enregistré."
   },
   "missions": {
     "title": "Missions",

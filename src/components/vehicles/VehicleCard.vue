@@ -102,7 +102,8 @@ const loanOverdue = computed(() =>
           </svg>
         </button>
         <button v-if="keyHolder" @click="$emit('key-return')" class="icon-btn text-green-600 hover:text-green-800"
-          :title="$t('keys.returnTitle')" :aria-label="$t('keys.returnTitle')">
+          :title="$t('keys.returnFor', { name: keyHolderName })"
+          :aria-label="$t('keys.returnFor', { name: keyHolderName })">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h11m0 0l-4-4m4 4l-4 4m10-9v14"/>
           </svg>

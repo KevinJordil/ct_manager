@@ -11,6 +11,7 @@ import RequestView from '../views/RequestView.vue'
 import RequestsView from '../views/RequestsView.vue'
 import ParkView from '../views/ParkView.vue'
 import ChecksView from '../views/ChecksView.vue'
+import BattleLogView from '../views/BattleLogView.vue'
 import ConfigView from '../views/ConfigView.vue'
 import UsersView from '../views/UsersView.vue'
 import PrintView from '../views/PrintView.vue'
@@ -29,6 +30,7 @@ const routes = [
   { path: '/requests', name: 'requests', component: RequestsView },
   { path: '/park', name: 'park', component: ParkView },
   { path: '/checks', name: 'checks', component: ChecksView },
+  { path: '/log', name: 'log', component: BattleLogView },
   { path: '/print', name: 'print', component: PrintView, meta: { bare: true } },
 
   // ── Administrators only ──

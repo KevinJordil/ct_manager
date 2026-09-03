@@ -6,8 +6,17 @@ import { formatDateTime } from '../../datetime.js'
 const props = defineProps({ vehicle: { type: Object, required: true } })
 defineEmits(['close'])
 
-/** Most recent movement first. */
-const entries = computed(() => [...(props.vehicle.keyHistory ?? [])].reverse())
+/**
+ * Most recent movement first. Who held the key and who recorded the movement
+ * are two different questions — anybody may hand a key over for somebody
+ * else — so the second name is shown whenever it differs from the first.
+ */
+const entries = computed(() =>
+  [...(props.vehicle.keyHistory ?? [])].reverse().map(entry => ({
+    ...entry,
+    byOther: Boolean(entry.recordedBy) && entry.recordedBy !== entry.name,
+  }))
+)
 
 const DOT = {
   taken: 'bg-amber-500',
@@ -35,7 +44,7 @@ const DOT = {
           </p>
           <p class="text-xs text-gray-400">
             {{ formatDateTime(entry.at) }}
-            <span v-if="entry.recordedBy"> · {{ $t('keys.recordedBy', { user: entry.recordedBy }) }}</span>
+            <span v-if="entry.byOther"> · {{ $t('keys.recordedBy', { user: entry.recordedBy }) }}</span>
           </p>
         </div>
       </li>

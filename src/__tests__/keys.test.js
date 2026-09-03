@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import {
-  keyIsOut, holderName, makeHolder, pushHistory,
+  keyIsOut, holderName, makeHolder, pushHistory, recorderName, keyMovements,
   vehiclesWithKeyIn, vehiclesWithKeyOut, keysHeldBy,
 } from '../keys.js'
 import { KEY_HISTORY_LIMIT } from '../constants.js'
@@ -77,6 +77,58 @@ describe('the key board', () => {
   it('lists the keys a person is holding', () => {
     expect(keysHeldBy('p1', fleet).map(v => v.id)).toEqual(['v1'])
     expect(keysHeldBy('p2', fleet)).toEqual([])
+  })
+})
+
+describe('naming the account that records a movement', () => {
+  it('uses the person behind the account', () => {
+    expect(recorderName({ username: 'favre', personId: 'p1' }, persons)).toBe('Sgt Caroline Favre')
+  })
+
+  it('falls back on the username for an account tied to nobody', () => {
+    expect(recorderName({ username: 'admin', personId: null }, persons)).toBe('admin')
+    expect(recorderName({ username: 'admin', personId: 'gone' }, persons)).toBe('admin')
+  })
+
+  it('has nothing to say about no account at all', () => {
+    expect(recorderName(null, persons)).toBe('')
+  })
+})
+
+describe('the fleet-wide log', () => {
+  const fleet = [
+    {
+      id: 'v1', name: 'Duro', plate: 'M1',
+      keyHistory: [
+        { id: 'a', at: '2026-09-02T07:15', action: 'taken', name: 'Sgt Favre', recordedBy: 'Sgt Favre' },
+        { id: 'b', at: '2026-09-03T16:40', action: 'returned', name: 'Sgt Favre', recordedBy: 'Sdt Jacquemoud' },
+      ],
+    },
+    {
+      id: 'v2', name: 'Class G', plate: 'M2',
+      keyHistory: [{ id: 'c', at: '2026-09-03T08:00', action: 'taken', name: 'Garage', recordedBy: 'admin' }],
+    },
+    { id: 'v3', name: 'Mégane', plate: 'M3' },
+  ]
+
+  it('merges every vehicle, most recent first', () => {
+    expect(keyMovements(fleet).map(m => m.id)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('carries the vehicle, since the log reads across the fleet', () => {
+    const [latest] = keyMovements(fleet)
+    expect(latest).toMatchObject({ vehicleId: 'v1', vehicleName: 'Duro', vehiclePlate: 'M1' })
+  })
+
+  it('flags a movement recorded by somebody other than the holder', () => {
+    const byId = Object.fromEntries(keyMovements(fleet).map(m => [m.id, m]))
+    expect(byId.b.byOther).toBe(true)   // Jacquemoud hung up Favre's key
+    expect(byId.a.byOther).toBe(false)  // Favre took her own
+  })
+
+  it('copes with a vehicle that has no history at all', () => {
+    expect(keyMovements([{ id: 'v3', name: 'X' }])).toEqual([])
+    expect(keyMovements([])).toEqual([])
   })
 })
 

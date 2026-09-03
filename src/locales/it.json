@@ -16,7 +16,8 @@
     "park": "Vista del parco",
     "checks": "SPH",
     "config": "Configurazione",
-    "users": "Account"
+    "users": "Account",
+    "log": "Giornale di combattimento"
   },
   "actions": {
     "add": "Aggiungi",
@@ -187,7 +188,6 @@
     "vehicle": "Veicolo:",
     "takeTitle": "Prendere la chiave",
     "transferTitle": "Trasferire la chiave",
-    "returnTitle": "Restituire la chiave",
     "currentHolder": "Attualmente presso {name} dal {date}.",
     "aPerson": "Una persona",
     "outside": "Fuori sistema",
@@ -207,7 +207,18 @@
       "taken": "{name} ha preso la chiave",
       "transferred": "Chiave trasferita da {from} a {name}",
       "returned": "{name} ha restituito la chiave"
-    }
+    },
+    "you": " (lei)",
+    "returnFor": "Restituire la chiave di {name}"
+  },
+  "log": {
+    "title": "Giornale di combattimento",
+    "subtitle": "I movimenti delle chiavi di tutto il parco, dal più recente al più vecchio.",
+    "searchPlaceholder": "Veicolo, persona…",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "undated": "Senza data",
+    "empty": "Nessun movimento di chiave registrato."
   },
   "missions": {
     "title": "Missioni",

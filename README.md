@@ -67,10 +67,21 @@ véhicule ?* Il se lit indépendamment du planning.
   n'autorise pas à conduire — le permis reste affaire de la fiche personne
 - Une clé peut être prêtée à quelqu'un **hors système** (garage, autre unité),
   enregistré au seul nom ; le retour peut être saisi par n'importe qui
+- Prendre une clé propose d'emblée la personne connectée, en tête de liste :
+  le cas courant tient en un clic, quelqu'un d'autre en deux
+- Poser la clé de quelqu'un d'autre est normal et ne demande rien de
+  particulier — le bouton nomme le détenteur, et le journal garde les deux
+  noms : qui tenait la clé, et qui a fait le geste
 - Chaque mouvement est horodaté et garde le compte qui l'a saisi ; les
   cinquante derniers sont consultables depuis la fiche véhicule
 - Supprimer une personne qui détient une clé ne remet pas la clé au tableau :
   elle reste sortie, sous le nom enregistré
+
+### Journal de combat
+Les mouvements de clés de toute la flotte sur une page, groupés par jour et du
+plus récent au plus ancien : heure, véhicule, ce qui s'est passé, et le compte
+qui l'a saisi quand ce n'est pas le détenteur lui-même. La recherche porte sur
+le véhicule comme sur les noms. La page est accessible à tous les comptes.
 
 ### Missions
 - Titre, description, dates de début et fin avec précision à l'heure

@@ -41,6 +41,17 @@ export function pushHistory(vehicle, entry) {
   vehicle.keyHistory = history.slice(-KEY_HISTORY_LIMIT)
 }
 
+/**
+ * How to name the account recording a movement. An account tied to a person
+ * is shown under that person's name, which is what a reader of the log is
+ * looking for; a service account keeps its username.
+ */
+export function recorderName(user, persons = []) {
+  if (!user) return ''
+  const person = user.personId ? persons.find(p => p.id === user.personId) : null
+  return person ? personName(person) : (user.username ?? '')
+}
+
 /** Vehicles whose key is out, most recently taken first. */
 export function vehiclesWithKeyOut(vehicles) {
   return vehicles
@@ -51,6 +62,31 @@ export function vehiclesWithKeyOut(vehicles) {
 /** Vehicles whose key is on the board. */
 export function vehiclesWithKeyIn(vehicles) {
   return vehicles.filter(vehicle => !keyIsOut(vehicle))
+}
+
+/**
+ * Every key movement of the fleet, most recent first.
+ *
+ * Each entry carries its vehicle, since the log reads across the fleet: the
+ * question it answers is "what happened this morning", not "what happened to
+ * this vehicle".
+ */
+export function keyMovements(vehicles) {
+  const all = []
+  for (const vehicle of vehicles) {
+    for (const entry of vehicle.keyHistory ?? []) {
+      all.push({
+        ...entry,
+        vehicleId: vehicle.id,
+        vehicleName: vehicle.name,
+        vehiclePlate: vehicle.plate,
+        // Who held the key and who recorded the movement are two different
+        // questions: anybody may hand a key over on somebody else's behalf.
+        byOther: Boolean(entry.recordedBy) && entry.recordedBy !== entry.name,
+      })
+    }
+  }
+  return all.sort((a, b) => (b.at ?? '').localeCompare(a.at ?? '') || a.vehicleName.localeCompare(b.vehicleName))
 }
 
 /** The keys a person is currently holding. */

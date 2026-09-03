@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
 import { usePersonsStore } from '../../stores/persons.js'
+import { useAuthStore } from '../../stores/auth.js'
 import { formatDateTime } from '../../datetime.js'
 import { personName } from '../../labels.js'
 import { holderName } from '../../keys.js'
@@ -10,15 +11,30 @@ const props = defineProps({ vehicle: { type: Object, required: true } })
 const emit = defineEmits(['confirm', 'close'])
 
 const personsStore = usePersonsStore()
+const auth = useAuthStore()
 
 const holder = computed(() => props.vehicle.keyHolder)
-const persons = computed(() =>
-  [...personsStore.persons].sort((a, b) => personName(a).localeCompare(personName(b)))
+
+/** The person behind the signed-in account, when there is one. */
+const self = computed(() =>
+  auth.user?.personId
+    ? personsStore.persons.find(person => person.id === auth.user.personId) ?? null
+    : null
 )
+// The signed-in person first, so the pre-selected entry is visible without
+// scrolling the list; everybody else alphabetically.
+const persons = computed(() => {
+  const sorted = [...personsStore.persons].sort((a, b) => personName(a).localeCompare(personName(b)))
+  const mine = sorted.findIndex(person => person.id === self.value?.id)
+  if (mine <= 0) return sorted
+  return [sorted[mine], ...sorted.slice(0, mine), ...sorted.slice(mine + 1)]
+})
 
 /** Either a declared person, or somebody outside the application. */
 const mode = ref('person')
-const personId = ref('')
+// Taking a key for oneself is the common case, so start there; anybody else
+// is one click away in the list.
+const personId = ref(self.value?.id ?? '')
 const outsideName = ref('')
 const search = ref('')
 
@@ -27,6 +43,8 @@ const matching = computed(() => {
   if (!needle) return persons.value
   return persons.value.filter(person => personName(person).toLowerCase().includes(needle))
 })
+
+const isSelf = id => id === self.value?.id
 
 const chosen = computed(() =>
   mode.value === 'person'
@@ -83,6 +101,7 @@ function submit() {
             :class="['w-full text-left px-3 py-2 text-sm min-h-[40px]',
               personId === person.id ? 'bg-blue-50 text-blue-800 font-medium' : 'hover:bg-gray-50']">
             {{ personName(person) }}
+            <span v-if="isSelf(person.id)" class="text-gray-400 font-normal">{{ $t('keys.you') }}</span>
           </button>
           <p v-if="!matching.length" class="px-3 py-2 text-sm text-gray-400 italic">
             {{ $t('keys.noPerson') }}

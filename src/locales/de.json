@@ -16,7 +16,8 @@
     "park": "Parkübersicht",
     "checks": "SPH",
     "config": "Konfiguration",
-    "users": "Konten"
+    "users": "Konten",
+    "log": "Gefechtsjournal"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -187,7 +188,6 @@
     "vehicle": "Fahrzeug:",
     "takeTitle": "Schlüssel nehmen",
     "transferTitle": "Schlüssel übergeben",
-    "returnTitle": "Schlüssel zurückgeben",
     "currentHolder": "Derzeit bei {name} seit {date}.",
     "aPerson": "Eine Person",
     "outside": "Ausserhalb des Systems",
@@ -207,7 +207,18 @@
       "taken": "{name} hat den Schlüssel genommen",
       "transferred": "Schlüssel von {from} an {name} übergeben",
       "returned": "{name} hat den Schlüssel zurückgegeben"
-    }
+    },
+    "you": " (Sie)",
+    "returnFor": "Schlüssel von {name} zurückgeben"
+  },
+  "log": {
+    "title": "Gefechtsjournal",
+    "subtitle": "Die Schlüsselbewegungen der ganzen Flotte, von der neuesten zur ältesten.",
+    "searchPlaceholder": "Fahrzeug, Person…",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "undated": "Ohne Datum",
+    "empty": "Keine Schlüsselbewegung erfasst."
   },
   "missions": {
     "title": "Einsätze",
