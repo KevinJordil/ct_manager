@@ -497,5 +497,31 @@
     "selfDelete": "Non puoi eliminare il tuo account",
     "loadFailed": "Impossibile caricare gli account: {reason}",
     "saveFailed": "Impossibile salvare l'account: {reason}"
+  },
+  "printing": {
+    "print": "Stampa / PDF",
+    "printMission": "Ordine di missione",
+    "printList": "Stampa l'elenco",
+    "printCalendar": "Stampa il calendario",
+    "printChecks": "Stampa lo stato SPH",
+    "documents": {
+      "mission": "Ordine di missione",
+      "missions": "Elenco delle missioni",
+      "calendar": "Calendario",
+      "checks": "Stato SPH"
+    },
+    "generatedOn": "Emesso il {date}",
+    "page": "Gestione CT",
+    "noData": "Nessun dato da stampare",
+    "unknownDocument": "Documento sconosciuto",
+    "backToApp": "Torna all'applicazione",
+    "printNow": "Stampa",
+    "meetingPoint": "Punto d'incontro",
+    "crew": "Equipaggio",
+    "staff": "Personale",
+    "lastCheck": "Ultimo controllo",
+    "status": "Stato",
+    "resource": "Risorsa",
+    "driver": "Conducente"
   }
 }

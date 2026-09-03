@@ -24,6 +24,8 @@ const { error: syncError, conflict, authRequired, saving, clearError } = useSync
 
 /** Public pages (login, request form) are rendered without the app shell. */
 const isPublicPage = computed(() => Boolean(route.meta.public))
+/** Printable documents carry their own layout, without the shell. */
+const isBarePage = computed(() => Boolean(route.meta.bare))
 
 // An expired or revoked session is only discovered on an API call: send the
 // user back to the login page as soon as one reports it.
@@ -144,8 +146,8 @@ const NAV_ITEMS = [
 </script>
 
 <template>
-  <!-- Public pages carry their own full-page layout. -->
-  <RouterView v-if="isPublicPage" />
+  <!-- Public and printable pages carry their own full-page layout. -->
+  <RouterView v-if="isPublicPage || isBarePage" />
 
   <div v-else class="min-h-screen flex">
     <!-- Mobile overlay -->

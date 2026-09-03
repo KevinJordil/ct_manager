@@ -497,5 +497,31 @@
     "selfDelete": "Sie können Ihr eigenes Konto nicht löschen",
     "loadFailed": "Konten konnten nicht geladen werden: {reason}",
     "saveFailed": "Konto konnte nicht gespeichert werden: {reason}"
+  },
+  "printing": {
+    "print": "Drucken / PDF",
+    "printMission": "Einsatzbefehl",
+    "printList": "Liste drucken",
+    "printCalendar": "Kalender drucken",
+    "printChecks": "SPH-Stand drucken",
+    "documents": {
+      "mission": "Einsatzbefehl",
+      "missions": "Einsatzliste",
+      "calendar": "Kalender",
+      "checks": "SPH-Stand"
+    },
+    "generatedOn": "Erstellt am {date}",
+    "page": "TK-Verwaltung",
+    "noData": "Keine Daten zum Drucken",
+    "unknownDocument": "Unbekanntes Dokument",
+    "backToApp": "Zurück zur Anwendung",
+    "printNow": "Drucken",
+    "meetingPoint": "Treffpunkt",
+    "crew": "Besatzung",
+    "staff": "Personal",
+    "lastCheck": "Letzte Kontrolle",
+    "status": "Status",
+    "resource": "Ressource",
+    "driver": "Fahrer"
   }
 }

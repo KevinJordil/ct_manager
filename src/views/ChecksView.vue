@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
 import { useClock } from '../stores/clock.js'
@@ -13,6 +14,7 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
 const { todayString } = useClock()
+const router = useRouter()
 
 onMounted(() => {
   vehiclesStore.init()
@@ -71,7 +73,12 @@ function onDelete() {
 
 <template>
   <div>
-    <h1 class="page-title">{{ $t('checks.title') }}</h1>
+    <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+      <h1 class="page-title mb-0">{{ $t('checks.title') }}</h1>
+      <button @click="router.push({ path: '/print', query: { doc: 'checks' } })" class="btn-secondary">
+        {{ $t('printing.printChecks') }}
+      </button>
+    </div>
 
     <div class="grid grid-cols-3 gap-4 mb-6">
       <div class="stat-card bg-gray-50 border border-gray-200">

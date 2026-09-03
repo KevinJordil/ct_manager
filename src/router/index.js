@@ -13,6 +13,7 @@ import ParkView from '../views/ParkView.vue'
 import ChecksView from '../views/ChecksView.vue'
 import ConfigView from '../views/ConfigView.vue'
 import UsersView from '../views/UsersView.vue'
+import PrintView from '../views/PrintView.vue'
 
 const routes = [
   // ── Public ──
@@ -28,6 +29,7 @@ const routes = [
   { path: '/requests', name: 'requests', component: RequestsView },
   { path: '/park', name: 'park', component: ParkView },
   { path: '/checks', name: 'checks', component: ChecksView },
+  { path: '/print', name: 'print', component: PrintView, meta: { bare: true } },
 
   // ── Administrators only ──
   { path: '/config', name: 'config', component: ConfigView, meta: { admin: true } },

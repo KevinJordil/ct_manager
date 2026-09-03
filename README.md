@@ -72,6 +72,17 @@ mois du calendrier.
 - **Recherche** sur les listes personnes, véhicules, missions et demandes — accents et casse ignorés, plusieurs mots combinables
 - **Approuver crée la mission** : le formulaire de mission s'ouvre pré-rempli depuis la demande (titre, contact, dates, point de rendez-vous et véhicules en notes) ; la demande ne passe à *approuvée* qu'une fois la mission enregistrée
 
+### Impression et PDF
+Quatre documents, mis en page pour l'A4 et produits par l'impression du
+navigateur — aucune bibliothèque PDF n'est embarquée :
+
+| Document | Depuis |
+|----------|--------|
+| **Ordre de mission** | l'icône imprimante d'une fiche mission |
+| **Liste des missions** | bouton de la page Missions, filtre de statut inclus |
+| **Calendrier de la période** | bouton de la page Calendrier — rendu en tableau, la timeline en pixels étant illisible sur papier |
+| **État des SPH** | bouton de la page SPH |
+
 ### Configuration
 - **Types de véhicules** proposés sur le formulaire public : réordonnables, supprimables, et extensibles par des types propres à l'unité
 - **Permis** et **matrice permis/catégorie** (avec et sans remorque) modifiables ; ce sont ces règles qui déterminent quels chauffeurs sont proposés pour un véhicule
@@ -220,6 +231,17 @@ node server.js
 ```
 
 Ouvrir **http://localhost:3000**.
+
+### Impression et PDF
+Quatre documents, mis en page pour l'A4 et produits par l'impression du
+navigateur — aucune bibliothèque PDF n'est embarquée :
+
+| Document | Depuis |
+|----------|--------|
+| **Ordre de mission** | l'icône imprimante d'une fiche mission |
+| **Liste des missions** | bouton de la page Missions, filtre de statut inclus |
+| **Calendrier de la période** | bouton de la page Calendrier — rendu en tableau, la timeline en pixels étant illisible sur papier |
+| **État des SPH** | bouton de la page SPH |
 
 ### Configuration
 

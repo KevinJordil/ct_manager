@@ -497,5 +497,31 @@
     "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
     "loadFailed": "Chargement des comptes impossible : {reason}",
     "saveFailed": "Enregistrement du compte impossible : {reason}"
+  },
+  "printing": {
+    "print": "Imprimer / PDF",
+    "printMission": "Ordre de mission",
+    "printList": "Imprimer la liste",
+    "printCalendar": "Imprimer le calendrier",
+    "printChecks": "Imprimer l'état des SPH",
+    "documents": {
+      "mission": "Ordre de mission",
+      "missions": "Liste des missions",
+      "calendar": "Calendrier",
+      "checks": "État des SPH"
+    },
+    "generatedOn": "Édité le {date}",
+    "page": "Gestion CT",
+    "noData": "Aucune donnée à imprimer",
+    "unknownDocument": "Document inconnu",
+    "backToApp": "Retour à l'application",
+    "printNow": "Imprimer",
+    "meetingPoint": "Point de rendez-vous",
+    "crew": "Équipage",
+    "staff": "Personnel",
+    "lastCheck": "Dernier contrôle",
+    "status": "Statut",
+    "resource": "Ressource",
+    "driver": "Chauffeur"
   }
 }

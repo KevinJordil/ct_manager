@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMissionsStore } from '../stores/missions.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
@@ -18,6 +19,15 @@ const store = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
 const { nowString } = useClock()
+const router = useRouter()
+
+function printList() {
+  router.push({ path: '/print', query: { doc: 'missions', status: statusFilter.value } })
+}
+
+function printMission(mission) {
+  router.push({ path: '/print', query: { doc: 'mission', id: mission.id } })
+}
 
 onMounted(() => {
   store.init()
@@ -88,12 +98,15 @@ function onDelete() {
   <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="page-title mb-0">{{ $t('missions.title') }}</h1>
-      <button @click="openCreate" class="btn-primary">
+      <div class="flex gap-2">
+        <button @click="printList" class="btn-secondary">{{ $t('printing.printList') }}</button>
+        <button @click="openCreate" class="btn-primary">
         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        {{ $t('actions.add') }}
-      </button>
+          {{ $t('actions.add') }}
+        </button>
+      </div>
     </div>
 
     <div class="flex gap-2 mb-6 flex-wrap">
@@ -115,6 +128,7 @@ function onDelete() {
         :mission="mission"
         @edit="openEdit(mission)"
         @delete="deletedId = mission.id"
+        @print="printMission(mission)"
       />
     </TransitionGroup>
 

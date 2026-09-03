@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
@@ -19,6 +20,14 @@ const personsStore = usePersonsStore()
 const missionsStore = useMissionsStore()
 const { nowString } = useClock()
 const { t, locale } = useI18n()
+const router = useRouter()
+
+function printCalendar() {
+  router.push({
+    path: '/print',
+    query: { doc: 'calendar', view: viewMode.value, date: currentDate.value, tab: activeTab.value },
+  })
+}
 
 onMounted(() => {
   vehiclesStore.init()
@@ -187,7 +196,10 @@ const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEven
 
 <template>
   <div>
-    <h1 class="page-title">{{ $t('calendar.title') }}</h1>
+    <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+      <h1 class="page-title mb-0">{{ $t('calendar.title') }}</h1>
+      <button @click="printCalendar" class="btn-secondary">{{ $t('printing.printCalendar') }}</button>
+    </div>
 
     <!-- Controls -->
     <div class="flex flex-wrap items-center gap-2 mb-4">
