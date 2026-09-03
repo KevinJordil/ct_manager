@@ -701,6 +701,35 @@ describe('own password', () => {
   })
 })
 
+// ── Static files and the single-page fallback ──
+
+describe('serving the frontend', () => {
+  it('answers 404 for a file that does not exist, not the application', async () => {
+    const res = await fetch(`${BASE}/assets/does-not-exist.js`, {
+      headers: { Accept: '*/*' },
+    })
+    expect(res.status).toBe(404)
+    // Returning index.html here would have the browser parse HTML as
+    // JavaScript, and a cache in front would store it under that URL.
+    expect(res.headers.get('content-type')).not.toContain('text/html')
+  })
+
+  it('answers 404 for a missing icon', async () => {
+    expect((await fetch(`${BASE}/vite.svg`)).status).toBe(404)
+  })
+
+  it('refuses a non-navigation request for an unknown path', async () => {
+    const res = await fetch(`${BASE}/whatever`, { headers: { Accept: 'application/json' } })
+    expect(res.status).toBe(404)
+  })
+
+  it('still answers on an unknown /api route with a JSON error', async () => {
+    const res = await fetch(`${BASE}/api/nope`, { headers: auth() })
+    expect(res.status).toBe(404)
+    expect((await res.json()).code).toBe('notFound')
+  })
+})
+
 // ── Brute force ──
 // Kept last on purpose: these tests exhaust the login budget for this client,
 // so anything signing in afterwards would be throttled.

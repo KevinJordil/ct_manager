@@ -641,7 +641,22 @@ app.use('/api', (_req, res) => fail(res, 404, 'notFound', {}, 'Unknown route'))
 // ── Frontend in production ──
 
 app.use(express.static(DIST_DIR))
-app.get('*', async (_req, res) => {
+
+/**
+ * Single-page fallback.
+ *
+ * Only navigations get index.html. A request for a file that does not exist
+ * must answer 404 rather than a 200 page: otherwise a missing script or icon
+ * comes back as HTML, the browser cannot make sense of it, and a cache in
+ * front of the application happily stores the wrong body under that URL.
+ */
+app.get('*', async (req, res) => {
+  const looksLikeFile = path.extname(req.path) !== ''
+  const wantsHtml = (req.get('Accept') ?? '').includes('text/html')
+  if (looksLikeFile || !wantsHtml) {
+    return res.status(404).type('text/plain').send('Not found')
+  }
+
   const index = path.join(DIST_DIR, 'index.html')
   try {
     await fs.access(index)

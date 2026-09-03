@@ -229,10 +229,12 @@ Le frontend est compilé dans `dist/`. Le serveur Express sert ensuite les fichi
 ### Lancement en production
 
 ```bash
+npm run build   # indispensable : le serveur sert dist/
 npm run server
-# ou
-node server.js
 ```
+
+> `dist/` n'est pas versionné. Après un `git pull`, **reconstruisez** avant de
+> relancer, sinon le serveur sert l'ancienne interface.
 
 Ouvrir **http://localhost:3000**.
 
@@ -325,6 +327,20 @@ légitime qui se trompe une fois n'est jamais pénalisé.
 En développement, Vite proxifie `/api` vers le serveur Express : les requêtes
 sont de même origine et aucun en-tête CORS n'est nécessaire. `CORS_ORIGIN`
 n'est utile que si le frontend est servi depuis une autre origine.
+
+### Derrière Cloudflare
+
+Chaque build produit des noms de fichiers différents (`index-BMAR6jcd.js`).
+Si `index.html` est servi depuis le cache alors que les fichiers ont changé,
+le navigateur réclame des ressources qui n'existent plus et l'application ne
+démarre pas. Deux précautions :
+
+- **purger le cache** après chaque déploiement ;
+- ne pas mettre `index.html` en cache longue durée — seuls les fichiers de
+  `assets/`, dont le nom contient une empreinte, peuvent l'être.
+
+Désactivez également **Rocket Loader** : il réécrit le chargement des scripts
+et se marie mal avec les modules ES d'une application Vue.
 
 ### Modifications concurrentes
 
