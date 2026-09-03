@@ -2,17 +2,20 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMissionsStore } from '../../stores/missions.js'
+import { usePersonsStore } from '../../stores/persons.js'
 import { useClock } from '../../stores/clock.js'
 import { getVehicleStatus, currentMissionOfVehicle } from '../../availability.js'
 import { formatDateTime } from '../../datetime.js'
 import { VEHICLE_STATUS } from '../../constants.js'
+import { holderName } from '../../keys.js'
 import StatusBadge from '../common/StatusBadge.vue'
 
 const props = defineProps({ vehicle: { type: Object, required: true } })
-defineEmits(['edit', 'delete', 'lend', 'release'])
+defineEmits(['edit', 'delete', 'lend', 'release', 'key-take', 'key-return', 'key-history'])
 
 const router = useRouter()
 const missionsStore = useMissionsStore()
+const personsStore = usePersonsStore()
 const { nowString, todayString } = useClock()
 
 const currentMission = computed(() =>
@@ -26,6 +29,9 @@ const status = computed(() =>
 const isOnLoan = computed(() => props.vehicle.status === VEHICLE_STATUS.ON_LOAN)
 const isFree = computed(() => status.value === VEHICLE_STATUS.FREE)
 const isOnMission = computed(() => status.value === VEHICLE_STATUS.ON_MISSION)
+
+const keyHolder = computed(() => props.vehicle.keyHolder ?? null)
+const keyHolderName = computed(() => holderName(keyHolder.value, personsStore.persons))
 
 /** A loan whose expected return date has passed. */
 const loanOverdue = computed(() =>
@@ -52,6 +58,19 @@ const loanOverdue = computed(() =>
           </span>
         </div>
 
+        <button type="button" @click="$emit('key-history')"
+          :class="['mt-2 flex items-center gap-1.5 text-sm rounded px-2 py-1 border w-full sm:w-auto text-left min-h-[36px]',
+            keyHolder ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-green-200 bg-green-50 text-green-800']"
+          :title="$t('keys.historyHint')">
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+          </svg>
+          <span class="min-w-0 truncate">
+            {{ keyHolder ? $t('keys.heldBy', { name: keyHolderName }) : $t('keys.onBoard') }}
+          </span>
+        </button>
+
         <div v-if="isOnMission && currentMission" class="mt-2">
           <button @click="router.push('/missions')" class="text-sm text-orange-600 hover:text-orange-800 underline underline-offset-2 inline-flex items-center min-h-[36px] py-1 text-left">
             {{ currentMission.title }}
@@ -74,6 +93,20 @@ const loanOverdue = computed(() =>
       </div>
 
       <div class="flex gap-1 shrink-0">
+        <button @click="$emit('key-take')" class="icon-btn text-amber-500 hover:text-amber-700"
+          :title="keyHolder ? $t('keys.transferTitle') : $t('keys.takeTitle')"
+          :aria-label="keyHolder ? $t('keys.transferTitle') : $t('keys.takeTitle')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+          </svg>
+        </button>
+        <button v-if="keyHolder" @click="$emit('key-return')" class="icon-btn text-green-600 hover:text-green-800"
+          :title="$t('keys.returnTitle')" :aria-label="$t('keys.returnTitle')">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h11m0 0l-4-4m4 4l-4 4m10-9v14"/>
+          </svg>
+        </button>
         <button v-if="isFree" @click="$emit('lend')" class="icon-btn"
           :title="$t('vehicles.loan.lend')" :aria-label="$t('vehicles.loan.lend')">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

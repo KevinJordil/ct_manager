@@ -90,6 +90,8 @@ describe('migrateVehicles — French schema', () => {
       loanUntil: '',
       seats: 8,
       checks: [],
+      keyHolder: null,
+      keyHistory: [],
     })
   })
 
@@ -200,7 +202,7 @@ describe('idempotence', () => {
     }]
     const vehicles = [{
       id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', status: 'free', loanNote: '',
-      loanUntil: '', seats: 8, checks: [],
+      loanUntil: '', seats: 8, checks: [], keyHolder: null, keyHistory: [],
     }]
     const missions = [{
       id: 'm1', title: 'T', description: '', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',

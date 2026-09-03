@@ -56,6 +56,22 @@ mois du calendrier.
 - Statut dynamique : *libre*, *en mission* (calculé depuis les missions actives), *en prêt* (manuel, avec commentaire et date de retour prévue signalée en cas de dépassement)
 - Mise en prêt et libération depuis la fiche véhicule
 
+### Clés
+Le tableau des clés répond à la question posée au guichet : *puis-je prendre ce
+véhicule ?* Il se lit indépendamment du planning.
+
+- Chaque véhicule affiche sa clé : **au tableau** (le véhicule est disponible)
+  ou **chez quelqu'un**, avec le nom et l'heure de la prise
+- N'importe quelle personne connectée peut enregistrer une prise, un transfert
+  ou un retour, pour n'importe quel véhicule : la clé dit où elle est, elle
+  n'autorise pas à conduire — le permis reste affaire de la fiche personne
+- Une clé peut être prêtée à quelqu'un **hors système** (garage, autre unité),
+  enregistré au seul nom ; le retour peut être saisi par n'importe qui
+- Chaque mouvement est horodaté et garde le compte qui l'a saisi ; les
+  cinquante derniers sont consultables depuis la fiche véhicule
+- Supprimer une personne qui détient une clé ne remet pas la clé au tableau :
+  elle reste sortie, sous le nom enregistré
+
 ### Missions
 - Titre, description, dates de début et fin avec précision à l'heure
 - Affectation de **plusieurs véhicules** par mission, chacun avec ou sans chauffeur
@@ -106,6 +122,8 @@ navigateur — aucune bibliothèque PDF n'est embarquée :
 ### Tableau de bord
 - Bandeau **À traiter** en tête de page : demandes en attente, SPH à faire, prêts en retard — chaque tuile mène à la page concernée, et disparaît quand il n'y a rien
 - Vue synthétique : disponibilités personnes et véhicules, missions en cours
+- **Clés des véhicules** : d'un côté les véhicules dont la clé est au tableau,
+  de l'autre les clés sorties avec leur détenteur et l'heure de la prise
 - Alertes automatiques (chauffeur en congé pendant une mission, véhicule en prêt sur une mission active, etc.)
 
 ### Calendrier
@@ -454,8 +472,12 @@ Les fichiers JSON utilisent des clés anglaises :
 | Collection | Champs |
 |------------|--------|
 | `persons` | `id`, `rank`, `firstName`, `lastName`, `licenses[]`, `notes`, `leaves[{id, startDate, endDate}]`, `unavailable`, `unavailabilityNote` |
-| `vehicles` | `id`, `name`, `plate`, `category`, `status`, `loanNote`, `seats` |
+| `vehicles` | `id`, `name`, `plate`, `category`, `status`, `loanNote`, `loanUntil`, `seats`, `checks[]`, `keyHolder`, `keyHistory[]` |
 | `missions` | `id`, `title`, `description`, `startDate`, `endDate`, `notes`, `vehicles[{id, vehicleId, driverId, withTrailer}]`, `staffIds[]` |
+
+`keyHolder` vaut `null` quand la clé est au tableau, sinon
+`{personId, name, since, recordedBy}` — `personId` est `null` pour un
+détenteur hors système, et le nom enregistré sert alors d'identité.
 
 Les fichiers écrits par une version antérieure — schéma français, statut de
 véhicule stocké, mission à véhicule unique, permis civils — sont convertis au

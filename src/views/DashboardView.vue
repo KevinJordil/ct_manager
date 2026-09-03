@@ -15,6 +15,7 @@ import {
 import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS, REQUEST_STATUS } from '../constants.js'
 import { needsCheck } from '../checks.js'
 import { personName } from '../labels.js'
+import { holderName, vehiclesWithKeyIn, vehiclesWithKeyOut } from '../keys.js'
 import StatusBadge from '../components/common/StatusBadge.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
@@ -98,6 +99,22 @@ const stats = computed(() => {
     vehiclesOnLoan: byVehicle[VEHICLE_STATUS.ON_LOAN] ?? 0,
   }
 })
+
+/**
+ * Where the keys are. This is the question asked at the counter — "can I take
+ * that vehicle?" — so it answers from the keys alone, not from the planning.
+ */
+const keysOut = computed(() =>
+  vehiclesWithKeyOut(vehiclesStore.vehicles).map(vehicle => ({
+    id: vehicle.id,
+    name: vehicle.name,
+    plate: vehicle.plate,
+    holder: holderName(vehicle.keyHolder, personsStore.persons),
+    since: vehicle.keyHolder.since,
+  }))
+)
+
+const keysIn = computed(() => vehiclesWithKeyIn(vehiclesStore.vehicles))
 
 const ongoingDetails = computed(() =>
   ongoing.value.map(mission => ({
@@ -206,6 +223,43 @@ const alerts = computed(() => {
         <div class="stat-card stat-red">
           <p class="stat-value">{{ stats.vehiclesOnLoan }}</p>
           <p class="stat-label">{{ $t('dashboard.stats.onLoan') }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="section-title">{{ $t('keys.dashboardTitle') }}</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="card">
+          <p class="flex items-center gap-2 font-semibold text-gray-900">
+            <span class="w-2.5 h-2.5 rounded-full bg-green-500" />
+            {{ $t('keys.availableCount', keysIn.length, { count: keysIn.length }) }}
+          </p>
+          <div v-if="keysIn.length" class="mt-3 flex flex-wrap gap-1.5">
+            <RouterLink v-for="vehicle in keysIn" :key="vehicle.id" to="/vehicles"
+              class="inline-flex items-center gap-1.5 text-sm bg-green-50 text-green-800 border border-green-200 rounded px-2 py-1 hover:border-green-400">
+              {{ vehicle.name }}
+              <span class="font-mono text-xs text-green-600">{{ vehicle.plate }}</span>
+            </RouterLink>
+          </div>
+          <p v-else class="mt-3 text-sm text-gray-500 italic">{{ $t('keys.noneAvailable') }}</p>
+        </div>
+
+        <div class="card">
+          <p class="flex items-center gap-2 font-semibold text-gray-900">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500" />
+            {{ $t('keys.takenCount', keysOut.length, { count: keysOut.length }) }}
+          </p>
+          <ul v-if="keysOut.length" class="mt-3 space-y-2">
+            <li v-for="vehicle in keysOut" :key="vehicle.id"
+              class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm border-l-2 border-amber-300 pl-2">
+              <span class="font-medium text-gray-800">{{ vehicle.name }}</span>
+              <span class="font-mono text-xs text-gray-400">{{ vehicle.plate }}</span>
+              <span class="text-amber-800">{{ $t('keys.heldBy', { name: vehicle.holder }) }}</span>
+              <span class="text-xs text-gray-400">{{ formatDateTime(vehicle.since) }}</span>
+            </li>
+          </ul>
+          <p v-else class="mt-3 text-sm text-gray-500 italic">{{ $t('keys.noneTaken') }}</p>
         </div>
       </div>
     </section>

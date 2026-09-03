@@ -77,5 +77,15 @@ export const REQUEST_VEHICLE_TYPES = [
   'other',
 ]
 
+/** What happened to a vehicle key. */
+export const KEY_ACTION = {
+  TAKEN: 'taken',
+  TRANSFERRED: 'transferred',
+  RETURNED: 'returned',
+}
+
+/** How many key movements are kept per vehicle, oldest dropped first. */
+export const KEY_HISTORY_LIMIT = 50
+
 /** Collections persisted by the API. */
 export const ENTITIES = ['persons', 'vehicles', 'missions']

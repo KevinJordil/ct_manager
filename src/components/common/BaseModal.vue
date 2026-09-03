@@ -67,7 +67,7 @@ onBeforeUnmount(() => {
           <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <h2 :id="titleId" class="text-lg font-semibold text-gray-900">{{ title }}</h2>
             <button type="button" @click="$emit('close')" :aria-label="$t('actions.close')"
-              class="text-gray-400 hover:text-gray-600 transition-colors rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="inline-flex items-center justify-center min-w-[36px] min-h-[36px] -mr-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>

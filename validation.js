@@ -89,6 +89,38 @@ function validateVehicle(v) {
     return invalidField('seats')
   }
 
+  if (v.keyHolder !== undefined && v.keyHolder !== null) {
+    const holder = v.keyHolder
+    if (typeof holder !== 'object' || Array.isArray(holder)) return invalidField('keyHolder')
+    // A key can be held by somebody outside the application, who has no id.
+    if (holder.personId !== null && holder.personId !== undefined && !isText(holder.personId)) {
+      return invalidField('keyHolder')
+    }
+    if (!isText(holder.name) || holder.name.trim() === '') return invalidField('keyHolder')
+    if (!isOptionalDate(holder.since)) return invalidField('keyHolder')
+    if (!isOptionalText(holder.recordedBy)) return invalidField('keyHolder')
+  }
+
+  if (v.keyHistory !== undefined) {
+    if (!Array.isArray(v.keyHistory)) return invalidField('keyHistory')
+    if (v.keyHistory.length > 200) return { code: 'tooManyItems', params: { max: 200 } }
+    for (const [i, entry] of v.keyHistory.entries()) {
+      if (entry === null || typeof entry !== 'object') {
+        return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: '' } }
+      }
+      if (!['taken', 'transferred', 'returned'].includes(entry.action)) {
+        return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: 'action' } }
+      }
+      if (!isOptionalDate(entry.at)) {
+        return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: 'at' } }
+      }
+      if (!isOptionalText(entry.name) || !isOptionalText(entry.recordedBy) ||
+          !isOptionalText(entry.from)) {
+        return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: 'name' } }
+      }
+    }
+  }
+
   if (v.checks !== undefined) {
     if (!Array.isArray(v.checks)) return invalidField('checks')
     for (const [i, check] of v.checks.entries()) {

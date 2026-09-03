@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePersonsStore } from '../stores/persons.js'
 import { useMissionsStore } from '../stores/missions.js'
+import { useVehiclesStore } from '../stores/vehicles.js'
 import PersonCard from '../components/persons/PersonCard.vue'
 import PersonForm from '../components/persons/PersonForm.vue'
 import LeavesModal from '../components/persons/LeavesModal.vue'
@@ -14,11 +15,13 @@ import { filterBySearch } from '../search.js'
 
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
+const vehiclesStore = useVehiclesStore()
 const { t, te } = useI18n()
 
 onMounted(async () => {
   await store.init()
   missionsStore.init()
+  vehiclesStore.init()
   store.loadAccounts()
 })
 
@@ -88,6 +91,9 @@ const deleteMessage = computed(() => {
 async function onDelete() {
   // Clear the references first, so no mission is ever left pointing at a
   // person who no longer exists — and take their account with them.
+  // A key stays where it is; only the link to the deleted record goes, so
+  // the board still says the key is out and under whose name.
+  vehiclesStore.forgetPersonKeys(deletedId.value)
   missionsStore.forgetPerson(deletedId.value)
   if (store.hasAccount(deletedId.value)) {
     try {

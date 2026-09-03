@@ -15,7 +15,24 @@
         "note": ""
       }
     ],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": {
+      "personId": "2001002",
+      "name": "Sgt Caroline Favre",
+      "since": "2026-05-07T07:15",
+      "recordedBy": "admin"
+    },
+    "keyHistory": [
+      {
+        "id": "5001001",
+        "at": "2026-05-07T07:15",
+        "action": "taken",
+        "personId": "2001002",
+        "name": "Sgt Caroline Favre",
+        "from": "",
+        "recordedBy": "admin"
+      }
+    ]
   },
   {
     "id": "3001002",
@@ -33,7 +50,9 @@
         "note": ""
       }
     ],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001003",
@@ -51,7 +70,9 @@
         "note": ""
       }
     ],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001004",
@@ -69,7 +90,9 @@
         "note": ""
       }
     ],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001005",
@@ -87,7 +110,9 @@
         "note": ""
       }
     ],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001006",
@@ -98,7 +123,9 @@
     "loanNote": "",
     "seats": 46,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001007",
@@ -109,7 +136,9 @@
     "loanNote": "",
     "seats": 46,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001008",
@@ -120,7 +149,9 @@
     "loanNote": "",
     "seats": 46,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001009",
@@ -131,7 +162,9 @@
     "loanNote": "",
     "seats": 13,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001010",
@@ -142,7 +175,9 @@
     "loanNote": "",
     "seats": 13,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001011",
@@ -153,7 +188,9 @@
     "loanNote": "",
     "seats": 13,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001012",
@@ -164,7 +201,9 @@
     "loanNote": "",
     "seats": 13,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001013",
@@ -175,7 +214,9 @@
     "loanNote": "",
     "seats": 3,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001014",
@@ -186,7 +227,9 @@
     "loanNote": "",
     "seats": 3,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001015",
@@ -197,7 +240,9 @@
     "loanNote": "",
     "seats": 3,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001016",
@@ -208,7 +253,9 @@
     "loanNote": "",
     "seats": 3,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001017",
@@ -219,7 +266,9 @@
     "loanNote": "",
     "seats": 4,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001018",
@@ -230,7 +279,9 @@
     "loanNote": "",
     "seats": 4,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001019",
@@ -241,7 +292,9 @@
     "loanNote": "",
     "seats": 4,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   },
   {
     "id": "3001020",
@@ -252,6 +305,8 @@
     "loanNote": "Prêté à la cp EM jusqu'à fin de semaine",
     "seats": 4,
     "checks": [],
-    "loanUntil": ""
+    "loanUntil": "",
+    "keyHolder": null,
+    "keyHistory": []
   }
 ]

@@ -117,6 +117,64 @@ describe('validateCollection — rejections', () => {
   })
 })
 
+describe('vehicle keys', () => {
+  const holder = (over = {}) => ({
+    personId: 'p1', name: 'Sgt Favre', since: '2026-09-02T07:15', recordedBy: 'admin', ...over,
+  })
+  const entry = (over = {}) => ({
+    id: 'e1', at: '2026-09-02T07:15', action: 'taken',
+    personId: 'p1', name: 'Sgt Favre', from: '', recordedBy: 'admin', ...over,
+  })
+
+  it('accepts a key on the board and a key that is out', () => {
+    expect(validateCollection('vehicles', [vehicle({ keyHolder: null, keyHistory: [] })])).toBeNull()
+    expect(validateCollection('vehicles', [vehicle({
+      keyHolder: holder(), keyHistory: [entry(), entry({ id: 'e2', action: 'returned' })],
+    })])).toBeNull()
+  })
+
+  it('accepts a holder from outside the application, who has no id', () => {
+    expect(validateCollection('vehicles', [vehicle({
+      keyHolder: holder({ personId: null, name: 'Garage Dupont' }),
+    })])).toBeNull()
+  })
+
+  it('rejects a holder without a name', () => {
+    for (const name of ['', '   ', 42, undefined]) {
+      expect(validateCollection('vehicles', [vehicle({ keyHolder: holder({ name }) })]))
+        .toMatchObject({ code: 'invalidField', params: { field: 'keyHolder' } })
+    }
+  })
+
+  it('rejects a holder that is not a record', () => {
+    expect(validateCollection('vehicles', [vehicle({ keyHolder: 'Sgt Favre' })]))
+      .toMatchObject({ code: 'invalidField', params: { field: 'keyHolder' } })
+    expect(validateCollection('vehicles', [vehicle({ keyHolder: ['Sgt Favre'] })]))
+      .toMatchObject({ code: 'invalidField', params: { field: 'keyHolder' } })
+  })
+
+  it('rejects a malformed date on the holder', () => {
+    expect(validateCollection('vehicles', [vehicle({ keyHolder: holder({ since: '02.09.2026' }) })]))
+      .toMatchObject({ code: 'invalidField', params: { field: 'keyHolder' } })
+  })
+
+  it('rejects an unknown movement', () => {
+    expect(validateCollection('vehicles', [vehicle({ keyHistory: [entry({ action: 'stolen' })] })]))
+      .toMatchObject({ code: 'invalidNested', params: { list: 'keyHistory', position: 0, field: 'action' } })
+  })
+
+  it('rejects a history that is not an array', () => {
+    expect(validateCollection('vehicles', [vehicle({ keyHistory: { e1: {} } })]))
+      .toMatchObject({ code: 'invalidField', params: { field: 'keyHistory' } })
+  })
+
+  it('caps the history, since it grows on its own', () => {
+    const long = Array.from({ length: 201 }, (_, i) => entry({ id: `e${i}` }))
+    expect(validateCollection('vehicles', [vehicle({ keyHistory: long })]))
+      .toMatchObject({ code: 'tooManyItems' })
+  })
+})
+
 describe('error shape', () => {
   it('always carries a code and parameters, so the interface can translate it', () => {
     const error = validateCollection('persons', [person({ lastName: 42 })])

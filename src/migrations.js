@@ -105,6 +105,8 @@ function migrateVehicle(raw) {
       loanUntil: rest.loanUntil ?? '',
       seats: rest.seats ?? 4,
       checks: migrateChecks(raw),
+      keyHolder: rest.keyHolder ?? null,
+      keyHistory: rest.keyHistory ?? [],
     }
   }
 
@@ -118,6 +120,8 @@ function migrateVehicle(raw) {
     loanUntil: '',
     seats: raw.places ?? 4,
     checks: migrateChecks(raw),
+    keyHolder: null,
+    keyHistory: [],
   }
 }
 

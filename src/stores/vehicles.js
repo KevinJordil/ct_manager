@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
-import { VEHICLE_STATUS } from '../constants.js'
+import { KEY_ACTION, VEHICLE_STATUS } from '../constants.js'
 import { newId } from '../id.js'
+import { nowString } from '../datetime.js'
+import { makeHolder, pushHistory } from '../keys.js'
 import { migrateVehicles } from '../migrations.js'
 import { useCollection } from './collection.js'
 
@@ -21,6 +23,55 @@ export const useVehiclesStore = defineStore('vehicles', () => {
       vehicle.loanNote = ''
       vehicle.loanUntil = ''
     })
+  }
+
+  /**
+   * Hands the key to somebody. The same call covers taking a key off the
+   * board and passing it on, so the two never disagree about who holds what;
+   * the history keeps the distinction.
+   */
+  function takeKey(vehicleId, { personId = null, name = '', recordedBy = '' } = {}) {
+    collection.mutate(vehicleId, vehicle => {
+      const at = nowString()
+      const previous = vehicle.keyHolder
+      const holder = makeHolder({ personId, name, recordedBy }, at)
+      vehicle.keyHolder = holder
+      pushHistory(vehicle, {
+        id: newId(),
+        at,
+        action: previous ? KEY_ACTION.TRANSFERRED : KEY_ACTION.TAKEN,
+        personId: holder.personId,
+        name: holder.name,
+        from: previous ? previous.name : '',
+        recordedBy,
+      })
+    })
+  }
+
+  /** Puts the key back on the board. */
+  function returnKey(vehicleId, { recordedBy = '' } = {}) {
+    collection.mutate(vehicleId, vehicle => {
+      const previous = vehicle.keyHolder
+      if (!previous) return
+      vehicle.keyHolder = null
+      pushHistory(vehicle, {
+        id: newId(),
+        at: nowString(),
+        action: KEY_ACTION.RETURNED,
+        personId: previous.personId,
+        name: previous.name,
+        from: '',
+        recordedBy,
+      })
+    })
+  }
+
+  /** Called when a person leaves the application: their name stays readable. */
+  function forgetPersonKeys(personId) {
+    for (const vehicle of collection.items.value) {
+      if (vehicle.keyHolder?.personId !== personId) continue
+      collection.mutate(vehicle.id, v => { v.keyHolder = { ...v.keyHolder, personId: null } })
+    }
   }
 
   function addCheck(vehicleId, check) {
@@ -46,5 +97,6 @@ export const useVehiclesStore = defineStore('vehicles', () => {
     update: collection.update,
     remove: collection.remove,
     lend, release, addCheck, removeCheck,
+    takeKey, returnKey, forgetPersonKeys,
   }
 })

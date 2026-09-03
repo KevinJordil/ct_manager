@@ -3,21 +3,29 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { useMissionsStore } from '../stores/missions.js'
+import { usePersonsStore } from '../stores/persons.js'
+import { useAuthStore } from '../stores/auth.js'
 import VehicleCard from '../components/vehicles/VehicleCard.vue'
 import VehicleForm from '../components/vehicles/VehicleForm.vue'
 import LoanModal from '../components/vehicles/LoanModal.vue'
+import KeyModal from '../components/vehicles/KeyModal.vue'
+import KeyHistoryModal from '../components/vehicles/KeyHistoryModal.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 import SearchField from '../components/common/SearchField.vue'
 import { filterBySearch } from '../search.js'
+import { holderName } from '../keys.js'
 
 const store = useVehiclesStore()
 const missionsStore = useMissionsStore()
+const personsStore = usePersonsStore()
+const auth = useAuthStore()
 const { t } = useI18n()
 
 onMounted(() => {
   store.init()
   missionsStore.init()
+  personsStore.init()
 })
 
 const search = ref('')
@@ -26,6 +34,8 @@ const visibleVehicles = computed(() =>
   filterBySearch(store.vehicles, search.value, vehicle => [
     vehicle.name, vehicle.plate, vehicle.loanNote,
     t(`vehicles.categories.${vehicle.category}`),
+    // Searching a name finds the vehicle whose key that person is holding.
+    holderName(vehicle.keyHolder, personsStore.persons),
   ])
 )
 
@@ -33,6 +43,8 @@ const showForm = ref(false)
 const editedVehicle = ref(null)
 const deletedId = ref(null)
 const lentVehicle = ref(null)
+const keyVehicle = ref(null)
+const historyVehicle = ref(null)
 
 function openCreate() {
   editedVehicle.value = null
@@ -68,6 +80,15 @@ function onDelete() {
   deletedId.value = null
 }
 
+function confirmKey(holder) {
+  store.takeKey(keyVehicle.value.id, { ...holder, recordedBy: auth.username })
+  keyVehicle.value = null
+}
+
+function returnKey(vehicle) {
+  store.returnKey(vehicle.id, { recordedBy: auth.username })
+}
+
 function confirmLoan(loan) {
   store.lend(lentVehicle.value.id, loan)
   lentVehicle.value = null
@@ -97,6 +118,9 @@ function confirmLoan(loan) {
         @delete="deletedId = vehicle.id"
         @lend="lentVehicle = vehicle"
         @release="store.release(vehicle.id)"
+        @key-take="keyVehicle = vehicle"
+        @key-return="returnKey(vehicle)"
+        @key-history="historyVehicle = vehicle"
       />
     </TransitionGroup>
 
@@ -108,6 +132,12 @@ function confirmLoan(loan) {
 
     <LoanModal v-if="lentVehicle" :vehicle="lentVehicle"
       @confirm="confirmLoan" @close="lentVehicle = null" />
+
+    <KeyModal v-if="keyVehicle" :vehicle="keyVehicle"
+      @confirm="confirmKey" @close="keyVehicle = null" />
+
+    <KeyHistoryModal v-if="historyVehicle" :vehicle="historyVehicle"
+      @close="historyVehicle = null" />
 
     <ConfirmModal
       v-if="deletedId"
