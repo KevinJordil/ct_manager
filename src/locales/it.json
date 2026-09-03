@@ -121,7 +121,16 @@
     },
     "deleteImpact": "Questa persona è impiegata in {count} missioni. Ne sarà rimossa. | Questa persona è impiegata in {count} missione. Ne sarà rimossa. | Questa persona è impiegata in {count} missioni. Ne sarà rimossa.",
     "phone": "Telefono",
-    "phonePlaceholder": "+41 79 000 00 00"
+    "phonePlaceholder": "+41 79 000 00 00",
+    "password": "Password",
+    "passwordHint": "La persona accederà con il proprio cognome e questa password.",
+    "passwordOptional": "Nuova password (lascia vuoto per non cambiarla)",
+    "accountActive": "account attivo",
+    "noAccount": "senza account",
+    "loginAs": "Accede come «{username}»",
+    "removeAccount": "Rimuovi l'account",
+    "removeAccountConfirm": "Rimuovere l'account di questa persona? Non potrà più accedere, ma la sua scheda resta.",
+    "accountFailed": "Impossibile salvare l'account: {reason}"
   },
   "vehicles": {
     "title": "Veicoli",
@@ -295,7 +304,8 @@
       "usernameTaken": "Il nome utente «{username}» è già in uso",
       "passwordTooShort": "La password deve contenere almeno {min} caratteri",
       "lastAdmin": "Deve restare almeno un amministratore",
-      "selfDelete": "Non puoi eliminare il tuo account"
+      "selfDelete": "Non puoi eliminare il tuo account",
+      "invalidLastName": "Il cognome non permette di creare un identificatore (almeno tre lettere)"
     }
   },
   "auth": {
@@ -314,7 +324,8 @@
     "confirmPassword": "Conferma la nuova password",
     "passwordChanged": "Password modificata",
     "passwordMismatch": "Le due password non coincidono",
-    "account": "Il mio account"
+    "account": "Il mio account",
+    "nameOrUsername": "Cognome"
   },
   "requests": {
     "title": "Richieste di veicoli",

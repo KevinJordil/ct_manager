@@ -14,12 +14,15 @@ import { filterBySearch } from '../search.js'
 
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
-const { t } = useI18n()
+const { t, te } = useI18n()
 
-onMounted(() => {
-  store.init()
+onMounted(async () => {
+  await store.init()
   missionsStore.init()
+  store.loadAccounts()
 })
+
+const formError = ref('')
 
 const search = ref('')
 
@@ -45,9 +48,29 @@ function openEdit(person) {
   showForm.value = true
 }
 
-function onSave(data) {
-  if (editedPerson.value) store.update(editedPerson.value.id, data)
-  else store.add(data)
+/**
+ * Saving a person and setting their password are two calls: the person lives
+ * in its collection, the credentials in the accounts file. The password is
+ * applied second, so a rejected one leaves the person saved and the form open
+ * with the reason.
+ */
+async function onSave({ person, password }) {
+  formError.value = ''
+  const record = editedPerson.value
+    ? (store.update(editedPerson.value.id, person), editedPerson.value)
+    : store.add(person)
+
+  if (password) {
+    try {
+      await store.setPassword(record.id, person.lastName, password)
+    } catch (error) {
+      const key = error.code ? `server.${error.code}` : null
+      formError.value = key && te(key)
+        ? t(key, error.params ?? {})
+        : t('persons.accountFailed', { reason: error.message })
+      return
+    }
+  }
   showForm.value = false
 }
 
@@ -62,10 +85,15 @@ const deleteMessage = computed(() => {
   return `${base} ${t('persons.deleteImpact', impactedMissions.value, { count: impactedMissions.value })}`
 })
 
-function onDelete() {
+async function onDelete() {
   // Clear the references first, so no mission is ever left pointing at a
-  // person who no longer exists.
+  // person who no longer exists — and take their account with them.
   missionsStore.forgetPerson(deletedId.value)
+  if (store.hasAccount(deletedId.value)) {
+    try {
+      await store.removeAccount(deletedId.value)
+    } catch { /* reported through the sync banner */ }
+  }
   store.remove(deletedId.value)
   deletedId.value = null
 }
@@ -112,7 +140,8 @@ function confirmUnavailable(note) {
       :loading="!store.loaded"
       :message="search ? $t('common.noMatch', { query: search }) : $t('persons.empty')" />
 
-    <PersonForm v-if="showForm" :person="editedPerson" @save="onSave" @close="showForm = false" />
+    <PersonForm v-if="showForm" :person="editedPerson" :error="formError"
+      @save="onSave" @close="showForm = false" />
 
     <LeavesModal v-if="leavesPerson" :person="leavesPerson" @close="leavesPerson = null" />
 

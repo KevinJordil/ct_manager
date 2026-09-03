@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth.js'
+import { normaliseName } from '../../users.js'
 import LanguageSwitcher from '../components/common/LanguageSwitcher.vue'
 
 const auth = useAuthStore()
@@ -20,7 +21,9 @@ async function submit() {
   error.value = ''
   loading.value = true
   try {
-    await auth.login(username.value.trim().toLowerCase(), password.value)
+    // A person signs in with their family name: "Müller" and "muller" are the
+    // same login, and the administrator account is reached the same way.
+    await auth.login(normaliseName(username.value), password.value)
     // Return to the page that was asked for before the redirect, if any.
     const target = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
     router.replace(target)
@@ -50,7 +53,7 @@ async function submit() {
 
         <form @submit.prevent="submit" class="space-y-4">
           <div>
-            <label class="label" for="login-username">{{ $t('auth.username') }}</label>
+            <label class="label" for="login-username">{{ $t('auth.nameOrUsername') }}</label>
             <input id="login-username" v-model="username" type="text" class="input"
               autocomplete="username" autocapitalize="none" spellcheck="false"
               autofocus :disabled="loading" />

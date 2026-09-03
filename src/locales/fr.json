@@ -121,7 +121,16 @@
     },
     "deleteImpact": "Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} missions. Elle en sera retirée.",
     "phone": "Téléphone",
-    "phonePlaceholder": "+41 79 000 00 00"
+    "phonePlaceholder": "+41 79 000 00 00",
+    "password": "Mot de passe",
+    "passwordHint": "La personne se connectera avec son nom de famille et ce mot de passe.",
+    "passwordOptional": "Nouveau mot de passe (laisser vide pour ne pas changer)",
+    "accountActive": "compte actif",
+    "noAccount": "sans compte",
+    "loginAs": "Se connecte avec « {username} »",
+    "removeAccount": "Retirer le compte",
+    "removeAccountConfirm": "Retirer le compte de cette personne ? Elle ne pourra plus se connecter, mais sa fiche est conservée.",
+    "accountFailed": "Le compte n'a pas pu être enregistré : {reason}"
   },
   "vehicles": {
     "title": "Véhicules",
@@ -295,7 +304,8 @@
       "usernameTaken": "Le nom d'utilisateur « {username} » est déjà pris",
       "passwordTooShort": "Le mot de passe doit compter au moins {min} caractères",
       "lastAdmin": "Il doit rester au moins un administrateur",
-      "selfDelete": "Vous ne pouvez pas supprimer votre propre compte"
+      "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
+      "invalidLastName": "Le nom de famille ne permet pas de créer un identifiant (au moins trois lettres)"
     }
   },
   "auth": {
@@ -314,7 +324,8 @@
     "confirmPassword": "Confirmer le nouveau mot de passe",
     "passwordChanged": "Mot de passe modifié",
     "passwordMismatch": "Les deux mots de passe diffèrent",
-    "account": "Mon compte"
+    "account": "Mon compte",
+    "nameOrUsername": "Nom de famille"
   },
   "requests": {
     "title": "Demandes de véhicules",

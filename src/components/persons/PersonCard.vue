@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import StatusBadge from '../common/StatusBadge.vue'
 import { useMissionsStore } from '../../stores/missions.js'
+import { usePersonsStore } from '../../stores/persons.js'
 import { useClock } from '../../stores/clock.js'
 import { formatDateTime } from '../../datetime.js'
 import { getDisplayedPersonStatus, currentMissionOfPerson } from '../../availability.js'
@@ -14,6 +15,7 @@ defineEmits(['edit', 'delete', 'manage-leaves', 'toggle-unavailable'])
 
 const router = useRouter()
 const missionsStore = useMissionsStore()
+const personsStore = usePersonsStore()
 const { nowString } = useClock()
 const { t } = useI18n()
 
@@ -24,6 +26,8 @@ const currentMission = computed(() =>
 const status = computed(() =>
   getDisplayedPersonStatus(props.person, missionsStore.missions, nowString.value)
 )
+
+const hasAccount = computed(() => personsStore.hasAccount(props.person.id))
 
 const openLeaves = computed(() =>
   (props.person.leaves ?? []).filter(l => l.endDate >= nowString.value)
@@ -47,6 +51,10 @@ const unavailabilityLabel = computed(() =>
         </p>
         <div class="mt-1.5 flex flex-wrap gap-1">
           <StatusBadge :status="status" />
+          <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+            hasAccount ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500']">
+            {{ hasAccount ? $t('persons.accountActive') : $t('persons.noAccount') }}
+          </span>
           <span v-for="license in person.licenses" :key="license"
             :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', LICENSE_COLORS[license] ?? 'bg-gray-100 text-gray-700']">
             {{ license }}

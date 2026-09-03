@@ -277,8 +277,15 @@ Deux rôles :
 | **Administrateur** | Tout, y compris la gestion des comptes et la configuration |
 | **Utilisateur** | Personnes, véhicules, missions, demandes, parc et SPH. Ni comptes ni configuration |
 
-Un compte peut être rattaché à un militaire déclaré dans l'application, ce qui
-associe la connexion à une fiche. Les mots de passe sont stockés hachés
+**Un militaire se connecte avec son nom de famille.** Le mot de passe se
+définit sur sa fiche, à la création ou plus tard : tant qu'il n'est pas
+défini, la personne existe dans l'application mais ne peut pas se connecter.
+Supprimer la fiche supprime le compte. Deux personnes ne peuvent pas partager
+un nom de famille pour la connexion — le formulaire le signale au lieu
+d'écraser un compte.
+
+Le compte créé depuis une fiche a le rôle *utilisateur* ; seul un
+administrateur peut le promouvoir, depuis la page Comptes. Les mots de passe sont stockés hachés
 (scrypt, sel propre à chaque compte) ; ils ne ressortent jamais du serveur.
 Réinitialiser un mot de passe ou changer un rôle **met fin à toutes les
 sessions** du compte concerné.

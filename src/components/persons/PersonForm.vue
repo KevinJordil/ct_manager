@@ -1,16 +1,32 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
 import { useConfigStore } from '../../stores/config.js'
+import { usePersonsStore } from '../../stores/persons.js'
 import { LICENSE_PICKER_COLORS } from '../../labels.js'
+import { usernameFromLastName, MIN_PASSWORD_LENGTH } from '../../../users.js'
 
-const props = defineProps({ person: { type: Object, default: null } })
+const props = defineProps({
+  person: { type: Object, default: null },
+  error: { type: String, default: '' },
+})
 const emit = defineEmits(['save', 'close'])
 
 const configStore = useConfigStore()
+const personsStore = usePersonsStore()
 configStore.init()
 
-const form = reactive({ rank: '', firstName: '', lastName: '', phone: '', licenses: [], notes: '' })
+const form = reactive({
+  rank: '', firstName: '', lastName: '', phone: '', licenses: [], notes: '', password: '',
+})
+
+/** An existing person may already sign in; a new one never does yet. */
+const hasAccount = computed(() => Boolean(props.person && personsStore.hasAccount(props.person.id)))
+
+/** The login the person will use, shown live as the family name is typed. */
+const futureUsername = computed(() => usernameFromLastName(form.lastName))
+
+const passwordRequired = computed(() => !props.person)
 
 watch(() => props.person, person => {
   form.rank = person?.rank ?? ''
@@ -19,6 +35,7 @@ watch(() => props.person, person => {
   form.phone = person?.phone ?? ''
   form.licenses = [...(person?.licenses ?? [])]
   form.notes = person?.notes ?? ''
+  form.password = ''
 }, { immediate: true })
 
 function toggleLicense(license) {
@@ -29,7 +46,10 @@ function toggleLicense(license) {
 
 function submit() {
   if (!form.firstName.trim() || !form.lastName.trim()) return
-  emit('save', { ...form })
+  if (passwordRequired.value && form.password.length < MIN_PASSWORD_LENGTH) return
+  if (form.password && form.password.length < MIN_PASSWORD_LENGTH) return
+  const { password, ...person } = form
+  emit('save', { person, password })
 }
 </script>
 
@@ -74,11 +94,33 @@ function submit() {
         </div>
       </div>
 
+      <!-- Credentials: a person without a password simply cannot sign in. -->
+      <div>
+        <label class="label" for="person-password">
+          {{ hasAccount ? $t('persons.passwordOptional') : $t('persons.password') }}
+          <span v-if="passwordRequired"> *</span>
+        </label>
+        <input id="person-password" v-model="form.password" type="password" class="input"
+          autocomplete="new-password" :minlength="MIN_PASSWORD_LENGTH"
+          :required="passwordRequired" />
+        <p class="mt-1 text-xs text-gray-400">
+          {{ $t('persons.passwordHint') }}
+          <span v-if="futureUsername.length >= 3">
+            {{ $t('persons.loginAs', { username: futureUsername }) }}
+          </span>
+        </p>
+      </div>
+
       <div>
         <label class="label" for="person-notes">{{ $t('persons.notes') }}</label>
         <textarea id="person-notes" v-model="form.notes" class="input" rows="3"
           :placeholder="$t('persons.notesPlaceholder')" />
       </div>
+
+      <p v-if="error" role="alert"
+        class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+        {{ error }}
+      </p>
 
       <div class="flex justify-end gap-3 pt-2">
         <button type="button" @click="$emit('close')" class="btn-secondary">{{ $t('actions.cancel') }}</button>

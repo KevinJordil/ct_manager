@@ -33,14 +33,26 @@ export function verifyPassword(password, { salt, digest }) {
   return crypto.timingSafeEqual(candidate, stored)
 }
 
-/** Suggests a username from a person's name: "Andreas Müller" → "amuller" */
-export function suggestUsername(firstName = '', lastName = '') {
-  const strip = text => text
+/** Lowercase, unaccented, letters and digits only: "Müller" → "muller" */
+export function normaliseName(text = '') {
+  return String(text)
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .toLowerCase().replace(/[^a-z0-9]/g, '')
-  const initial = strip(firstName).slice(0, 1)
-  const family = strip(lastName)
-  return `${initial}${family}`.slice(0, 32)
+}
+
+/**
+ * A person signs in with their family name, so that is their username.
+ * Two people sharing a family name cannot both hold an account; the person
+ * form says so rather than silently overwriting one.
+ */
+export function usernameFromLastName(lastName = '') {
+  return normaliseName(lastName).slice(0, 32)
+}
+
+/** Suggests a username from a person's name: "Andreas Müller" → "amuller" */
+export function suggestUsername(firstName = '', lastName = '') {
+  const initial = normaliseName(firstName).slice(0, 1)
+  return `${initial}${normaliseName(lastName)}`.slice(0, 32)
 }
 
 /** @returns {{code: string, params: object}|null} */

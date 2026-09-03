@@ -14,7 +14,7 @@ import { reanchor } from './seed.js'
 import { createSessions, resolveInitialPassword } from './auth.js'
 import {
   ROLES, hashPassword, verifyPassword, validateUsername, validatePassword,
-  publicUser, isLastAdmin,
+  publicUser, isLastAdmin, usernameFromLastName,
 } from './users.js'
 import { createRateLimiter } from './rate-limit.js'
 
@@ -410,6 +410,85 @@ for (const entity of ENTITIES) {
     }
   })
 }
+
+// ── Person accounts ──
+// A person signs in with their family name. Setting the password is part of
+// managing the person, so it is open to any signed-in user; the role of such
+// an account is always "user" — promoting one stays an administrator's job.
+
+/** Which persons hold an account. Ids only: no account detail leaks here. */
+app.get('/api/persons/accounts', async (_req, res, next) => {
+  try {
+    const users = await readUsers()
+    res.json(users.filter(user => user.personId).map(user => user.personId))
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.put('/api/persons/:id/account', async (req, res, next) => {
+  const { password, lastName } = req.body ?? {}
+  const weak = validatePassword(password)
+  if (weak) return fail(res, 400, `users.${weak.code}`, weak.params, 'Password too short')
+
+  const username = usernameFromLastName(lastName)
+  if (!username || username.length < 3) {
+    return fail(res, 400, 'users.invalidLastName', {}, 'Family name unusable as a login')
+  }
+
+  try {
+    await withLock('users', async () => {
+      const users = await readUsers()
+      const existing = users.findIndex(user => user.personId === req.params.id)
+
+      // Another person already signs in under this family name.
+      const taken = users.some(user =>
+        user.username === username && user.personId !== req.params.id)
+      if (taken) {
+        return fail(res, 409, 'users.usernameTaken', { username }, 'Family name already used')
+      }
+
+      if (existing === -1) {
+        const user = {
+          id: crypto.randomUUID(),
+          username,
+          role: ROLES.USER,
+          personId: req.params.id,
+          createdAt: localDateTime(),
+          ...hashPassword(password),
+        }
+        await writeUsers([...users, user])
+        return res.status(201).json(publicUser(user))
+      }
+
+      // Keep whatever role an administrator may have granted.
+      users[existing] = { ...users[existing], username, ...hashPassword(password) }
+      await writeUsers(users)
+      sessions.revokeUser(users[existing].id)
+      res.json(publicUser(users[existing]))
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.delete('/api/persons/:id/account', async (req, res, next) => {
+  try {
+    await withLock('users', async () => {
+      const users = await readUsers()
+      const target = users.find(user => user.personId === req.params.id)
+      if (!target) return res.json({ ok: true, removed: false })
+      if (isLastAdmin(users, target.id)) {
+        return fail(res, 409, 'users.lastAdmin', {}, 'The last administrator cannot be removed')
+      }
+      await writeUsers(users.filter(user => user.id !== target.id))
+      sessions.revokeUser(target.id)
+      res.json({ ok: true, removed: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
 
 // ── Accounts ──
 // Reserved to administrators: an ordinary account manages the fleet, not who

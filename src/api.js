@@ -105,6 +105,27 @@ export const api = {
     return res.json()
   },
 
+  // ── Person accounts ──
+  // A person signs in with their family name; setting the password is part of
+  // managing the person, so it needs no administrator.
+
+  async loadPersonAccounts() {
+    return (await request(`${BASE}/persons/accounts`)).json()
+  },
+
+  async setPersonPassword(personId, lastName, password) {
+    const res = await request(`${BASE}/persons/${encodeURIComponent(personId)}/account`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, lastName }),
+    })
+    return res.json()
+  },
+
+  async deletePersonAccount(personId) {
+    await request(`${BASE}/persons/${encodeURIComponent(personId)}/account`, { method: 'DELETE' })
+  },
+
   // ── Accounts, administrators only ──
 
   async loadUsers() {

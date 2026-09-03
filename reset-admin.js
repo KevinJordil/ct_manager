@@ -34,10 +34,16 @@ async function readUsers() {
 
 async function main() {
   const password = chosen ?? crypto.randomBytes(9).toString('base64url')
+  if (!password) {
+    console.error('The password cannot be empty.')
+    process.exit(1)
+  }
+  // The length rule guards the forms; this command runs on the server, where
+  // a short password is a deliberate choice — warned about, not refused.
   const weak = validatePassword(password)
   if (weak) {
-    console.error(`The password must be at least ${weak.params.min} characters long.`)
-    process.exit(1)
+    console.warn(`⚠  Shorter than the ${weak.params.min} characters the interface requires.`)
+    console.warn('   Fine for a development machine, not for anything reachable.')
   }
 
   const users = await readUsers()
