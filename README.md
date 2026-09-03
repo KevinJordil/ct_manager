@@ -205,6 +205,10 @@ npm test          # une passe
 npm run test:watch
 ```
 
+Les tests s'exécutent aussi automatiquement à chaque push et sur chaque pull
+request (`.github/workflows/ci.yml`), dans le fuseau `Europe/Zurich` — les
+helpers de date et le calendrier en dépendent.
+
 La suite couvre les helpers de date et la logique de disponibilité, la
 migration des anciens formats, la validation côté serveur, le recalage du jeu
 de démonstration, le store de collection (versions, conflits, garde
@@ -308,10 +312,15 @@ La connexion est **limitée à 10 tentatives par quart d'heure et par adresse**.
 Une tentative réussie remet le compteur à zéro, de sorte qu'un utilisateur
 légitime qui se trompe une fois n'est jamais pénalisé.
 
-> **Derrière un reverse proxy**, définissez `TRUST_PROXY` (par exemple
-> `TRUST_PROXY=1`), sans quoi toutes les requêtes semblent venir de l'adresse
-> du proxy : les utilisateurs se bloqueraient mutuellement, et la limite
-> deviendrait contournable.
+> **Derrière un reverse proxy**, définissez `TRUST_PROXY`, sans quoi toutes
+> les requêtes semblent venir de l'adresse du proxy : les utilisateurs se
+> bloqueraient mutuellement, et la limite deviendrait contournable.
+>
+> - un seul proxy local (nginx, Caddy, Traefik) : `TRUST_PROXY=1`
+> - **derrière Cloudflare** : `TRUST_PROXY=2` si Cloudflare est lui-même
+>   devant votre proxy, car deux intermédiaires ajoutent chacun leur adresse
+>   à `X-Forwarded-For`. Vérifiez la valeur retenue en consultant l'adresse
+>   effectivement vue par le serveur avant de vous y fier.
 
 En développement, Vite proxifie `/api` vers le serveur Express : les requêtes
 sont de même origine et aucun en-tête CORS n'est nécessaire. `CORS_ORIGIN`

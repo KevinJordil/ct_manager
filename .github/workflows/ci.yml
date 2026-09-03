@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The date helpers and the calendar depend on the local time zone, so the
+      # suite runs in the one the application is used in.
+      - run: npm test
+        env:
+          TZ: Europe/Zurich
+
+      - run: npm run build
