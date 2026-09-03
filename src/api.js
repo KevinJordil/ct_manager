@@ -78,16 +78,59 @@ function versionOf(res) {
 
 export const api = {
   /**
-   * Exchanges the password for a session token.
-   * @returns {{ token: string, expiresAt: number }}
+   * Exchanges credentials for a session token.
+   * @returns {{ token: string, expiresAt: number, user: object }}
    */
-  async login(password) {
+  async login(username, password) {
     const res = await request(`${BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ username, password }),
     })
     return res.json()
+  },
+
+  /** The signed-in account, or throws when the token is dead. */
+  async me() {
+    return (await request(`${BASE}/auth/me`)).json()
+  },
+
+  /** Changing the password ends every other session and returns a fresh token. */
+  async changePassword(currentPassword, newPassword) {
+    const res = await request(`${BASE}/auth/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    })
+    return res.json()
+  },
+
+  // ── Accounts, administrators only ──
+
+  async loadUsers() {
+    return (await request(`${BASE}/users`)).json()
+  },
+
+  async createUser(payload) {
+    const res = await request(`${BASE}/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    return res.json()
+  },
+
+  async updateUser(id, payload) {
+    const res = await request(`${BASE}/users/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    return res.json()
+  },
+
+  async deleteUser(id) {
+    await request(`${BASE}/users/${encodeURIComponent(id)}`, { method: 'DELETE' })
   },
 
   /** Revokes the session server-side; ignores a failure, the client leaves anyway */

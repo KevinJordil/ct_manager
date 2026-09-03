@@ -11,7 +11,11 @@ import {
 } from './validation.js'
 import { withDefaults } from './src/config.js'
 import { reanchor } from './seed.js'
-import { createAuth, resolvePassword } from './auth.js'
+import { createSessions, resolveInitialPassword } from './auth.js'
+import {
+  ROLES, hashPassword, verifyPassword, validateUsername, validatePassword,
+  publicUser, isLastAdmin,
+} from './users.js'
 import { createRateLimiter } from './rate-limit.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -21,8 +25,7 @@ const SEED_DIR = process.env.SEED_DIR ?? path.join(__dirname, 'data.example')
 const PORT = process.env.PORT ?? 3000
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? ''
 
-const { password: ADMIN_PASSWORD, generated: PASSWORD_GENERATED } = resolvePassword()
-const auth = createAuth({ password: ADMIN_PASSWORD })
+const sessions = createSessions()
 
 const app = express()
 app.disable('x-powered-by')
@@ -90,7 +93,43 @@ function clientKey(req) {
 // guard below: the public request form needs to reach the API without an
 // account.
 
-app.post('/api/auth/login', (req, res) => {
+async function readUsers() {
+  const raw = await readRaw('users')
+  return raw === '[]' ? [] : JSON.parse(raw)
+}
+
+async function writeUsers(users) {
+  await write('users', JSON.stringify(users, null, 2))
+}
+
+/** Attaches the account to the request, or answers 401. */
+async function requireAuth(req, res, next) {
+  try {
+    const userId = sessions.userIdFor(sessions.tokenFrom(req))
+    if (!userId) return fail(res, 401, 'auth.required', {}, 'Authentication required')
+
+    const user = (await readUsers()).find(candidate => candidate.id === userId)
+    if (!user) {
+      // The account was deleted while its session was still alive.
+      sessions.revokeUser(userId)
+      return fail(res, 401, 'auth.required', {}, 'Authentication required')
+    }
+    req.user = user
+    next()
+  } catch (err) {
+    next(err)
+  }
+}
+
+/** Account management and configuration are reserved to administrators. */
+function requireAdmin(req, res, next) {
+  if (req.user?.role !== ROLES.ADMIN) {
+    return fail(res, 403, 'auth.adminOnly', {}, 'Administrator only')
+  }
+  next()
+}
+
+app.post('/api/auth/login', async (req, res, next) => {
   const key = clientKey(req)
   if (loginLimiter.hit(key)) {
     const seconds = loginLimiter.retryAfter(key)
@@ -98,20 +137,60 @@ app.post('/api/auth/login', (req, res) => {
     return fail(res, 429, 'tooManyAttempts', { seconds }, 'Too many attempts')
   }
 
-  const session = auth.login(req.body?.password)
-  if (!session) return fail(res, 401, 'auth.invalidPassword', {}, 'Wrong password')
+  try {
+    const { username, password } = req.body ?? {}
+    const users = await readUsers()
+    const user = users.find(candidate => candidate.username === username)
 
-  // Only failed attempts should consume the budget.
-  loginLimiter.reset(key)
-  res.json({ token: session.token, expiresAt: session.expiresAt })
+    // The same answer whether the account or the password is wrong, so the
+    // response never reveals which usernames exist.
+    if (!user || !verifyPassword(password, user)) {
+      return fail(res, 401, 'auth.invalidCredentials', {}, 'Wrong username or password')
+    }
+
+    loginLimiter.reset(key) // only failed attempts consume the budget
+    const session = sessions.issue(user.id)
+    res.json({ token: session.token, expiresAt: session.expiresAt, user: publicUser(user) })
+  } catch (err) {
+    next(err)
+  }
 })
 
 app.post('/api/auth/logout', (req, res) => {
-  auth.logout(auth.tokenFrom(req))
+  sessions.revoke(sessions.tokenFrom(req))
   res.json({ ok: true })
 })
 
-app.get('/api/auth/check', auth.requireAuth, (_req, res) => res.json({ ok: true }))
+app.get('/api/auth/check', requireAuth, (_req, res) => res.json({ ok: true }))
+
+app.get('/api/auth/me', requireAuth, (req, res) => res.json(publicUser(req.user)))
+
+/** Changing one's own password ends every other session of the account. */
+app.put('/api/auth/password', requireAuth, async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body ?? {}
+  if (!verifyPassword(currentPassword, req.user)) {
+    return fail(res, 403, 'auth.wrongCurrentPassword', {}, 'Wrong current password')
+  }
+  const weak = validatePassword(newPassword)
+  if (weak) return fail(res, 400, `users.${weak.code}`, weak.params, 'Password too short')
+
+  try {
+    await withLock('users', async () => {
+      const users = await readUsers()
+      const index = users.findIndex(user => user.id === req.user.id)
+      if (index === -1) return fail(res, 404, 'notFound', {}, 'Unknown account')
+      users[index] = { ...users[index], ...hashPassword(newPassword) }
+      await writeUsers(users)
+
+      const current = sessions.tokenFrom(req)
+      sessions.revokeUser(req.user.id)
+      const session = sessions.issue(req.user.id)
+      res.json({ ok: true, token: session.token, expiresAt: session.expiresAt, replaced: current !== session.token })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
 
 /**
  * The configuration is readable without a session: the public request form
@@ -172,7 +251,7 @@ app.post('/api/requests', async (req, res, next) => {
 })
 
 // Everything below this point requires a session.
-app.use('/api', auth.requireAuth)
+app.use('/api', requireAuth)
 
 // ── Requests, management side ──
 
@@ -314,9 +393,118 @@ for (const entity of ENTITIES) {
   })
 }
 
+// ── Accounts ──
+// Reserved to administrators: an ordinary account manages the fleet, not who
+// may reach it.
+
+app.get('/api/users', requireAdmin, async (_req, res, next) => {
+  try {
+    res.json((await readUsers()).map(publicUser))
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.post('/api/users', requireAdmin, async (req, res, next) => {
+  const { username, password, role = ROLES.USER, personId = null } = req.body ?? {}
+  if (!Object.values(ROLES).includes(role)) {
+    return fail(res, 400, 'validation.unknownValue', { field: 'role' }, 'Unknown role')
+  }
+  const weak = validatePassword(password)
+  if (weak) return fail(res, 400, `users.${weak.code}`, weak.params, 'Password too short')
+
+  try {
+    await withLock('users', async () => {
+      const users = await readUsers()
+      const badName = validateUsername(username, users)
+      if (badName) return fail(res, 400, `users.${badName.code}`, badName.params, 'Invalid username')
+
+      const user = {
+        id: crypto.randomUUID(),
+        username,
+        role,
+        personId: personId || null,
+        createdAt: localDateTime(),
+        ...hashPassword(password),
+      }
+      await writeUsers([...users, user])
+      res.status(201).json(publicUser(user))
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.put('/api/users/:id', requireAdmin, async (req, res, next) => {
+  const { username, role, personId, password } = req.body ?? {}
+  try {
+    await withLock('users', async () => {
+      const users = await readUsers()
+      const index = users.findIndex(user => user.id === req.params.id)
+      if (index === -1) return fail(res, 404, 'notFound', {}, 'Unknown account')
+
+      const target = users[index]
+      const next_ = { ...target }
+
+      if (username !== undefined) {
+        const badName = validateUsername(username, users, target.id)
+        if (badName) return fail(res, 400, `users.${badName.code}`, badName.params, 'Invalid username')
+        next_.username = username
+      }
+      if (role !== undefined) {
+        if (!Object.values(ROLES).includes(role)) {
+          return fail(res, 400, 'validation.unknownValue', { field: 'role' }, 'Unknown role')
+        }
+        // Losing the last administrator would lock everyone out of the settings.
+        if (role !== ROLES.ADMIN && isLastAdmin(users, target.id)) {
+          return fail(res, 409, 'users.lastAdmin', {}, 'The last administrator must stay one')
+        }
+        next_.role = role
+      }
+      if (personId !== undefined) next_.personId = personId || null
+
+      if (password !== undefined) {
+        const weakPassword = validatePassword(password)
+        if (weakPassword) return fail(res, 400, `users.${weakPassword.code}`, weakPassword.params, 'Password too short')
+        Object.assign(next_, hashPassword(password))
+      }
+
+      users[index] = next_
+      await writeUsers(users)
+      // A password reset or a demotion must not leave an old session alive.
+      if (password !== undefined || next_.role !== target.role) sessions.revokeUser(target.id)
+      res.json(publicUser(next_))
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+app.delete('/api/users/:id', requireAdmin, async (req, res, next) => {
+  if (req.params.id === req.user.id) {
+    return fail(res, 409, 'users.selfDelete', {}, 'You cannot delete your own account')
+  }
+  try {
+    await withLock('users', async () => {
+      const users = await readUsers()
+      if (!users.some(user => user.id === req.params.id)) {
+        return fail(res, 404, 'notFound', {}, 'Unknown account')
+      }
+      if (isLastAdmin(users, req.params.id)) {
+        return fail(res, 409, 'users.lastAdmin', {}, 'The last administrator cannot be deleted')
+      }
+      await writeUsers(users.filter(user => user.id !== req.params.id))
+      sessions.revokeUser(req.params.id)
+      res.json({ ok: true })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
 // ── Configuration ──
 
-app.put('/api/config', async (req, res, next) => {
+app.put('/api/config', requireAdmin, async (req, res, next) => {
   const invalid = validateConfig(req.body)
   if (invalid) {
     return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid configuration')
@@ -490,14 +678,29 @@ async function seedData() {
   }
 }
 
+/** Creates the first administrator when no account exists yet. */
+async function seedAdministrator() {
+  const users = await readUsers()
+  if (users.length > 0) return
+
+  const { password } = resolveInitialPassword()
+  await writeUsers([{
+    id: crypto.randomUUID(),
+    username: 'admin',
+    role: ROLES.ADMIN,
+    personId: null,
+    createdAt: localDateTime(),
+    ...hashPassword(password),
+  }])
+}
+
 async function start() {
   await fs.mkdir(DATA_DIR, { recursive: true })
   await seedData()
+  await seedAdministrator()
   app.listen(PORT, () => {
     console.log(`Server → http://localhost:${PORT}`)
-    if (PASSWORD_GENERATED) {
-      console.warn('   (the generated password above is valid until the next restart)')
-    }
+
   })
 }
 

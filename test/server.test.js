@@ -26,13 +26,12 @@ async function waitForServer() {
   throw new Error('the server did not start')
 }
 
-async function signIn(password = PASSWORD) {
-  const res = await fetch(`${BASE}/api/auth/login`, {
+async function signIn(password = PASSWORD, username = 'admin') {
+  return fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ username, password }),
   })
-  return res
 }
 
 beforeAll(async () => {
@@ -100,7 +99,20 @@ describe('authentication', () => {
   it('refuses the wrong password', async () => {
     const res = await signIn('wrong-password')
     expect(res.status).toBe(401)
-    expect((await res.json()).code).toBe('auth.invalidPassword')
+    expect((await res.json()).code).toBe('auth.invalidCredentials')
+  })
+
+  it('answers the same for an unknown account, so usernames stay private', async () => {
+    const unknown = await (await signIn('whatever', 'ghost')).json()
+    const wrong = await (await signIn('wrong-password')).json()
+    expect(unknown.code).toBe(wrong.code)
+  })
+
+  it('returns the account alongside the token', async () => {
+    const body = await (await signIn()).json()
+    expect(body.user).toMatchObject({ username: 'admin', role: 'admin' })
+    expect(body.user).not.toHaveProperty('digest')
+    expect(body.user).not.toHaveProperty('salt')
   })
 
   it('never hands the password back as the token', async () => {
@@ -535,7 +547,163 @@ describe('configuration', () => {
   })
 })
 
+// ── Accounts and roles ──
+
+async function createAccount(payload) {
+  return fetch(`${BASE}/api/users`, {
+    method: 'PUT'.replace('PUT', 'POST'),
+    headers: { ...auth(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+describe('accounts', () => {
+  let soldierToken
+
+  it('starts with the bootstrapped administrator only', async () => {
+    const users = await (await fetch(`${BASE}/api/users`, { headers: auth() })).json()
+    expect(users).toHaveLength(1)
+    expect(users[0]).toMatchObject({ username: 'admin', role: 'admin' })
+  })
+
+  it('never exposes the stored secrets', async () => {
+    const users = await (await fetch(`${BASE}/api/users`, { headers: auth() })).json()
+    for (const user of users) {
+      expect(user).not.toHaveProperty('salt')
+      expect(user).not.toHaveProperty('digest')
+    }
+  })
+
+  it('creates an ordinary account', async () => {
+    const res = await createAccount({ username: 'amuller', password: 'motdepasse1', role: 'user' })
+    expect(res.status).toBe(201)
+    expect(await res.json()).toMatchObject({ username: 'amuller', role: 'user' })
+  })
+
+  it('refuses a duplicate username', async () => {
+    const res = await createAccount({ username: 'amuller', password: 'motdepasse2' })
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('users.usernameTaken')
+  })
+
+  it('refuses a malformed username or a short password', async () => {
+    expect((await (await createAccount({ username: 'A Muller', password: 'motdepasse1' })).json()).code)
+      .toBe('users.invalidUsername')
+    expect((await (await createAccount({ username: 'cfavre', password: 'court' })).json()).code)
+      .toBe('users.passwordTooShort')
+  })
+
+  it('lets the new account sign in', async () => {
+    const res = await signIn('motdepasse1', 'amuller')
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    soldierToken = body.token
+    expect(body.user.role).toBe('user')
+  })
+
+  it('keeps accounts and configuration out of an ordinary account\'s reach', async () => {
+    const asSoldier = { Authorization: `Bearer ${soldierToken}` }
+    expect((await fetch(`${BASE}/api/users`, { headers: asSoldier })).status).toBe(403)
+
+    const config = await fetch(`${BASE}/api/config`, {
+      method: 'PUT',
+      headers: { ...asSoldier, 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    expect(config.status).toBe(403)
+    expect((await config.json()).code).toBe('auth.adminOnly')
+  })
+
+  it('still lets an ordinary account manage the fleet', async () => {
+    const asSoldier = { Authorization: `Bearer ${soldierToken}` }
+    expect((await fetch(`${BASE}/api/missions`, { headers: asSoldier })).status).toBe(200)
+    expect((await fetch(`${BASE}/api/requests`, { headers: asSoldier })).status).toBe(200)
+  })
+
+  it('ends every session of an account when its password is reset', async () => {
+    const users = await (await fetch(`${BASE}/api/users`, { headers: auth() })).json()
+    const soldier = users.find(user => user.username === 'amuller')
+
+    const res = await fetch(`${BASE}/api/users/${soldier.id}`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: 'nouveaumotdepasse' }),
+    })
+    expect(res.status).toBe(200)
+
+    expect((await fetch(`${BASE}/api/missions`, {
+      headers: { Authorization: `Bearer ${soldierToken}` },
+    })).status).toBe(401)
+    expect((await signIn('nouveaumotdepasse', 'amuller')).status).toBe(200)
+  })
+
+  it('refuses to remove the last administrator', async () => {
+    const users = await (await fetch(`${BASE}/api/users`, { headers: auth() })).json()
+    const administrator = users.find(user => user.username === 'admin')
+
+    const demotion = await fetch(`${BASE}/api/users/${administrator.id}`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'user' }),
+    })
+    expect(demotion.status).toBe(409)
+    expect((await demotion.json()).code).toBe('users.lastAdmin')
+  })
+
+  it('refuses to delete one\'s own account', async () => {
+    const users = await (await fetch(`${BASE}/api/users`, { headers: auth() })).json()
+    const administrator = users.find(user => user.username === 'admin')
+
+    const res = await fetch(`${BASE}/api/users/${administrator.id}`, { method: 'DELETE', headers: auth() })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('users.selfDelete')
+  })
+
+  it('deletes an account and kills its sessions', async () => {
+    const created = await (await createAccount({ username: 'temporaire', password: 'motdepasse1' })).json()
+    const token = (await (await signIn('motdepasse1', 'temporaire')).json()).token
+    expect((await fetch(`${BASE}/api/missions`, { headers: { Authorization: `Bearer ${token}` } })).status).toBe(200)
+
+    expect((await fetch(`${BASE}/api/users/${created.id}`, { method: 'DELETE', headers: auth() })).status).toBe(200)
+    expect((await fetch(`${BASE}/api/missions`, { headers: { Authorization: `Bearer ${token}` } })).status).toBe(401)
+  })
+})
+
+describe('own password', () => {
+  it('refuses a wrong current password', async () => {
+    const res = await fetch(`${BASE}/api/auth/password`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: 'wrong', newPassword: 'nouveaumotdepasse' }),
+    })
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('auth.wrongCurrentPassword')
+  })
+
+  it('changes it and returns a usable token', async () => {
+    const res = await fetch(`${BASE}/api/auth/password`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: PASSWORD, newPassword: 'admin-nouveau' }),
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.token).toMatch(/^[0-9a-f]{64}$/)
+
+    // The old token is gone, the new one works, and the new password is live.
+    expect((await fetch(`${BASE}/api/users`, { headers: auth() })).status).toBe(401)
+    expect((await fetch(`${BASE}/api/users`, {
+      headers: { Authorization: `Bearer ${body.token}` },
+    })).status).toBe(200)
+    expect((await signIn('admin-nouveau')).status).toBe(200)
+
+    token = body.token // keep the suite usable afterwards
+  })
+})
+
 // ── Brute force ──
+// Kept last on purpose: these tests exhaust the login budget for this client,
+// so anything signing in afterwards would be throttled.
 
 describe('login throttling', () => {
   it('blocks repeated wrong passwords and says how long to wait', async () => {

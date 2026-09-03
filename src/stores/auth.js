@@ -2,55 +2,68 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api, setSessionToken, hasSessionToken } from '../api.js'
 
+const ADMIN = 'admin'
+
 /**
- * Session state.
+ * The signed-in account.
  *
- * The token lives in localStorage so a reload does not log the user out; it
- * is a random server-side session identifier, never the password.
+ * The token is a random server-side session identifier kept in localStorage,
+ * never a password. The account itself is re-read from the server on start,
+ * since a role may have changed since the last visit.
  */
 export const useAuthStore = defineStore('auth', () => {
-  const authenticated = ref(hasSessionToken())
+  const user = ref(null)
   const checking = ref(false)
 
-  const isAuthenticated = computed(() => authenticated.value)
+  const isAuthenticated = computed(() => user.value !== null)
+  const isAdmin = computed(() => user.value?.role === ADMIN)
+  const username = computed(() => user.value?.username ?? '')
 
-  async function login(password) {
-    const { token } = await api.login(password)
+  async function login(name, password) {
+    const { token, user: account } = await api.login(name, password)
     setSessionToken(token)
-    authenticated.value = true
+    user.value = account
   }
 
   async function logout() {
     await api.logout()
     setSessionToken(null)
-    authenticated.value = false
+    user.value = null
   }
 
-  /**
-   * Confirms with the server that the stored token is still valid — it may
-   * have expired or been revoked since the last visit.
-   */
+  /** Confirms the stored token is still valid and refreshes the account. */
   async function verify() {
     if (!hasSessionToken()) {
-      authenticated.value = false
+      user.value = null
       return false
     }
     checking.value = true
     try {
-      const valid = await api.check()
-      if (!valid) setSessionToken(null)
-      authenticated.value = valid
-      return valid
+      user.value = await api.me()
+      return true
+    } catch {
+      setSessionToken(null)
+      user.value = null
+      return false
     } finally {
       checking.value = false
     }
   }
 
+  /** The server issues a new token, so the current session survives. */
+  async function changePassword(currentPassword, newPassword) {
+    const { token } = await api.changePassword(currentPassword, newPassword)
+    if (token) setSessionToken(token)
+  }
+
   /** Called when the API answers 401: the session is gone. */
   function clear() {
     setSessionToken(null)
-    authenticated.value = false
+    user.value = null
   }
 
-  return { isAuthenticated, checking, login, logout, verify, clear }
+  return {
+    user, isAuthenticated, isAdmin, username, checking,
+    login, logout, verify, changePassword, clear,
+  }
 })

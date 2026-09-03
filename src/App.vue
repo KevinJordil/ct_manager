@@ -9,6 +9,7 @@ import { useRequestsStore } from './stores/requests.js'
 import { localeTag } from './i18n/index.js'
 import { formatLongDate, formatClock } from './i18n/formats.js'
 import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
+import PasswordModal from './components/common/PasswordModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,6 +17,7 @@ const auth = useAuthStore()
 const requestsStore = useRequestsStore()
 const { t, te, locale } = useI18n()
 const sidebarOpen = ref(false)
+const changingPassword = ref(false)
 
 const { now } = useClock()
 const { error: syncError, conflict, authRequired, saving, clearError } = useSync()
@@ -39,6 +41,16 @@ const shellVisible = computed(() => !isPublicPage.value && auth.isAuthenticated)
 watch(shellVisible, visible => {
   if (visible) requestsStore.init()
 }, { immediate: true })
+
+// The account is re-read on start: a role may have changed since last visit.
+watch(isPublicPage, publicPage => {
+  if (!publicPage && !auth.user) auth.verify()
+}, { immediate: true })
+
+/** Configuration and accounts are hidden from ordinary users. */
+const visibleNavItems = computed(() =>
+  NAV_ITEMS.filter(item => !item.admin || auth.isAdmin)
+)
 
 async function signOut() {
   await auth.logout()
@@ -117,8 +129,15 @@ const NAV_ITEMS = [
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>`,
   },
   {
+    to: '/users',
+    key: 'users',
+    admin: true,
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>`,
+  },
+  {
     to: '/config',
     key: 'config',
+    admin: true,
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>`,
   },
 ]
@@ -145,7 +164,7 @@ const NAV_ITEMS = [
 
       <nav class="flex-1 px-3 py-4 space-y-1">
         <RouterLink
-          v-for="item in NAV_ITEMS"
+          v-for="item in visibleNavItems"
           :key="item.to"
           :to="item.to"
           @click="sidebarOpen = false"
@@ -159,7 +178,16 @@ const NAV_ITEMS = [
         </RouterLink>
       </nav>
 
-      <div class="px-3 pb-2">
+      <div class="px-3 pb-2 space-y-1">
+        <button @click="changingPassword = true"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M5 8a8 8 0 001.921 5.191"/>
+          </svg>
+          <span class="flex-1 text-left truncate">{{ auth.username || $t('auth.account') }}</span>
+        </button>
+
         <button @click="signOut"
           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -223,6 +251,8 @@ const NAV_ITEMS = [
           {{ $t('actions.hide') }}
         </button>
       </div>
+
+      <PasswordModal v-if="changingPassword" @close="changingPassword = false" />
 
       <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
         <RouterView v-slot="{ Component }">

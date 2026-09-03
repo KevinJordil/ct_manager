@@ -15,7 +15,8 @@
     "requests": "Demandes",
     "park": "Vue de parc",
     "checks": "SPH",
-    "config": "Configuration"
+    "config": "Configuration",
+    "users": "Comptes"
   },
   "actions": {
     "add": "Ajouter",
@@ -243,7 +244,10 @@
     "unreachable": "Serveur injoignable",
     "auth": {
       "required": "Clé d'accès requise ou invalide",
-      "invalidPassword": "Mot de passe incorrect"
+      "invalidPassword": "Mot de passe incorrect",
+      "adminOnly": "Réservé aux administrateurs",
+      "wrongCurrentPassword": "Mot de passe actuel incorrect",
+      "invalidCredentials": "Nom d'utilisateur ou mot de passe incorrect"
     },
     "conflict": "Les données ont été modifiées ailleurs depuis votre chargement",
     "preconditionRequired": "Requête incomplète envoyée au serveur",
@@ -271,7 +275,14 @@
     "tooManyRequests": "Trop de demandes envoyées. Réessayez dans quelques minutes.",
     "requestsFull": "La file de demandes est pleine. Contactez l'administration.",
     "noImage": "Aucun plan enregistré",
-    "tooManyAttempts": "Trop de tentatives. Réessayez dans {seconds} secondes."
+    "tooManyAttempts": "Trop de tentatives. Réessayez dans {seconds} secondes.",
+    "users": {
+      "invalidUsername": "Nom d'utilisateur invalide : minuscules, chiffres, point, tiret ou souligné, 3 à 32 caractères",
+      "usernameTaken": "Le nom d'utilisateur « {username} » est déjà pris",
+      "passwordTooShort": "Le mot de passe doit compter au moins {min} caractères",
+      "lastAdmin": "Il doit rester au moins un administrateur",
+      "selfDelete": "Vous ne pouvez pas supprimer votre propre compte"
+    }
   },
   "auth": {
     "title": "Connexion",
@@ -280,7 +291,16 @@
     "submit": "Se connecter",
     "logout": "Se déconnecter",
     "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
-    "makeRequest": "Faire une demande de véhicule"
+    "makeRequest": "Faire une demande de véhicule",
+    "username": "Nom d'utilisateur",
+    "invalidCredentials": "Nom d'utilisateur ou mot de passe incorrect",
+    "changePassword": "Changer mon mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "passwordChanged": "Mot de passe modifié",
+    "passwordMismatch": "Les deux mots de passe diffèrent",
+    "account": "Mon compte"
   },
   "requests": {
     "title": "Demandes de véhicules",
@@ -431,5 +451,33 @@
     "resetConfirm": "Rétablir toute la configuration par défaut ?",
     "loadFailed": "Chargement de la configuration impossible : {reason}",
     "saveFailed": "Enregistrement de la configuration impossible : {reason}"
+  },
+  "users": {
+    "title": "Comptes",
+    "empty": "Aucun compte",
+    "new": "Nouveau compte",
+    "edit": "Modifier le compte",
+    "username": "Nom d'utilisateur",
+    "usernameHint": "minuscules, chiffres, point, tiret ou souligné",
+    "password": "Mot de passe",
+    "newPasswordOptional": "Nouveau mot de passe (laisser vide pour ne pas changer)",
+    "role": "Rôle",
+    "roleAdmin": "Administrateur",
+    "roleUser": "Utilisateur",
+    "roleAdminHint": "Gère les comptes et la configuration, en plus de tout le reste.",
+    "roleUserHint": "Gère personnes, véhicules, missions, demandes, parc et SPH. Ni comptes ni configuration.",
+    "person": "Militaire associé",
+    "noPerson": "— Aucun —",
+    "createdOn": "Créé le {date}",
+    "deleteTitle": "Supprimer le compte",
+    "deleteConfirm": "Supprimer ce compte ? La personne ne pourra plus se connecter.",
+    "you": "vous",
+    "invalidUsername": "Nom d'utilisateur invalide : minuscules, chiffres, point, tiret ou souligné, 3 à 32 caractères",
+    "usernameTaken": "Le nom d'utilisateur « {username} » est déjà pris",
+    "passwordTooShort": "Le mot de passe doit compter au moins {min} caractères",
+    "lastAdmin": "Il doit rester au moins un administrateur",
+    "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
+    "loadFailed": "Chargement des comptes impossible : {reason}",
+    "saveFailed": "Enregistrement du compte impossible : {reason}"
   }
 }

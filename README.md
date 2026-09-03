@@ -225,7 +225,7 @@ Ouvrir **http://localhost:3000**.
 | `PORT` | `3000` | Port d'écoute |
 | `DATA_DIR` | `./data` | Dossier des fichiers JSON |
 | `SEED_DIR` | `./data.example` | Données de démonstration du premier lancement |
-| `CT_PASSWORD` | *(généré)* | Mot de passe de connexion — voir ci-dessous |
+| `CT_PASSWORD` | *(généré)* | Mot de passe du premier administrateur — voir ci-dessous |
 | `CORS_ORIGIN` | *(vide)* | Origine autorisée si le frontend est servi ailleurs |
 | `TRUST_PROXY` | *(vide)* | À définir derrière un reverse proxy — voir ci-dessous |
 
@@ -235,9 +235,22 @@ PORT=8080 CT_PASSWORD=un-mot-de-passe-solide node server.js
 
 ### Sécurité
 
-L'application est protégée par un **mot de passe unique**. À la première
+L'application est protégée par des **comptes nominatifs**. À la première
 visite, l'utilisateur arrive sur `/login` ; toutes les autres pages et toutes
 les routes de l'API lui sont fermées tant qu'il n'est pas connecté.
+
+Deux rôles :
+
+| Rôle | Peut faire |
+|------|-----------|
+| **Administrateur** | Tout, y compris la gestion des comptes et la configuration |
+| **Utilisateur** | Personnes, véhicules, missions, demandes, parc et SPH. Ni comptes ni configuration |
+
+Un compte peut être rattaché à un militaire déclaré dans l'application, ce qui
+associe la connexion à une fiche. Les mots de passe sont stockés hachés
+(scrypt, sel propre à chaque compte) ; ils ne ressortent jamais du serveur.
+Réinitialiser un mot de passe ou changer un rôle **met fin à toutes les
+sessions** du compte concerné.
 
 Le plan du parc ne fait pas exception : il est servi derrière la session et
 récupéré en JavaScript, une balise `<img>` ne pouvant pas porter d'en-tête
@@ -255,9 +268,11 @@ sur le nombre de demandes conservées.
 CT_PASSWORD="$(openssl rand -base64 18)" node server.js
 ```
 
-Sans `CT_PASSWORD`, le serveur **génère un mot de passe aléatoire** et
-l'affiche au démarrage. Il change à chaque redémarrage : c'est fait pour
-dépanner, pas pour durer. Il n'existe aucun mot de passe par défaut.
+Au tout premier démarrage, un administrateur nommé **`admin`** est créé.
+Son mot de passe vient de `CT_PASSWORD` ; sans cette variable, le serveur en
+**génère un aléatoire** et l'affiche une fois dans la console. Il n'existe
+aucun mot de passe par défaut, et la variable n'est plus consultée une fois
+le compte créé.
 
 Le navigateur ne conserve jamais le mot de passe. La connexion l'échange
 contre un **jeton de session** aléatoire, sans lien avec lui, valable

@@ -15,7 +15,8 @@
     "requests": "Richieste",
     "park": "Vista del parco",
     "checks": "SPH",
-    "config": "Configurazione"
+    "config": "Configurazione",
+    "users": "Account"
   },
   "actions": {
     "add": "Aggiungi",
@@ -243,7 +244,10 @@
     "unreachable": "Server irraggiungibile",
     "auth": {
       "required": "Chiave d'accesso richiesta o non valida",
-      "invalidPassword": "Password errata"
+      "invalidPassword": "Password errata",
+      "adminOnly": "Riservato agli amministratori",
+      "wrongCurrentPassword": "Password attuale errata",
+      "invalidCredentials": "Nome utente o password errati"
     },
     "conflict": "I dati sono stati modificati altrove dopo il tuo caricamento",
     "preconditionRequired": "Richiesta incompleta inviata al server",
@@ -271,7 +275,14 @@
     "tooManyRequests": "Troppe richieste inviate. Riprova tra qualche minuto.",
     "requestsFull": "La coda delle richieste è piena. Contatta l'amministrazione.",
     "noImage": "Nessuna piantina salvata",
-    "tooManyAttempts": "Troppi tentativi. Riprova tra {seconds} secondi."
+    "tooManyAttempts": "Troppi tentativi. Riprova tra {seconds} secondi.",
+    "users": {
+      "invalidUsername": "Nome utente non valido: minuscole, cifre, punto, trattino o trattino basso, da 3 a 32 caratteri",
+      "usernameTaken": "Il nome utente «{username}» è già in uso",
+      "passwordTooShort": "La password deve contenere almeno {min} caratteri",
+      "lastAdmin": "Deve restare almeno un amministratore",
+      "selfDelete": "Non puoi eliminare il tuo account"
+    }
   },
   "auth": {
     "title": "Accesso",
@@ -280,7 +291,16 @@
     "submit": "Accedi",
     "logout": "Esci",
     "sessionExpired": "Sessione scaduta. Effettua di nuovo l'accesso.",
-    "makeRequest": "Inviare una richiesta di veicolo"
+    "makeRequest": "Inviare una richiesta di veicolo",
+    "username": "Nome utente",
+    "invalidCredentials": "Nome utente o password errati",
+    "changePassword": "Cambia la mia password",
+    "currentPassword": "Password attuale",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Conferma la nuova password",
+    "passwordChanged": "Password modificata",
+    "passwordMismatch": "Le due password non coincidono",
+    "account": "Il mio account"
   },
   "requests": {
     "title": "Richieste di veicoli",
@@ -431,5 +451,33 @@
     "resetConfirm": "Ripristinare tutta la configurazione ai valori predefiniti?",
     "loadFailed": "Impossibile caricare la configurazione: {reason}",
     "saveFailed": "Impossibile salvare la configurazione: {reason}"
+  },
+  "users": {
+    "title": "Account",
+    "empty": "Nessun account",
+    "new": "Nuovo account",
+    "edit": "Modifica l'account",
+    "username": "Nome utente",
+    "usernameHint": "minuscole, cifre, punto, trattino o trattino basso",
+    "password": "Password",
+    "newPasswordOptional": "Nuova password (lascia vuoto per non cambiarla)",
+    "role": "Ruolo",
+    "roleAdmin": "Amministratore",
+    "roleUser": "Utente",
+    "roleAdminHint": "Gestisce account e configurazione, oltre a tutto il resto.",
+    "roleUserHint": "Gestisce persone, veicoli, missioni, richieste, parco e SPH. Né account né configurazione.",
+    "person": "Militare associato",
+    "noPerson": "— Nessuno —",
+    "createdOn": "Creato il {date}",
+    "deleteTitle": "Elimina l'account",
+    "deleteConfirm": "Eliminare questo account? La persona non potrà più accedere.",
+    "you": "tu",
+    "invalidUsername": "Nome utente non valido: minuscole, cifre, punto, trattino o trattino basso, da 3 a 32 caratteri",
+    "usernameTaken": "Il nome utente «{username}» è già in uso",
+    "passwordTooShort": "La password deve contenere almeno {min} caratteri",
+    "lastAdmin": "Deve restare almeno un amministratore",
+    "selfDelete": "Non puoi eliminare il tuo account",
+    "loadFailed": "Impossibile caricare gli account: {reason}",
+    "saveFailed": "Impossibile salvare l'account: {reason}"
   }
 }

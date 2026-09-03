@@ -15,7 +15,8 @@
     "requests": "Anfragen",
     "park": "Parkübersicht",
     "checks": "SPH",
-    "config": "Konfiguration"
+    "config": "Konfiguration",
+    "users": "Konten"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -243,7 +244,10 @@
     "unreachable": "Server nicht erreichbar",
     "auth": {
       "required": "Zugangsschlüssel erforderlich oder ungültig",
-      "invalidPassword": "Falsches Passwort"
+      "invalidPassword": "Falsches Passwort",
+      "adminOnly": "Nur für Administratoren",
+      "wrongCurrentPassword": "Aktuelles Passwort falsch",
+      "invalidCredentials": "Benutzername oder Passwort falsch"
     },
     "conflict": "Die Daten wurden seit Ihrem Laden anderswo geändert",
     "preconditionRequired": "Unvollständige Anfrage an den Server gesendet",
@@ -271,7 +275,14 @@
     "tooManyRequests": "Zu viele Anfragen gesendet. Versuchen Sie es in einigen Minuten erneut.",
     "requestsFull": "Die Anfrageliste ist voll. Wenden Sie sich an die Verwaltung.",
     "noImage": "Kein Plan gespeichert",
-    "tooManyAttempts": "Zu viele Versuche. Versuchen Sie es in {seconds} Sekunden erneut."
+    "tooManyAttempts": "Zu viele Versuche. Versuchen Sie es in {seconds} Sekunden erneut.",
+    "users": {
+      "invalidUsername": "Ungültiger Benutzername: Kleinbuchstaben, Ziffern, Punkt, Bindestrich oder Unterstrich, 3 bis 32 Zeichen",
+      "usernameTaken": "Der Benutzername «{username}» ist bereits vergeben",
+      "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein",
+      "lastAdmin": "Es muss mindestens ein Administrator bleiben",
+      "selfDelete": "Sie können Ihr eigenes Konto nicht löschen"
+    }
   },
   "auth": {
     "title": "Anmeldung",
@@ -280,7 +291,16 @@
     "submit": "Anmelden",
     "logout": "Abmelden",
     "sessionExpired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",
-    "makeRequest": "Eine Fahrzeuganfrage stellen"
+    "makeRequest": "Eine Fahrzeuganfrage stellen",
+    "username": "Benutzername",
+    "invalidCredentials": "Benutzername oder Passwort falsch",
+    "changePassword": "Mein Passwort ändern",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Neues Passwort bestätigen",
+    "passwordChanged": "Passwort geändert",
+    "passwordMismatch": "Die beiden Passwörter stimmen nicht überein",
+    "account": "Mein Konto"
   },
   "requests": {
     "title": "Fahrzeuganfragen",
@@ -431,5 +451,33 @@
     "resetConfirm": "Die gesamte Konfiguration auf die Standardwerte zurücksetzen?",
     "loadFailed": "Konfiguration konnte nicht geladen werden: {reason}",
     "saveFailed": "Konfiguration konnte nicht gespeichert werden: {reason}"
+  },
+  "users": {
+    "title": "Konten",
+    "empty": "Kein Konto",
+    "new": "Neues Konto",
+    "edit": "Konto bearbeiten",
+    "username": "Benutzername",
+    "usernameHint": "Kleinbuchstaben, Ziffern, Punkt, Bindestrich oder Unterstrich",
+    "password": "Passwort",
+    "newPasswordOptional": "Neues Passwort (leer lassen, um es zu behalten)",
+    "role": "Rolle",
+    "roleAdmin": "Administrator",
+    "roleUser": "Benutzer",
+    "roleAdminHint": "Verwaltet Konten und Konfiguration, zusätzlich zu allem Übrigen.",
+    "roleUserHint": "Verwaltet Personen, Fahrzeuge, Einsätze, Anfragen, Park und SPH. Weder Konten noch Konfiguration.",
+    "person": "Zugeordnete Person",
+    "noPerson": "— Keine —",
+    "createdOn": "Erstellt am {date}",
+    "deleteTitle": "Konto löschen",
+    "deleteConfirm": "Dieses Konto löschen? Die Person kann sich nicht mehr anmelden.",
+    "you": "Sie",
+    "invalidUsername": "Ungültiger Benutzername: Kleinbuchstaben, Ziffern, Punkt, Bindestrich oder Unterstrich, 3 bis 32 Zeichen",
+    "usernameTaken": "Der Benutzername «{username}» ist bereits vergeben",
+    "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein",
+    "lastAdmin": "Es muss mindestens ein Administrator bleiben",
+    "selfDelete": "Sie können Ihr eigenes Konto nicht löschen",
+    "loadFailed": "Konten konnten nicht geladen werden: {reason}",
+    "saveFailed": "Konto konnte nicht gespeichert werden: {reason}"
   }
 }

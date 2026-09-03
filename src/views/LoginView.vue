@@ -10,16 +10,17 @@ const router = useRouter()
 const route = useRoute()
 const { t, te } = useI18n()
 
+const username = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
 
 async function submit() {
-  if (!password.value) return
+  if (!username.value || !password.value) return
   error.value = ''
   loading.value = true
   try {
-    await auth.login(password.value)
+    await auth.login(username.value.trim().toLowerCase(), password.value)
     // Return to the page that was asked for before the redirect, if any.
     const target = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
     router.replace(target)
@@ -49,9 +50,16 @@ async function submit() {
 
         <form @submit.prevent="submit" class="space-y-4">
           <div>
+            <label class="label" for="login-username">{{ $t('auth.username') }}</label>
+            <input id="login-username" v-model="username" type="text" class="input"
+              autocomplete="username" autocapitalize="none" spellcheck="false"
+              autofocus :disabled="loading" />
+          </div>
+
+          <div>
             <label class="label" for="login-password">{{ $t('auth.password') }}</label>
             <input id="login-password" v-model="password" type="password" class="input"
-              placeholder="••••••••" autocomplete="current-password" autofocus :disabled="loading" />
+              placeholder="••••••••" autocomplete="current-password" :disabled="loading" />
           </div>
 
           <p v-if="error" role="alert"
