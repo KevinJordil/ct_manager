@@ -197,7 +197,7 @@
     "outsideName": "Nom de la personne",
     "outsidePlaceholder": "Ex. : Garage Dupont",
     "outsideHint": "Pour prêter une clé à quelqu'un qui n'est pas dans l'application. Le retour peut être enregistré par n'importe qui.",
-    "confirmTake": "Remettre la clé",
+    "confirmTake": "Prendre la clé",
     "confirmTransfer": "Transférer",
     "historyTitle": "Clé — {vehicle}",
     "historyHint": "Voir l'historique de la clé",

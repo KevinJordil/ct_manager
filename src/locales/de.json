@@ -197,7 +197,7 @@
     "outsideName": "Name der Person",
     "outsidePlaceholder": "z. B. Garage Dupont",
     "outsideHint": "Für die Ausleihe an jemanden ausserhalb der Anwendung. Die Rückgabe kann jede Person erfassen.",
-    "confirmTake": "Schlüssel übergeben",
+    "confirmTake": "Schlüssel nehmen",
     "confirmTransfer": "Übergeben",
     "historyTitle": "Schlüssel — {vehicle}",
     "historyHint": "Verlauf des Schlüssels ansehen",
