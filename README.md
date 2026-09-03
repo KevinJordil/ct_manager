@@ -46,14 +46,14 @@ mois du calendrier.
 ## Fonctionnalités
 
 ### Personnes
-- Fiche par personne avec **grade**, prénom, nom, permis de conduire et notes
+- Fiche par personne avec **grade**, prénom, nom, **téléphone**, permis de conduire et notes
 - **Congés** : ajout de périodes de congé avec date/heure précises
 - **Indisponibilité** : marquage d'une personne indisponible avec commentaire (garde, affectation temporaire, etc.)
 - Statut calculé automatiquement : *disponible*, *en congé*, *indisponible*
 
 ### Véhicules
 - Fiche par véhicule avec nom, immatriculation, catégorie (léger / moyen / lourd)
-- Statut dynamique : *libre*, *en mission* (calculé depuis les missions actives), *en prêt* (manuel avec commentaire)
+- Statut dynamique : *libre*, *en mission* (calculé depuis les missions actives), *en prêt* (manuel, avec commentaire et date de retour prévue signalée en cas de dépassement)
 - Mise en prêt et libération depuis la fiche véhicule
 
 ### Missions
@@ -68,6 +68,8 @@ mois du calendrier.
 ### Demandes de véhicules
 - **Page publique** `/#/request`, accessible sans compte : formulaire de contact, dates, point de rendez-vous et liste des véhicules souhaités, chacun avec ou sans chauffeur
 - **File de traitement** côté gestion : filtrage par statut, détail dépliable, compteur des demandes en attente dans la barre latérale
+- **Décision attribuée** : le compte qui approuve ou refuse est enregistré avec la date et l'heure, et un refus peut porter un motif
+- **Recherche** sur les listes personnes, véhicules, missions et demandes — accents et casse ignorés, plusieurs mots combinables
 - **Approuver crée la mission** : le formulaire de mission s'ouvre pré-rempli depuis la demande (titre, contact, dates, point de rendez-vous et véhicules en notes) ; la demande ne passe à *approuvée* qu'une fois la mission enregistrée
 
 ### Configuration

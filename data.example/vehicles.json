@@ -14,7 +14,8 @@
         "personId": "2001001",
         "note": ""
       }
-    ]
+    ],
+    "loanUntil": ""
   },
   {
     "id": "3001002",
@@ -31,7 +32,8 @@
         "personId": "2001001",
         "note": ""
       }
-    ]
+    ],
+    "loanUntil": ""
   },
   {
     "id": "3001003",
@@ -48,7 +50,8 @@
         "personId": "2001001",
         "note": ""
       }
-    ]
+    ],
+    "loanUntil": ""
   },
   {
     "id": "3001004",
@@ -65,7 +68,8 @@
         "personId": "2001001",
         "note": ""
       }
-    ]
+    ],
+    "loanUntil": ""
   },
   {
     "id": "3001005",
@@ -82,7 +86,8 @@
         "personId": "2001001",
         "note": ""
       }
-    ]
+    ],
+    "loanUntil": ""
   },
   {
     "id": "3001006",
@@ -92,7 +97,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 46,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001007",
@@ -102,7 +108,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 46,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001008",
@@ -112,7 +119,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 46,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001009",
@@ -122,7 +130,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 13,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001010",
@@ -132,7 +141,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 13,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001011",
@@ -142,7 +152,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 13,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001012",
@@ -152,7 +163,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 13,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001013",
@@ -162,7 +174,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 3,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001014",
@@ -172,7 +185,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 3,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001015",
@@ -182,7 +196,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 3,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001016",
@@ -192,7 +207,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 3,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001017",
@@ -202,7 +218,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 4,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001018",
@@ -212,7 +229,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 4,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001019",
@@ -222,7 +240,8 @@
     "status": "free",
     "loanNote": "",
     "seats": 4,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   },
   {
     "id": "3001020",
@@ -232,6 +251,7 @@
     "status": "on-loan",
     "loanNote": "Prêté à la cp EM jusqu'à fin de semaine",
     "seats": 4,
-    "checks": []
+    "checks": [],
+    "loanUntil": ""
   }
 ]

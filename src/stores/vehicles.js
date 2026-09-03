@@ -7,10 +7,11 @@ import { useCollection } from './collection.js'
 export const useVehiclesStore = defineStore('vehicles', () => {
   const collection = useCollection('vehicles', migrateVehicles)
 
-  function lend(id, note) {
+  function lend(id, { note, until = '' }) {
     collection.mutate(id, vehicle => {
       vehicle.status = VEHICLE_STATUS.ON_LOAN
       vehicle.loanNote = note
+      vehicle.loanUntil = until
     })
   }
 
@@ -18,6 +19,7 @@ export const useVehiclesStore = defineStore('vehicles', () => {
     collection.mutate(id, vehicle => {
       vehicle.status = VEHICLE_STATUS.FREE
       vehicle.loanNote = ''
+      vehicle.loanUntil = ''
     })
   }
 

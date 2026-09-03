@@ -264,18 +264,36 @@ app.get('/api/requests', async (_req, res, next) => {
 })
 
 app.put('/api/requests/:id/status', async (req, res, next) => {
-  const { status } = req.body ?? {}
+  const { status, reason } = req.body ?? {}
   if (!isValidRequestStatus(status)) {
     return fail(res, 400, 'validation.unknownValue', { field: 'status' }, 'Unknown status')
   }
+  if (reason !== undefined && (typeof reason !== 'string' || reason.length > 1000)) {
+    return fail(res, 400, 'validation.invalidField', { field: 'reason' }, 'Invalid reason')
+  }
+
   try {
     await withLock('requests', async () => {
       const stored = JSON.parse(await readRaw('requests'))
       const index = stored.findIndex(request => request.id === req.params.id)
       if (index === -1) return fail(res, 404, 'notFound', {}, 'Unknown request')
-      stored[index] = { ...stored[index], status }
+
+      // Who decided and when is recorded server-side: the client cannot claim
+      // a decision was taken by somebody else.
+      const decided = status !== 'pending'
+      stored[index] = {
+        ...stored[index],
+        status,
+        decidedBy: decided ? req.user.username : null,
+        decidedAt: decided ? localDateTime() : null,
+        decisionReason: decided ? (reason ?? '').trim() : '',
+      }
       await write('requests', JSON.stringify(stored, null, 2))
-      res.json({ ok: true })
+      res.json({
+        ok: true,
+        decidedBy: stored[index].decidedBy,
+        decidedAt: stored[index].decidedAt,
+      })
     })
   } catch (err) {
     next(err)

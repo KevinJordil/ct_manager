@@ -222,12 +222,13 @@ export const api = {
     return (await request(`${BASE}/requests`)).json()
   },
 
-  async setRequestStatus(id, status) {
-    await request(`${BASE}/requests/${encodeURIComponent(id)}/status`, {
+  async setRequestStatus(id, status, reason = '') {
+    const res = await request(`${BASE}/requests/${encodeURIComponent(id)}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, reason }),
     })
+    return res.json()
   },
 
   async deleteRequest(id) {

@@ -36,7 +36,10 @@
     "loading": "Chargement…",
     "empty": "—",
     "selectPerson": "— Sélectionner une personne —",
-    "selectVehicle": "— Sélectionner un véhicule —"
+    "selectVehicle": "— Sélectionner un véhicule —",
+    "search": "Rechercher",
+    "noMatch": "Aucun résultat pour « {query} »",
+    "clearSearch": "Effacer la recherche"
   },
   "entities": {
     "persons": "personnes",
@@ -111,7 +114,9 @@
       "placeholder": "Ex : Assigné à la garde, affecté à une section, formation…",
       "person": "Personne :"
     },
-    "deleteImpact": "Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} missions. Elle en sera retirée."
+    "deleteImpact": "Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} missions. Elle en sera retirée.",
+    "phone": "Téléphone",
+    "phonePlaceholder": "+41 79 000 00 00"
   },
   "vehicles": {
     "title": "Véhicules",
@@ -151,7 +156,11 @@
       "notePlaceholder": "À qui, jusqu'à quand…",
       "vehicle": "Véhicule :"
     },
-    "deleteImpact": "Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} missions. Il en sera retiré."
+    "deleteImpact": "Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} missions. Il en sera retiré.",
+    "loanUntil": "Jusqu'au",
+    "loanUntilOptional": "Retour prévu (facultatif)",
+    "loanOverdue": "Retour dépassé depuis le {date}",
+    "loanUntilLabel": "Retour prévu le {date}"
   },
   "missions": {
     "title": "Missions",
@@ -361,7 +370,11 @@
       "truck-cargo": "Camion — matériel",
       "other": "Autre (préciser en commentaire)"
     },
-    "vehicleCount": "{count} véhicule | {count} véhicule | {count} véhicules"
+    "vehicleCount": "{count} véhicule | {count} véhicule | {count} véhicules",
+    "decidedBy": "{status} par {user} le {date}",
+    "reason": "Motif",
+    "reasonPlaceholder": "Motif communiqué au demandeur par téléphone…",
+    "rejectTitle": "Refuser la demande"
   },
   "park": {
     "title": "Vue de parc",

@@ -10,12 +10,13 @@ const emit = defineEmits(['save', 'close'])
 const configStore = useConfigStore()
 configStore.init()
 
-const form = reactive({ rank: '', firstName: '', lastName: '', licenses: [], notes: '' })
+const form = reactive({ rank: '', firstName: '', lastName: '', phone: '', licenses: [], notes: '' })
 
 watch(() => props.person, person => {
   form.rank = person?.rank ?? ''
   form.firstName = person?.firstName ?? ''
   form.lastName = person?.lastName ?? ''
+  form.phone = person?.phone ?? ''
   form.licenses = [...(person?.licenses ?? [])]
   form.notes = person?.notes ?? ''
 }, { immediate: true })
@@ -50,6 +51,12 @@ function submit() {
           <input id="person-last-name" v-model="form.lastName" class="input"
             :placeholder="$t('persons.lastNamePlaceholder')" required />
         </div>
+      </div>
+
+      <div>
+        <label class="label" for="person-phone">{{ $t('persons.phone') }}</label>
+        <input id="person-phone" v-model="form.phone" type="tel" class="input"
+          :placeholder="$t('persons.phonePlaceholder')" />
       </div>
 
       <div>

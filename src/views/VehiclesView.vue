@@ -8,6 +8,8 @@ import VehicleForm from '../components/vehicles/VehicleForm.vue'
 import LoanModal from '../components/vehicles/LoanModal.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
+import SearchField from '../components/common/SearchField.vue'
+import { filterBySearch } from '../search.js'
 
 const store = useVehiclesStore()
 const missionsStore = useMissionsStore()
@@ -17,6 +19,15 @@ onMounted(() => {
   store.init()
   missionsStore.init()
 })
+
+const search = ref('')
+
+const visibleVehicles = computed(() =>
+  filterBySearch(store.vehicles, search.value, vehicle => [
+    vehicle.name, vehicle.plate, vehicle.loanNote,
+    t(`vehicles.categories.${vehicle.category}`),
+  ])
+)
 
 const showForm = ref(false)
 const editedVehicle = ref(null)
@@ -57,8 +68,8 @@ function onDelete() {
   deletedId.value = null
 }
 
-function confirmLoan(note) {
-  store.lend(lentVehicle.value.id, note)
+function confirmLoan(loan) {
+  store.lend(lentVehicle.value.id, loan)
   lentVehicle.value = null
 }
 </script>
@@ -75,9 +86,11 @@ function confirmLoan(note) {
       </button>
     </div>
 
+    <SearchField v-model="search" class="mb-4 max-w-md" />
+
     <TransitionGroup name="list" tag="div" class="space-y-3">
       <VehicleCard
-        v-for="vehicle in store.vehicles"
+        v-for="vehicle in visibleVehicles"
         :key="vehicle.id"
         :vehicle="vehicle"
         @edit="openEdit(vehicle)"
@@ -87,8 +100,9 @@ function confirmLoan(note) {
       />
     </TransitionGroup>
 
-    <ListPlaceholder v-if="store.vehicles.length === 0"
-      :loading="!store.loaded" :message="$t('vehicles.empty')" />
+    <ListPlaceholder v-if="visibleVehicles.length === 0"
+      :loading="!store.loaded"
+      :message="search ? $t('common.noMatch', { query: search }) : $t('vehicles.empty')" />
 
     <VehicleForm v-if="showForm" :vehicle="editedVehicle" @save="onSave" @close="showForm = false" />
 

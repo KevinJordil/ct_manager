@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useMissionsStore } from '../../stores/missions.js'
 import { useClock } from '../../stores/clock.js'
 import { getVehicleStatus, currentMissionOfVehicle } from '../../availability.js'
+import { formatDateTime } from '../../datetime.js'
 import { VEHICLE_STATUS } from '../../constants.js'
 import StatusBadge from '../common/StatusBadge.vue'
 
@@ -12,7 +13,7 @@ defineEmits(['edit', 'delete', 'lend', 'release'])
 
 const router = useRouter()
 const missionsStore = useMissionsStore()
-const { nowString } = useClock()
+const { nowString, todayString } = useClock()
 
 const currentMission = computed(() =>
   currentMissionOfVehicle(props.vehicle.id, missionsStore.missions, nowString.value)
@@ -25,6 +26,11 @@ const status = computed(() =>
 const isOnLoan = computed(() => props.vehicle.status === VEHICLE_STATUS.ON_LOAN)
 const isFree = computed(() => status.value === VEHICLE_STATUS.FREE)
 const isOnMission = computed(() => status.value === VEHICLE_STATUS.ON_MISSION)
+
+/** A loan whose expected return date has passed. */
+const loanOverdue = computed(() =>
+  isOnLoan.value && props.vehicle.loanUntil && props.vehicle.loanUntil < todayString.value
+)
 </script>
 
 <template>
@@ -52,8 +58,18 @@ const isOnMission = computed(() => status.value === VEHICLE_STATUS.ON_MISSION)
           </button>
         </div>
 
-        <div v-if="isOnLoan && vehicle.loanNote" class="mt-2 text-sm text-red-600 italic">
-          {{ vehicle.loanNote }}
+        <div v-if="isOnLoan" class="mt-2 space-y-1">
+          <p v-if="vehicle.loanNote" class="text-sm text-red-600 italic">{{ vehicle.loanNote }}</p>
+          <p v-if="vehicle.loanUntil"
+            :class="['text-xs inline-flex items-center gap-1.5 rounded px-2 py-1 border',
+              loanOverdue ? 'text-red-700 bg-red-50 border-red-200 font-medium' : 'text-gray-500 bg-gray-50 border-gray-200']">
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            {{ loanOverdue
+              ? $t('vehicles.loanOverdue', { date: formatDateTime(vehicle.loanUntil) })
+              : $t('vehicles.loanUntilLabel', { date: formatDateTime(vehicle.loanUntil) }) }}
+          </p>
         </div>
       </div>
 

@@ -46,6 +46,7 @@ function validatePerson(p) {
   if (!isText(p.lastName)) return invalidField('lastName')
   if (!isText(p.firstName)) return invalidField('firstName')
   if (!isOptionalText(p.rank)) return invalidField('rank')
+  if (!isOptionalText(p.phone)) return invalidField('phone')
   if (!isOptionalText(p.notes)) return invalidField('notes')
   if (!isOptionalTextList(p.licenses)) return invalidField('licenses')
   if (!isOptionalBoolean(p.unavailable)) return invalidField('unavailable')
@@ -80,6 +81,10 @@ function validateVehicle(v) {
     return { code: 'unknownValue', params: { field: 'status' } }
   }
   if (!isOptionalText(v.loanNote)) return invalidField('loanNote')
+  if (v.loanUntil !== undefined && v.loanUntil !== null && v.loanUntil !== '' &&
+      !/^\d{4}-\d{2}-\d{2}$/.test(v.loanUntil)) {
+    return invalidField('loanUntil')
+  }
   if (v.seats !== undefined && (!Number.isInteger(v.seats) || v.seats < 0 || v.seats > 200)) {
     return invalidField('seats')
   }

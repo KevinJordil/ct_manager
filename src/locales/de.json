@@ -36,7 +36,10 @@
     "loading": "Wird geladen…",
     "empty": "—",
     "selectPerson": "— Person auswählen —",
-    "selectVehicle": "— Fahrzeug auswählen —"
+    "selectVehicle": "— Fahrzeug auswählen —",
+    "search": "Suchen",
+    "noMatch": "Kein Ergebnis für «{query}»",
+    "clearSearch": "Suche löschen"
   },
   "entities": {
     "persons": "Personen",
@@ -111,7 +114,9 @@
       "placeholder": "z. B. Wachdienst, einer Sektion zugeteilt, Ausbildung…",
       "person": "Person:"
     },
-    "deleteImpact": "Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsatz beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt."
+    "deleteImpact": "Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsatz beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt.",
+    "phone": "Telefon",
+    "phonePlaceholder": "+41 79 000 00 00"
   },
   "vehicles": {
     "title": "Fahrzeuge",
@@ -151,7 +156,11 @@
       "notePlaceholder": "An wen, bis wann…",
       "vehicle": "Fahrzeug:"
     },
-    "deleteImpact": "Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsatz eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt."
+    "deleteImpact": "Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsatz eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt.",
+    "loanUntil": "Bis",
+    "loanUntilOptional": "Geplante Rückgabe (optional)",
+    "loanOverdue": "Rückgabe überfällig seit dem {date}",
+    "loanUntilLabel": "Rückgabe geplant am {date}"
   },
   "missions": {
     "title": "Einsätze",
@@ -361,7 +370,11 @@
       "truck-cargo": "Lastwagen — Material",
       "other": "Andere (in der Bemerkung angeben)"
     },
-    "vehicleCount": "{count} Fahrzeuge | {count} Fahrzeug | {count} Fahrzeuge"
+    "vehicleCount": "{count} Fahrzeuge | {count} Fahrzeug | {count} Fahrzeuge",
+    "decidedBy": "{status} von {user} am {date}",
+    "reason": "Begründung",
+    "reasonPlaceholder": "Dem Anfragenden telefonisch mitgeteilte Begründung…",
+    "rejectTitle": "Anfrage ablehnen"
   },
   "park": {
     "title": "Parkübersicht",

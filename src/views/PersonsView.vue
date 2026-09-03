@@ -9,6 +9,8 @@ import LeavesModal from '../components/persons/LeavesModal.vue'
 import PersonUnavailableModal from '../components/persons/PersonUnavailableModal.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
+import SearchField from '../components/common/SearchField.vue'
+import { filterBySearch } from '../search.js'
 
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
@@ -18,6 +20,14 @@ onMounted(() => {
   store.init()
   missionsStore.init()
 })
+
+const search = ref('')
+
+const visiblePersons = computed(() =>
+  filterBySearch(store.persons, search.value, person => [
+    person.rank, person.firstName, person.lastName, person.phone, person.notes, person.licenses,
+  ])
+)
 
 const showForm = ref(false)
 const editedPerson = ref(null)
@@ -84,9 +94,11 @@ function confirmUnavailable(note) {
       </button>
     </div>
 
+    <SearchField v-model="search" class="mb-4 max-w-md" />
+
     <TransitionGroup name="list" tag="div" class="space-y-3">
       <PersonCard
-        v-for="person in store.persons"
+        v-for="person in visiblePersons"
         :key="person.id"
         :person="person"
         @edit="openEdit(person)"
@@ -96,8 +108,9 @@ function confirmUnavailable(note) {
       />
     </TransitionGroup>
 
-    <ListPlaceholder v-if="store.persons.length === 0"
-      :loading="!store.loaded" :message="$t('persons.empty')" />
+    <ListPlaceholder v-if="visiblePersons.length === 0"
+      :loading="!store.loaded"
+      :message="search ? $t('common.noMatch', { query: search }) : $t('persons.empty')" />
 
     <PersonForm v-if="showForm" :person="editedPerson" @save="onSave" @close="showForm = false" />
 

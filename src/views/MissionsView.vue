@@ -10,6 +10,9 @@ import MissionCard from '../components/missions/MissionCard.vue'
 import MissionForm from '../components/missions/MissionForm.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
+import SearchField from '../components/common/SearchField.vue'
+import { filterBySearch } from '../search.js'
+import { personName } from '../labels.js'
 
 const store = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
@@ -35,11 +38,29 @@ const counts = computed(() => {
   return totals
 })
 
-const filteredMissions = computed(() =>
-  statusFilter.value === 'all'
+const search = ref('')
+
+/** Searching a mission also reaches the people and vehicles it engages. */
+function searchableFields(mission) {
+  const people = [
+    ...(mission.vehicles ?? []).map(entry => entry.driverId),
+    ...(mission.staffIds ?? []),
+  ].map(id => personName(personsStore.persons.find(person => person.id === id)))
+
+  const vehicles = (mission.vehicles ?? [])
+    .map(entry => vehiclesStore.vehicles.find(vehicle => vehicle.id === entry.vehicleId))
+    .filter(Boolean)
+    .flatMap(vehicle => [vehicle.name, vehicle.plate])
+
+  return [mission.title, mission.description, mission.notes, people, vehicles]
+}
+
+const filteredMissions = computed(() => {
+  const byStatus = statusFilter.value === 'all'
     ? store.missions
     : store.missions.filter(m => getMissionStatus(m, nowString.value) === statusFilter.value)
-)
+  return filterBySearch(byStatus, search.value, searchableFields)
+})
 
 function openCreate() {
   editedMission.value = null
@@ -85,6 +106,8 @@ function onDelete() {
       </button>
     </div>
 
+    <SearchField v-model="search" class="mb-4 max-w-md" />
+
     <TransitionGroup name="list" tag="div" class="space-y-3">
       <MissionCard
         v-for="mission in filteredMissions"
@@ -96,7 +119,8 @@ function onDelete() {
     </TransitionGroup>
 
     <ListPlaceholder v-if="filteredMissions.length === 0"
-      :loading="!store.loaded" :message="$t('missions.empty')" />
+      :loading="!store.loaded"
+      :message="search ? $t('common.noMatch', { query: search }) : $t('missions.empty')" />
 
     <MissionForm v-if="showForm" :mission="editedMission" @save="onSave" @close="showForm = false" />
 

@@ -10,6 +10,7 @@ describe('migratePersons — French schema', () => {
   const legacy = {
     id: '2001001',
     grade: 'Sgt',
+    telephone: '+41 79 000 00 00',
     prenom: 'Andreas',
     nom: 'Müller',
     permis: ['930', '930E'],
@@ -24,6 +25,7 @@ describe('migratePersons — French schema', () => {
     expect(person).toEqual({
       id: '2001001',
       rank: 'Sgt',
+      phone: '+41 79 000 00 00',
       firstName: 'Andreas',
       lastName: 'Müller',
       licenses: ['930', '930E'],
@@ -36,7 +38,7 @@ describe('migratePersons — French schema', () => {
 
   it('leaves no French key behind', () => {
     const [person] = migratePersons([legacy])
-    for (const key of ['grade', 'prenom', 'nom', 'permis', 'conges', 'indisponible', 'commentaireIndisponible']) {
+    for (const key of ['grade', 'telephone', 'prenom', 'nom', 'permis', 'conges', 'indisponible', 'commentaireIndisponible']) {
       expect(person).not.toHaveProperty(key)
     }
   })
@@ -61,7 +63,7 @@ describe('migratePersons — French schema', () => {
 
   it('fills in fields added over time', () => {
     const [person] = migratePersons([{ id: 'p1', nom: 'X', prenom: 'Y' }])
-    expect(person).toMatchObject({ rank: '', notes: '', leaves: [], unavailable: false, unavailabilityNote: '' })
+    expect(person).toMatchObject({ rank: '', phone: '', notes: '', leaves: [], unavailable: false, unavailabilityNote: '' })
   })
 })
 
@@ -85,6 +87,7 @@ describe('migrateVehicles — French schema', () => {
       category: 'medium',
       status: 'on-loan',
       loanNote: 'Prêté à la cp EM',
+      loanUntil: '',
       seats: 8,
       checks: [],
     })
@@ -192,12 +195,12 @@ describe('migrateMissions — French schema', () => {
 describe('idempotence', () => {
   it('leaves data already in the current schema untouched', () => {
     const persons = [{
-      id: 'p1', rank: 'Sgt', firstName: 'A', lastName: 'B', licenses: ['930'],
+      id: 'p1', rank: 'Sgt', phone: '', firstName: 'A', lastName: 'B', licenses: ['930'],
       notes: '', leaves: [], unavailable: false, unavailabilityNote: '',
     }]
     const vehicles = [{
-      id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', status: 'free', loanNote: '', seats: 8,
-      checks: [],
+      id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', status: 'free', loanNote: '',
+      loanUntil: '', seats: 8, checks: [],
     }]
     const missions = [{
       id: 'm1', title: 'T', description: '', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',

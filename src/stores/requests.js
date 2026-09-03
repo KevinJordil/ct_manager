@@ -50,20 +50,41 @@ export const useRequestsStore = defineStore('requests', () => {
     return init()
   }
 
+  /**
+   * Re-reads the queue without emptying it first.
+   *
+   * The list is loaded once when the shell appears, for the sidebar badge; a
+   * request submitted afterwards would never show up without this, since the
+   * initial load is memoised.
+   */
+  async function refresh() {
+    try {
+      requests.value = await api.loadRequests()
+      clearError()
+    } catch (error) {
+      handleError(error, 'requests.loadFailed')
+    }
+  }
+
   /** Public submission; throws so the form can show the reason inline. */
   async function submit(payload) {
     return api.submitRequest(payload)
   }
 
-  async function setStatus(id, status) {
+  async function setStatus(id, status, reason = '') {
     const request = requests.value.find(r => r.id === id)
-    const previous = request?.status
+    const previous = request ? { ...request } : null
     if (request) request.status = status // optimistic, reverted on failure
     try {
-      await api.setRequestStatus(id, status)
+      const { decidedBy, decidedAt } = await api.setRequestStatus(id, status, reason)
+      if (request) {
+        request.decidedBy = decidedBy
+        request.decidedAt = decidedAt
+        request.decisionReason = status === 'pending' ? '' : reason.trim()
+      }
       clearError()
     } catch (error) {
-      if (request && previous !== undefined) request.status = previous
+      if (request && previous) Object.assign(request, previous)
       handleError(error, 'requests.updateFailed')
     }
   }
@@ -85,6 +106,6 @@ export const useRequestsStore = defineStore('requests', () => {
     loading: readonly(loading),
     loaded: readonly(loaded),
     pendingCount,
-    init, reload, submit, setStatus, remove,
+    init, reload, refresh, submit, setStatus, remove,
   }
 })

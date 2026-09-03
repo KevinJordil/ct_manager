@@ -36,6 +36,7 @@ function migratePerson(raw) {
     return {
       ...raw,
       rank: raw.rank ?? '',
+      phone: raw.phone ?? '',
       licenses: raw.licenses ?? [],
       notes: raw.notes ?? '',
       leaves: (raw.leaves ?? []).map(normaliseLeave),
@@ -52,6 +53,7 @@ function migratePerson(raw) {
   return {
     id: raw.id,
     rank: raw.grade ?? '',
+    phone: raw.telephone ?? '',
     firstName: raw.prenom ?? '',
     lastName: raw.nom ?? '',
     licenses: (raw.permis ?? []).map(code => LEGACY_LICENSES[code] ?? code),
@@ -100,6 +102,7 @@ function migrateVehicle(raw) {
       plate: rest.plate ?? '',
       status: rest.status === VEHICLE_STATUS.ON_LOAN ? VEHICLE_STATUS.ON_LOAN : VEHICLE_STATUS.FREE,
       loanNote: rest.loanNote ?? '',
+      loanUntil: rest.loanUntil ?? '',
       seats: rest.seats ?? 4,
       checks: migrateChecks(raw),
     }
@@ -112,6 +115,7 @@ function migrateVehicle(raw) {
     category: LEGACY_CATEGORIES[raw.categorie] ?? raw.categorie,
     status: LEGACY_VEHICLE_STATUSES[raw.statut] ?? VEHICLE_STATUS.FREE,
     loanNote: raw.commentairePret ?? '',
+    loanUntil: '',
     seats: raw.places ?? 4,
     checks: migrateChecks(raw),
   }

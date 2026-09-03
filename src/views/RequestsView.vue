@@ -11,6 +11,9 @@ import { formatDateTime } from '../datetime.js'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 import MissionForm from '../components/missions/MissionForm.vue'
+import BaseModal from '../components/common/BaseModal.vue'
+import SearchField from '../components/common/SearchField.vue'
+import { filterBySearch } from '../search.js'
 
 const store = useRequestsStore()
 const missionsStore = useMissionsStore()
@@ -26,7 +29,10 @@ function typeLabel(id) {
 }
 
 onMounted(() => {
-  store.init()
+  // The queue may have been loaded already for the sidebar badge; opening the
+  // page must still show requests that arrived since.
+  if (store.loaded) store.refresh()
+  else store.init()
   missionsStore.init()
   vehiclesStore.init()
   personsStore.init()
@@ -34,6 +40,9 @@ onMounted(() => {
 })
 
 const statusFilter = ref('all')
+const search = ref('')
+const rejecting = ref(null)
+const rejectionReason = ref('')
 const expandedId = ref(null)
 const deletedId = ref(null)
 const missionPrefill = ref(null)
@@ -53,13 +62,35 @@ const counts = computed(() => {
   return totals
 })
 
+/** Search reaches the requester, their unit, the meeting point and the comment. */
+function searchableFields(request) {
+  const { contact } = request
+  return [
+    contact.firstName, contact.lastName, contact.company, contact.section, contact.phone,
+    request.meetingPoint, request.comment, request.decisionReason, request.decidedBy,
+    request.vehicles.map(entry => typeLabel(entry.type)),
+  ]
+}
+
 /** Newest first: a queue is read from the most recent entry. */
 const visibleRequests = computed(() => {
   const sorted = [...store.requests].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  return statusFilter.value === 'all'
+  const byStatus = statusFilter.value === 'all'
     ? sorted
     : sorted.filter(request => request.status === statusFilter.value)
+  return filterBySearch(byStatus, search.value, searchableFields)
 })
+
+function openRejection(request) {
+  rejecting.value = request
+  rejectionReason.value = request.decisionReason ?? ''
+}
+
+async function confirmRejection() {
+  await store.setStatus(rejecting.value.id, REQUEST_STATUS.REJECTED, rejectionReason.value)
+  rejecting.value = null
+  rejectionReason.value = ''
+}
 
 function toggleExpanded(id) {
   expandedId.value = expandedId.value === id ? null : id
@@ -128,6 +159,8 @@ async function onDelete() {
       </button>
     </div>
 
+    <SearchField v-model="search" class="mb-4 max-w-md" />
+
     <TransitionGroup name="list" tag="div" class="space-y-3">
       <div v-for="request in visibleRequests" :key="request.id" class="card">
         <div class="flex items-start justify-between gap-3">
@@ -152,6 +185,13 @@ async function onDelete() {
               {{ $t('requests.submittedOn', { date: formatDateTime(request.createdAt) }) }}
               · {{ $t('requests.vehicleCount', request.vehicles.length, { count: request.vehicles.length }) }}
             </p>
+            <p v-if="request.decidedBy" class="text-xs text-gray-500 mt-1">
+              {{ $t('requests.decidedBy', {
+                status: $t(`status.${request.status}`),
+                user: request.decidedBy,
+                date: formatDateTime(request.decidedAt),
+              }) }}
+            </p>
           </button>
 
           <div class="flex flex-col gap-1 shrink-0">
@@ -159,7 +199,7 @@ async function onDelete() {
               class="text-xs px-2.5 min-h-[36px] rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">
               {{ $t('requests.approve') }}
             </button>
-            <button v-if="request.status !== 'rejected'" @click="store.setStatus(request.id, 'rejected')"
+            <button v-if="request.status !== 'rejected'" @click="openRejection(request)"
               class="text-xs px-2.5 min-h-[36px] rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
               {{ $t('requests.reject') }}
             </button>
@@ -190,12 +230,34 @@ async function onDelete() {
             </li>
           </ul>
           <p v-if="request.comment" class="text-gray-500 italic">{{ request.comment }}</p>
+          <p v-if="request.decisionReason" class="text-gray-600">
+            <span class="font-medium text-gray-700">{{ $t('requests.reason') }} :</span>
+            {{ request.decisionReason }}
+          </p>
         </div>
       </div>
     </TransitionGroup>
 
     <ListPlaceholder v-if="visibleRequests.length === 0"
-      :loading="!store.loaded" :message="$t('requests.empty')" />
+      :loading="!store.loaded"
+      :message="search ? $t('common.noMatch', { query: search }) : $t('requests.empty')" />
+
+    <BaseModal v-if="rejecting" :title="$t('requests.rejectTitle')" @close="rejecting = null">
+      <form @submit.prevent="confirmRejection" class="space-y-4">
+        <p class="text-sm text-gray-600">
+          {{ rejecting.contact.company }} — {{ rejecting.contact.firstName }} {{ rejecting.contact.lastName }}
+        </p>
+        <div>
+          <label class="label" for="rejection-reason">{{ $t('requests.reason') }}</label>
+          <textarea id="rejection-reason" v-model="rejectionReason" class="input" rows="3"
+            :placeholder="$t('requests.reasonPlaceholder')" autofocus />
+        </div>
+        <div class="flex justify-end gap-3 pt-1">
+          <button type="button" @click="rejecting = null" class="btn-secondary">{{ $t('actions.cancel') }}</button>
+          <button type="submit" class="btn-danger">{{ $t('requests.reject') }}</button>
+        </div>
+      </form>
+    </BaseModal>
 
     <MissionForm v-if="missionPrefill" :mission="missionPrefill"
       @save="onMissionSave" @close="closeApproval" />
