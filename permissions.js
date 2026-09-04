@@ -1,14 +1,15 @@
 /**
  * What an account may do.
  *
- * Every signed-in account may *use* the fleet: take, pass on and hang up
- * keys, record a weekly check, lend a vehicle out and bring it back, mark
- * somebody away, answer a request. Those are the acts of a working day, and
- * gating them would only mean they stop being recorded.
+ * Without any right, an account can do what a soldier does at the counter:
+ * move keys — take one, pass it on, hang it up — and record a weekly check.
+ * It can read everything else: missions, the park plan, the log of key
+ * movements, the requests that came in.
  *
- * What is granted account by account is the right to *manage* a resource —
- * to create one, change its identity, or delete it. Nothing is granted by
- * default: a new account can work, not rewrite the register.
+ * Everything that commits the company is granted account by account: saying
+ * that somebody is away, lending a vehicle out, deciding a request, and of
+ * course creating, changing or deleting any record. Nothing is granted by
+ * default.
  *
  * Administrators hold every right, plus accounts and configuration, which
  * are not listed here because they are never granted separately.
@@ -46,15 +47,21 @@ export function can(user, permission) {
 }
 
 /**
- * Fields an account may change on a record it does not manage: the state a
- * vehicle or a person is in today, never its existence or its identity.
+ * Fields an account may change on a record it does not manage.
  *
- * A mission has no such field — it is planning through and through, so
- * changing one is managing it.
+ * On a vehicle: where its key is, and its weekly checks. Not its loan —
+ * lending a vehicle out is a decision, not a movement — and not its
+ * identity.
+ *
+ * On a person: nothing. Declaring somebody away is a statement about
+ * somebody else's service, so it belongs with managing people.
+ *
+ * On a mission: nothing. It is planning through and through, so changing one
+ * is managing it.
  */
 export const INTERACTION_FIELDS = {
-  vehicles: ['keyHolder', 'keyHistory', 'checks', 'status', 'loanNote', 'loanUntil'],
-  persons: ['unavailable', 'unavailabilityNote', 'leaves'],
+  vehicles: ['keyHolder', 'keyHistory', 'checks'],
+  persons: [],
   missions: [],
 }
 

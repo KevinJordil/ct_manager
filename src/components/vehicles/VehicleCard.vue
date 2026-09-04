@@ -105,8 +105,8 @@ const loanOverdue = computed(() =>
           :title="$t('keys.returnFor', { name: keyHolderName })">
           {{ $t('keys.returnShort') }}
         </button>
-        <button v-if="isFree" @click="$emit('lend')" class="btn-action">{{ $t('vehicles.loan.lend') }}</button>
-        <button v-if="isOnLoan" @click="$emit('release')" class="btn-action">{{ $t('vehicles.loan.release') }}</button>
+        <button v-if="canManage && isFree" @click="$emit('lend')" class="btn-action">{{ $t('vehicles.loan.lend') }}</button>
+        <button v-if="canManage && isOnLoan" @click="$emit('release')" class="btn-action">{{ $t('vehicles.loan.release') }}</button>
         <button v-if="canManage" @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
         <button v-if="canManage" @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>

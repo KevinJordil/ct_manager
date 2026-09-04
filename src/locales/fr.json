@@ -120,7 +120,8 @@
       "clear": "Lever l'indisponibilité",
       "reason": "Motif d'indisponibilité",
       "placeholder": "Ex : Assigné à la garde, affecté à une section, formation…",
-      "person": "Personne :"
+      "person": "Personne :",
+      "clearConfirm": "Rendre {name} de nouveau disponible ?"
     },
     "deleteImpact": "Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} mission. Elle en sera retirée. | Cette personne est engagée sur {count} missions. Elle en sera retirée.",
     "phone": "Téléphone",
@@ -171,7 +172,8 @@
       "confirm": "Confirmer le prêt",
       "note": "Commentaire de prêt",
       "notePlaceholder": "À qui, jusqu'à quand…",
-      "vehicle": "Véhicule :"
+      "vehicle": "Véhicule :",
+      "releaseConfirm": "Mettre fin au prêt de {plate} et le rendre disponible ?"
     },
     "deleteImpact": "Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} mission. Il en sera retiré. | Ce véhicule est engagé sur {count} missions. Il en sera retiré.",
     "loanUntil": "Jusqu'au",
@@ -219,7 +221,8 @@
     "returnFor": "Rendre la clé de {name}",
     "takeShort": "Prendre la clé",
     "transferShort": "Transférer la clé",
-    "returnShort": "Rendre la clé"
+    "returnShort": "Rendre la clé",
+    "returnConfirm": "Rendre la clé de {plate}, détenue par {name} ?"
   },
   "log": {
     "title": "Journal de combat",
@@ -450,7 +453,8 @@
     "decidedBy": "{status} par {user} le {date}",
     "reason": "Motif",
     "reasonPlaceholder": "Motif communiqué au demandeur par téléphone…",
-    "rejectTitle": "Refuser la demande"
+    "rejectTitle": "Refuser la demande",
+    "reopenConfirm": "Remettre la demande de {company} en attente ? La décision prise sera effacée."
   },
   "park": {
     "title": "Vue de parc",
@@ -572,8 +576,8 @@
   "permissions": {
     "title": "Droits",
     "intro": "Chaque compte peut travailler avec la flotte dès sa création. Ce qui s'accorde ici, c'est le droit de tenir le registre : créer, modifier ou supprimer une ressource.",
-    "alwaysAllowed": "Toujours permis, sans droit particulier : prendre, transférer et rendre une clé, enregistrer un SPH, mettre un véhicule en prêt et le libérer, marquer une personne indisponible ou lui saisir un congé, approuver ou refuser une demande.",
-    "granted": "Accordé compte par compte : créer, modifier et supprimer des personnes, des véhicules, des missions, supprimer des demandes, et disposer le plan de parc.",
+    "alwaysAllowed": "Toujours permis, sans droit particulier : prendre, transférer et rendre une clé, enregistrer un SPH, et consulter les missions, la vue de parc, le journal de combat et les demandes.",
+    "granted": "Accordé compte par compte : créer, modifier et supprimer des personnes, des véhicules et des missions, déclarer une indisponibilité ou un congé, mettre un véhicule en prêt, décider d'une demande, et disposer le plan de parc.",
     "adminNote": "Un administrateur a tous les droits, plus les comptes et la configuration ; ses cases ne se décochent pas.",
     "account": "Compte",
     "saving": "enregistrement…",
@@ -585,7 +589,11 @@
       "missions": "Missions",
       "requests": "Demandes",
       "park": "Vue de parc"
-    }
+    },
+    "grantConfirm": "Accorder « {permission} » à {account} ?",
+    "revokeConfirm": "Retirer « {permission} » à {account} ?",
+    "grant": "Accorder",
+    "revoke": "Retirer"
   },
   "printing": {
     "print": "Imprimer / PDF",

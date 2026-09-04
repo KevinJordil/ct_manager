@@ -10,6 +10,7 @@ import { PERMISSIONS } from '../../permissions.js'
 const resourceOf = permission => permission.split('.')[0]
 import { personName } from '../labels.js'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
+import ConfirmModal from '../components/common/ConfirmModal.vue'
 
 const store = useUsersStore()
 const personsStore = usePersonsStore()
@@ -40,8 +41,37 @@ function holds(user, permission) {
   return user.role === 'admin' || user.permissions?.[permission] === true
 }
 
-async function toggle(user, permission) {
+/**
+ * A tick changes what somebody else may do, so it is asked first — the
+ * question names the right and the account, which is what a misplaced click
+ * gets wrong.
+ */
+const pending = ref(null)
+
+const confirmMessage = computed(() => {
+  if (!pending.value) return ''
+  const { user, permission, granting } = pending.value
+  return t(granting ? 'permissions.grantConfirm' : 'permissions.revokeConfirm', {
+    permission: t(`permissions.labels.${resourceOf(permission)}`),
+    account: user.username,
+  })
+})
+
+function ask(event, user, permission) {
+  // The box must not look ticked before the question is answered; Vue would
+  // not put it back on its own, since the bound value has not changed.
+  event.target.checked = holds(user, permission)
   if (user.role === 'admin') return
+  pending.value = { user, permission, granting: !holds(user, permission) }
+}
+
+async function apply() {
+  const { user, permission } = pending.value
+  pending.value = null
+  await toggle(user, permission)
+}
+
+async function toggle(user, permission) {
   const permissions = { ...(user.permissions ?? {}) }
   if (permissions[permission]) delete permissions[permission]
   else permissions[permission] = true
@@ -108,7 +138,7 @@ async function toggle(user, permission) {
                   :aria-label="$t('permissions.toggleLabel', {
                     permission: $t(`permissions.labels.${resourceOf(permission)}`), account: user.username,
                   })"
-                  @change="toggle(user, permission)" />
+                  @change="ask($event, user, permission)" />
               </label>
             </td>
           </tr>
@@ -117,5 +147,15 @@ async function toggle(user, permission) {
     </div>
 
     <ListPlaceholder v-else :loading="!store.loaded" :message="$t('permissions.empty')" />
+
+    <ConfirmModal
+      v-if="pending"
+      :title="$t(pending.granting ? 'permissions.grant' : 'permissions.revoke')"
+      :message="confirmMessage"
+      :confirm-label="$t(pending.granting ? 'permissions.grant' : 'permissions.revoke')"
+      :tone="pending.granting ? 'primary' : 'danger'"
+      @confirm="apply"
+      @cancel="pending = null"
+    />
   </div>
 </template>

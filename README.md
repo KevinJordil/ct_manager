@@ -164,6 +164,19 @@ Trois modes de visualisation, deux onglets de ressources (Véhicules / Personnes
 
 ---
 
+### Confirmations
+
+Toute action qui part d'un **simple clic dans une liste** demande d'abord
+confirmation, et la question nomme ce qui est en jeu : *« Rendre la clé de
+M12346, détenue par Sgt Caroline Favre ? »*, *« Mettre fin au prêt de M89309
+et le rendre disponible ? »*, *« Accorder "Véhicules" à zurbriggen ? »* — un
+clic mal placé se rattrape en lisant. Les actions qui passent déjà par un
+formulaire (prendre une clé, enregistrer un SPH, refuser une demande) portent
+leur propre bouton de validation et n'en demandent pas une seconde.
+
+La question est posée en rouge quand elle détruit quelque chose, dans la
+couleur d'accent sinon : du rouge partout ne voudrait plus rien dire.
+
 ## Apparence
 
 Neutres chauds, un seul accent vert-armée, angles droits et aucune couleur
@@ -336,21 +349,24 @@ Deux rôles :
 
 ### Droits
 
-Un compte peut **utiliser** la flotte dès sa création : prendre, transférer et
-rendre une clé, enregistrer un SPH, mettre un véhicule en prêt et le libérer,
-marquer une personne indisponible ou lui saisir un congé, approuver ou refuser
-une demande. Ce sont les gestes de la journée : les soumettre à un droit
-reviendrait simplement à ce qu'ils ne soient plus saisis.
+Sans aucun droit, un compte fait ce qu'on fait au guichet : **déplacer les
+clés** — en prendre une, la transférer, la rendre — et **enregistrer les
+SPH**. Il peut **consulter** le reste : missions, vue de parc, journal de
+combat, demandes reçues.
+
+Tout ce qui engage la compagnie s'accorde compte par compte : déclarer
+quelqu'un indisponible ou en congé, mettre un véhicule en prêt, décider d'une
+demande, et bien sûr créer, modifier ou supprimer une fiche.
 
 Ce qui s'accorde compte par compte, depuis la page **Droits**, c'est le droit
 de **tenir le registre** — créer, modifier ou supprimer une ressource :
 
 | Droit | Ouvre |
 |-------|-------|
-| `persons.manage` | Créer, modifier et supprimer des personnes, et leur donner un mot de passe |
-| `vehicles.manage` | Créer, modifier et supprimer des véhicules, et supprimer un SPH enregistré |
+| `persons.manage` | Créer, modifier et supprimer des personnes, leur donner un mot de passe, déclarer une indisponibilité ou un congé |
+| `vehicles.manage` | Créer, modifier et supprimer des véhicules, et gérer les prêts |
 | `missions.manage` | Créer, modifier et supprimer des missions |
-| `requests.manage` | Supprimer des demandes (les approuver ou les refuser reste ouvert) |
+| `requests.manage` | Approuver, refuser, remettre en attente et supprimer des demandes |
 | `park.manage` | Charger le plan de parc et disposer les zones |
 
 Rien n'est accordé par défaut : un nouveau compte peut travailler, pas
@@ -360,11 +376,13 @@ réécrire le registre.
 Comme l'API enregistre des collections entières, un refus pur et simple
 bloquerait aussi les mouvements de clé et les SPH que tout le monde peut
 saisir : la requête est donc comparée champ par champ à ce qui est stocké.
-Sans le droit de gestion, seuls les champs d'état passent — `keyHolder`,
-`keyHistory`, `checks`, `status`, `loanNote`, `loanUntil` pour un véhicule,
-`unavailable`, `unavailabilityNote`, `leaves` pour une personne — et ni
-création ni suppression. Une mission n'a aucun champ de ce genre : elle est
-de la planification de bout en bout, donc la modifier, c'est la gérer.
+Sans le droit de gestion, seuls passent `keyHolder`, `keyHistory` et `checks`
+sur un véhicule — où est sa clé, et ses contrôles hebdomadaires — et ni
+création ni suppression. Ni le prêt (`status`, `loanNote`, `loanUntil`), qui
+est une décision et non un mouvement, ni aucun champ d'une personne : dire
+que quelqu'un est absent est une affirmation sur le service d'un autre. Une
+mission n'a aucun champ de ce genre non plus : elle est de la planification
+de bout en bout, donc la modifier, c'est la gérer.
 
 **Un militaire se connecte avec son nom de famille.** Le mot de passe se
 définit sur sa fiche, à la création ou plus tard : tant qu'il n'est pas

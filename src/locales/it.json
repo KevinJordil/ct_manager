@@ -120,7 +120,8 @@
       "clear": "Revoca l'indisponibilità",
       "reason": "Motivo dell'indisponibilità",
       "placeholder": "Es. assegnato alla guardia, aggregato a una sezione, formazione…",
-      "person": "Persona:"
+      "person": "Persona:",
+      "clearConfirm": "Rendere {name} di nuovo disponibile?"
     },
     "deleteImpact": "Questa persona è impiegata in {count} missioni. Ne sarà rimossa. | Questa persona è impiegata in {count} missione. Ne sarà rimossa. | Questa persona è impiegata in {count} missioni. Ne sarà rimossa.",
     "phone": "Telefono",
@@ -171,7 +172,8 @@
       "confirm": "Conferma il prestito",
       "note": "Commento sul prestito",
       "notePlaceholder": "A chi, fino a quando…",
-      "vehicle": "Veicolo:"
+      "vehicle": "Veicolo:",
+      "releaseConfirm": "Terminare il prestito di {plate} e renderlo disponibile?"
     },
     "deleteImpact": "Questo veicolo è impiegato in {count} missioni. Ne sarà rimosso. | Questo veicolo è impiegato in {count} missione. Ne sarà rimosso. | Questo veicolo è impiegato in {count} missioni. Ne sarà rimosso.",
     "loanUntil": "Fino al",
@@ -219,7 +221,8 @@
     "returnFor": "Restituire la chiave di {name}",
     "takeShort": "Prendere la chiave",
     "transferShort": "Trasferire la chiave",
-    "returnShort": "Restituire la chiave"
+    "returnShort": "Restituire la chiave",
+    "returnConfirm": "Restituire la chiave di {plate}, tenuta da {name}?"
   },
   "log": {
     "title": "Giornale di combattimento",
@@ -450,7 +453,8 @@
     "decidedBy": "{status} da {user} il {date}",
     "reason": "Motivo",
     "reasonPlaceholder": "Motivo comunicato al richiedente per telefono…",
-    "rejectTitle": "Rifiuta la richiesta"
+    "rejectTitle": "Rifiuta la richiesta",
+    "reopenConfirm": "Rimettere in attesa la richiesta di {company}? La decisione presa sarà cancellata."
   },
   "park": {
     "title": "Vista del parco",
@@ -572,8 +576,8 @@
   "permissions": {
     "title": "Diritti",
     "intro": "Ogni account può lavorare con il parco fin dalla creazione. Qui si concede il diritto di tenere il registro: creare, modificare o eliminare una risorsa.",
-    "alwaysAllowed": "Sempre permesso, senza diritto particolare: prendere, trasferire e restituire una chiave, registrare un servizio di parco, prestare un veicolo e riprenderlo, segnare una persona indisponibile o registrarne il congedo, approvare o rifiutare una richiesta.",
-    "granted": "Concesso account per account: creare, modificare ed eliminare persone, veicoli e missioni, eliminare richieste e disporre la piantina del parco.",
+    "alwaysAllowed": "Sempre permesso, senza diritto particolare: prendere, trasferire e restituire una chiave, registrare un servizio di parco e consultare missioni, piantina del parco, giornale di combattimento e richieste.",
+    "granted": "Concesso account per account: creare, modificare ed eliminare persone, veicoli e missioni, dichiarare un'indisponibilità o un congedo, prestare un veicolo, decidere una richiesta e disporre la piantina del parco.",
     "adminNote": "Un amministratore ha tutti i diritti, più gli account e la configurazione; le sue caselle non si tolgono.",
     "account": "Account",
     "saving": "salvataggio…",
@@ -585,7 +589,11 @@
       "missions": "Missioni",
       "requests": "Richieste",
       "park": "Piantina"
-    }
+    },
+    "grantConfirm": "Concedere «{permission}» a {account}?",
+    "revokeConfirm": "Togliere «{permission}» a {account}?",
+    "grant": "Concedere",
+    "revoke": "Togliere"
   },
   "printing": {
     "print": "Stampa / PDF",

@@ -711,12 +711,29 @@ describe('rights', () => {
     expect(res.status).toBe(200)
   })
 
-  it('lets it record a check and lend the vehicle out', async () => {
+  it('lets it record a weekly check', async () => {
     const { data, version } = await currentFleet()
     data[0].checks = [{ id: 'c1', date: '2026-09-04', performedBy: 'sdtworker' }]
+    expect((await put('vehicles', data, { version, headers: asWorker() })).status).toBe(200)
+  })
+
+  it('refuses to lend the vehicle out, which commits the company', async () => {
+    const { data, version } = await currentFleet()
     data[0].status = 'on-loan'
     data[0].loanNote = 'cp EM'
-    expect((await put('vehicles', data, { version, headers: asWorker() })).status).toBe(200)
+    const res = await put('vehicles', data, { version, headers: asWorker() })
+    expect(res.status).toBe(403)
+    expect((await res.json()).params.field).toBe('status')
+  })
+
+  it('refuses to decide a request', async () => {
+    const decided = await fetch(`${BASE}/api/requests/whatever/status`, {
+      method: 'PUT',
+      headers: { ...asWorker(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'approved' }),
+    })
+    expect(decided.status).toBe(403)
+    expect((await decided.json()).code).toBe('permissions.denied')
   })
 
   it('refuses a change of identity, and says which field', async () => {

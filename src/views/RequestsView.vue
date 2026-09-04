@@ -47,6 +47,13 @@ const rejecting = ref(null)
 const rejectionReason = ref('')
 const expandedId = ref(null)
 const deletedId = ref(null)
+/** A decided request going back into the queue: asked, since it undoes a decision. */
+const reopening = ref(null)
+
+async function reopen() {
+  await store.setStatus(reopening.value.id, REQUEST_STATUS.PENDING)
+  reopening.value = null
+}
 const missionPrefill = ref(null)
 const approvedRequestId = ref(null)
 
@@ -197,15 +204,15 @@ async function onDelete() {
           </button>
 
           <div class="flex flex-col gap-1 shrink-0">
-            <button v-if="request.status !== 'approved'" @click="openApproval(request)"
+            <button v-if="auth.can('requests.manage') && request.status !== 'approved'" @click="openApproval(request)"
               class="btn-action border-green-300 bg-green-50 text-green-800 hover:bg-green-100 hover:border-green-400">
               {{ $t('requests.approve') }}
             </button>
-            <button v-if="request.status !== 'rejected'" @click="openRejection(request)"
+            <button v-if="auth.can('requests.manage') && request.status !== 'rejected'" @click="openRejection(request)"
               class="btn-action">
               {{ $t('requests.reject') }}
             </button>
-            <button v-if="request.status !== 'pending'" @click="store.setStatus(request.id, 'pending')"
+            <button v-if="auth.can('requests.manage') && request.status !== 'pending'" @click="reopening = request"
               class="btn-action">
               {{ $t('requests.reopen') }}
             </button>
@@ -263,6 +270,18 @@ async function onDelete() {
 
     <MissionForm v-if="missionPrefill" :mission="missionPrefill"
       @save="onMissionSave" @close="closeApproval" />
+
+    <ConfirmModal
+      v-if="reopening"
+      :title="$t('requests.reopen')"
+      :message="$t('requests.reopenConfirm', {
+        company: reopening.contact.company || reopening.contact.lastName,
+      })"
+      :confirm-label="$t('requests.reopen')"
+      tone="primary"
+      @confirm="reopen"
+      @cancel="reopening = null"
+    />
 
     <ConfirmModal
       v-if="deletedId"

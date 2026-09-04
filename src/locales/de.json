@@ -120,7 +120,8 @@
       "clear": "Nichtverfügbarkeit aufheben",
       "reason": "Grund der Nichtverfügbarkeit",
       "placeholder": "z. B. Wachdienst, einer Sektion zugeteilt, Ausbildung…",
-      "person": "Person:"
+      "person": "Person:",
+      "clearConfirm": "{name} wieder als verfügbar führen?"
     },
     "deleteImpact": "Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsatz beteiligt. Sie wird daraus entfernt. | Diese Person ist an {count} Einsätzen beteiligt. Sie wird daraus entfernt.",
     "phone": "Telefon",
@@ -171,7 +172,8 @@
       "confirm": "Ausleihe bestätigen",
       "note": "Bemerkung zur Ausleihe",
       "notePlaceholder": "An wen, bis wann…",
-      "vehicle": "Fahrzeug:"
+      "vehicle": "Fahrzeug:",
+      "releaseConfirm": "Ausleihe von {plate} beenden und das Fahrzeug freigeben?"
     },
     "deleteImpact": "Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsatz eingeteilt. Es wird daraus entfernt. | Dieses Fahrzeug ist in {count} Einsätzen eingeteilt. Es wird daraus entfernt.",
     "loanUntil": "Bis",
@@ -219,7 +221,8 @@
     "returnFor": "Schlüssel von {name} zurückgeben",
     "takeShort": "Schlüssel nehmen",
     "transferShort": "Schlüssel übergeben",
-    "returnShort": "Schlüssel zurück"
+    "returnShort": "Schlüssel zurück",
+    "returnConfirm": "Schlüssel von {plate}, gehalten von {name}, zurückgeben?"
   },
   "log": {
     "title": "Gefechtsjournal",
@@ -450,7 +453,8 @@
     "decidedBy": "{status} von {user} am {date}",
     "reason": "Begründung",
     "reasonPlaceholder": "Dem Anfragenden telefonisch mitgeteilte Begründung…",
-    "rejectTitle": "Anfrage ablehnen"
+    "rejectTitle": "Anfrage ablehnen",
+    "reopenConfirm": "Gesuch von {company} wieder in die Warteschlange? Der Entscheid wird gelöscht."
   },
   "park": {
     "title": "Parkübersicht",
@@ -572,8 +576,8 @@
   "permissions": {
     "title": "Rechte",
     "intro": "Jedes Konto kann von Anfang an mit der Flotte arbeiten. Hier wird das Recht vergeben, das Register zu führen: eine Ressource erstellen, ändern oder löschen.",
-    "alwaysAllowed": "Immer erlaubt, ohne besonderes Recht: Schlüssel nehmen, übergeben und zurückgeben, einen Parkdienst erfassen, ein Fahrzeug ausleihen und zurücknehmen, eine Person als nicht verfügbar markieren oder ihren Urlaub erfassen, ein Gesuch bewilligen oder ablehnen.",
-    "granted": "Konto für Konto vergeben: Personen, Fahrzeuge und Aufträge erstellen, ändern und löschen, Gesuche löschen und den Parkplan einrichten.",
+    "alwaysAllowed": "Immer erlaubt, ohne besonderes Recht: Schlüssel nehmen, übergeben und zurückgeben, einen Parkdienst erfassen sowie Aufträge, Parkplan, Gefechtsjournal und Gesuche einsehen.",
+    "granted": "Konto für Konto vergeben: Personen, Fahrzeuge und Aufträge erstellen, ändern und löschen, eine Abwesenheit oder einen Urlaub erfassen, ein Fahrzeug ausleihen, über ein Gesuch entscheiden und den Parkplan einrichten.",
     "adminNote": "Ein Administrator hat alle Rechte, dazu Konten und Konfiguration; seine Felder lassen sich nicht abwählen.",
     "account": "Konto",
     "saving": "wird gespeichert…",
@@ -585,7 +589,11 @@
       "missions": "Aufträge",
       "requests": "Gesuche",
       "park": "Parkplan"
-    }
+    },
+    "grantConfirm": "„{permission}“ an {account} vergeben?",
+    "revokeConfirm": "„{permission}“ von {account} entziehen?",
+    "grant": "Vergeben",
+    "revoke": "Entziehen"
   },
   "printing": {
     "print": "Drucken / PDF",

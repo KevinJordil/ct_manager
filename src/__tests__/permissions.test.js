@@ -75,16 +75,22 @@ describe('what may be changed without the right to manage', () => {
     expect(forbiddenChange('vehicles', [vehicle()], after)).toBeNull()
   })
 
-  it('lets a vehicle be lent out and brought back', () => {
+  it('refuses to lend a vehicle out: that is a decision, not a movement', () => {
     const lent = [vehicle({ status: 'on-loan', loanNote: 'cp EM', loanUntil: '2026-09-10' })]
-    expect(forbiddenChange('vehicles', [vehicle()], lent)).toBeNull()
-    expect(forbiddenChange('vehicles', lent, [vehicle()])).toBeNull()
+    expect(forbiddenChange('vehicles', [vehicle()], lent))
+      .toMatchObject({ code: 'edited', params: { field: 'status' } })
   })
 
-  it('lets an absence be recorded on a person', () => {
-    const person = (over = {}) => ({ id: 'p1', firstName: 'A', lastName: 'B', licenses: ['930'], ...over })
-    const after = [person({ unavailable: true, unavailabilityNote: 'malade', leaves: [{ id: 'l1' }] })]
-    expect(forbiddenChange('persons', [person()], after)).toBeNull()
+  it('refuses to declare somebody away, which is a statement about their service', () => {
+    const person = (over = {}) => ({
+      id: 'p1', firstName: 'A', lastName: 'B', licenses: ['930'],
+      unavailable: false, unavailabilityNote: '', leaves: [], ...over,
+    })
+    expect(INTERACTION_FIELDS.persons).toEqual([])
+    expect(forbiddenChange('persons', [person()], [person({ unavailable: true })]))
+      .toMatchObject({ code: 'edited', params: { field: 'unavailable' } })
+    expect(forbiddenChange('persons', [person()], [person({ leaves: [{ id: 'l1' }] })]))
+      .toMatchObject({ code: 'edited', params: { field: 'leaves' } })
   })
 
   it('refuses a new record', () => {

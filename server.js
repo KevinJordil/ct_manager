@@ -274,7 +274,7 @@ app.get('/api/requests', async (_req, res, next) => {
   }
 })
 
-app.put('/api/requests/:id/status', async (req, res, next) => {
+app.put('/api/requests/:id/status', requirePermission('requests.manage'), async (req, res, next) => {
   const { status, reason } = req.body ?? {}
   if (!isValidRequestStatus(status)) {
     return fail(res, 400, 'validation.unknownValue', { field: 'status' }, 'Unknown status')

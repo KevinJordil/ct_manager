@@ -13,6 +13,7 @@ import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 import SearchField from '../components/common/SearchField.vue'
 import { filterBySearch } from '../search.js'
+import { personName } from '../labels.js'
 
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
@@ -107,9 +108,17 @@ async function onDelete() {
 }
 
 /** Marking someone unavailable asks for a reason; clearing it does not. */
+/** Marking somebody away asks for a reason; lifting it asks for a nod. */
+const clearingPerson = ref(null)
+
 function toggleUnavailable(person) {
-  if (person.unavailable) store.clearUnavailable(person.id)
+  if (person.unavailable) clearingPerson.value = person
   else unavailablePerson.value = person
+}
+
+function clearUnavailable() {
+  store.clearUnavailable(clearingPerson.value.id)
+  clearingPerson.value = null
 }
 
 function confirmUnavailable(note) {
@@ -148,6 +157,16 @@ function confirmUnavailable(note) {
     <ListPlaceholder v-if="visiblePersons.length === 0"
       :loading="!store.loaded"
       :message="search ? $t('common.noMatch', { query: search }) : $t('persons.empty')" />
+
+    <ConfirmModal
+      v-if="clearingPerson"
+      :title="$t('persons.unavailability.clear')"
+      :message="$t('persons.unavailability.clearConfirm', { name: personName(clearingPerson) })"
+      :confirm-label="$t('persons.unavailability.clear')"
+      tone="primary"
+      @confirm="clearUnavailable"
+      @cancel="clearingPerson = null"
+    />
 
     <PersonForm v-if="showForm" :person="editedPerson" :error="formError"
       @save="onSave" @close="showForm = false" />

@@ -117,8 +117,31 @@ function confirmKey(holder) {
   keyVehicle.value = null
 }
 
-function returnKey(vehicle) {
-  store.returnKey(vehicle.id, { recordedBy: recordedBy.value })
+/**
+ * Hanging up a key and ending a loan act on somebody else's doing, and they
+ * fire from a single click on a list. Both are asked first, naming who or
+ * what is concerned so a misplaced click is caught by reading the question.
+ */
+const returningVehicle = ref(null)
+const releasingVehicle = ref(null)
+
+const returnMessage = computed(() => {
+  const vehicle = returningVehicle.value
+  if (!vehicle) return ''
+  return t('keys.returnConfirm', {
+    plate: vehicle.plate,
+    name: holderName(vehicle.keyHolder, personsStore.persons),
+  })
+})
+
+function returnKey() {
+  store.returnKey(returningVehicle.value.id, { recordedBy: recordedBy.value })
+  returningVehicle.value = null
+}
+
+function release() {
+  store.release(releasingVehicle.value.id)
+  releasingVehicle.value = null
 }
 
 function confirmLoan(loan) {
@@ -175,9 +198,9 @@ function confirmLoan(loan) {
           @edit="openEdit(vehicle)"
           @delete="deletedId = vehicle.id"
           @lend="lentVehicle = vehicle"
-          @release="store.release(vehicle.id)"
+          @release="releasingVehicle = vehicle"
           @key-take="keyVehicle = vehicle"
-          @key-return="returnKey(vehicle)"
+          @key-return="returningVehicle = vehicle"
           @key-history="historyVehicle = vehicle"
           :can-manage="auth.can('vehicles.manage')"
         />
@@ -198,6 +221,26 @@ function confirmLoan(loan) {
 
     <KeyHistoryModal v-if="historyVehicle" :vehicle="historyVehicle"
       @close="historyVehicle = null" />
+
+    <ConfirmModal
+      v-if="returningVehicle"
+      :title="$t('keys.returnShort')"
+      :message="returnMessage"
+      :confirm-label="$t('keys.returnShort')"
+      tone="primary"
+      @confirm="returnKey"
+      @cancel="returningVehicle = null"
+    />
+
+    <ConfirmModal
+      v-if="releasingVehicle"
+      :title="$t('vehicles.loan.release')"
+      :message="$t('vehicles.loan.releaseConfirm', { plate: releasingVehicle.plate })"
+      :confirm-label="$t('vehicles.loan.release')"
+      tone="primary"
+      @confirm="release"
+      @cancel="releasingVehicle = null"
+    />
 
     <ConfirmModal
       v-if="deletedId"

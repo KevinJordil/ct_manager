@@ -104,11 +104,11 @@ const unavailabilityLabel = computed(() =>
       </div>
 
       <div class="flex flex-wrap gap-1.5 shrink-0">
-        <button @click="$emit('toggle-unavailable')"
+        <button v-if="canManage" @click="$emit('toggle-unavailable')"
           :class="['btn-action', person.unavailable ? 'border-amber-300 bg-amber-50 text-amber-800' : '']">
           {{ unavailabilityLabel }}
         </button>
-        <button @click="$emit('manage-leaves')" class="btn-action">{{ $t('persons.leaves.short') }}</button>
+        <button v-if="canManage" @click="$emit('manage-leaves')" class="btn-action">{{ $t('persons.leaves.short') }}</button>
         <button v-if="canManage" @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
         <button v-if="canManage" @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>

@@ -130,8 +130,7 @@ function onDelete() {
                 <span class="text-stone-400">·</span>
                 <span>{{ performerLabel(check) }}</span>
               </span>
-              <button v-if="auth.can('vehicles.manage')"
-                @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
+              <button @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
                 class="btn-action btn-action-danger">
                 {{ $t('actions.delete') }}
               </button>
