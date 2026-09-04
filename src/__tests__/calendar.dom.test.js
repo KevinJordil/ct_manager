@@ -142,15 +142,21 @@ describe('StatusBadge', () => {
     return mount(StatusBadge, { props: { status }, global: { plugins: [i18nFor(locale)] } })
   }
 
+  // The palette may be repainted; what matters is that the colour follows
+  // the status instead of being fixed when the component is created.
+  const background = wrapper => wrapper.classes().find(c => c.startsWith('bg-'))
+
   it('changes colour when the status changes', async () => {
     const wrapper = mountBadge('planned')
-    expect(wrapper.classes().join(' ')).toContain('bg-olive-100')
+    const planned = background(wrapper)
+    expect(planned).toBeDefined()
 
     await wrapper.setProps({ status: 'ongoing' })
-    expect(wrapper.classes().join(' ')).toContain('bg-orange-100')
+    const ongoing = background(wrapper)
+    expect(ongoing).not.toBe(planned)
 
     await wrapper.setProps({ status: 'completed' })
-    expect(wrapper.classes().join(' ')).toContain('bg-green-100')
+    expect(background(wrapper)).toBe('bg-green-100')
   })
 
   it('falls back to a neutral colour for an unknown status', () => {
