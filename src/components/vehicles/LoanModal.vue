@@ -19,8 +19,8 @@ function submit() {
 <template>
   <BaseModal :title="$t('vehicles.loan.title')" @close="emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
-      <p class="text-sm text-gray-600">
-        {{ $t('vehicles.loan.vehicle') }} <strong>{{ vehicle.name }}</strong>
+      <p class="text-sm text-stone-600">
+        {{ $t('vehicles.loan.vehicle') }} <strong class="plate">{{ vehicle.plate }}</strong> <span class="text-stone-400">{{ vehicle.name }}</span>
       </p>
       <div>
         <label class="label" for="loan-note">{{ $t('vehicles.loan.note') }} *</label>

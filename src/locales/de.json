@@ -110,7 +110,8 @@
       "current": "Laufend",
       "upcoming": "Bevorstehend",
       "past": "Vergangen",
-      "addLeave": "Urlaub hinzufügen"
+      "addLeave": "Urlaub hinzufügen",
+      "short": "Urlaub"
     },
     "unavailability": {
       "title": "Nichtverfügbarkeit — {name}",
@@ -209,7 +210,10 @@
       "returned": "{name} hat den Schlüssel zurückgegeben"
     },
     "you": " (Sie)",
-    "returnFor": "Schlüssel von {name} zurückgeben"
+    "returnFor": "Schlüssel von {name} zurückgeben",
+    "takeShort": "Schlüssel nehmen",
+    "transferShort": "Schlüssel übergeben",
+    "returnShort": "Schlüssel zurück"
   },
   "log": {
     "title": "Gefechtsjournal",
@@ -577,6 +581,7 @@
     "lastCheck": "Letzte Kontrolle",
     "status": "Status",
     "resource": "Ressource",
-    "driver": "Fahrer"
+    "driver": "Fahrer",
+    "short": "Marschbefehl"
   }
 }

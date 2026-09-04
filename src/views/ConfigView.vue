@@ -122,19 +122,19 @@ async function reset() {
 <template>
   <div>
     <h1 class="page-title">{{ $t('config.title') }}</h1>
-    <p class="text-sm text-gray-500 -mt-4 mb-6">{{ $t('config.intro') }}</p>
+    <p class="text-sm text-stone-500 -mt-4 mb-6">{{ $t('config.intro') }}</p>
 
     <!-- Request vehicle types -->
     <section class="card mb-6">
       <h2 class="section-title mb-1">{{ $t('config.requestTypes') }}</h2>
-      <p class="text-xs text-gray-400 mb-4">{{ $t('config.requestTypesHint') }}</p>
+      <p class="text-xs text-stone-400 mb-4">{{ $t('config.requestTypesHint') }}</p>
 
       <ul class="space-y-2 mb-4">
         <li v-for="(type, index) in draft.requestVehicleTypes" :key="type.id"
-          class="flex items-center gap-2 p-2 border border-gray-200 rounded-lg">
+          class="flex items-center gap-2 p-2 border border-stone-200 rounded-lg">
           <span class="flex-1 min-w-0">
-            <span class="font-medium text-gray-800">{{ typeLabel(type) }}</span>
-            <span class="ml-2 text-xs text-gray-400 font-mono">{{ type.id }}</span>
+            <span class="font-medium text-stone-800">{{ typeLabel(type) }}</span>
+            <span class="ml-2 text-xs text-stone-400 font-mono">{{ type.id }}</span>
             <span class="ml-2 badge-gray">
               {{ isBuiltInRequestType(type.id) ? $t('config.builtIn') : $t('config.custom') }}
             </span>
@@ -153,7 +153,7 @@ async function reset() {
         <div>
           <label class="label" for="new-type-id">
             {{ $t('config.identifier') }}
-            <span class="font-normal text-gray-400">({{ $t('config.identifierHint') }})</span>
+            <span class="font-normal text-stone-400">({{ $t('config.identifierHint') }})</span>
           </label>
           <input id="new-type-id" v-model="newType.id" class="input" placeholder="minibus" />
         </div>
@@ -170,11 +170,11 @@ async function reset() {
     <!-- Licences -->
     <section class="card mb-6">
       <h2 class="section-title mb-1">{{ $t('config.licenses') }}</h2>
-      <p class="text-xs text-gray-400 mb-4">{{ $t('config.licensesHint') }}</p>
+      <p class="text-xs text-stone-400 mb-4">{{ $t('config.licensesHint') }}</p>
 
       <div class="flex flex-wrap gap-2 mb-4">
         <span v-for="code in draft.licenses" :key="code"
-          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gray-300 text-sm font-medium">
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-300 text-sm font-medium">
           {{ code }}
           <button type="button" @click="removeLicense(code)"
             :aria-label="`${$t('actions.delete')} ${code}`"
@@ -194,34 +194,34 @@ async function reset() {
     <!-- Licence matrix -->
     <section class="card mb-6">
       <h2 class="section-title mb-1">{{ $t('config.matrix') }}</h2>
-      <p class="text-xs text-gray-400 mb-1">{{ $t('config.matrixHint') }}</p>
-      <p class="text-xs text-gray-400 mb-4 italic">{{ $t('config.categoriesFixed') }}</p>
+      <p class="text-xs text-stone-400 mb-1">{{ $t('config.matrixHint') }}</p>
+      <p class="text-xs text-stone-400 mb-4 italic">{{ $t('config.categoriesFixed') }}</p>
 
       <div v-for="(matrix, key) in { licensesByCategory: draft.licensesByCategory, trailerLicensesByCategory: draft.trailerLicensesByCategory }"
         :key="key" class="mb-5 last:mb-0">
-        <h3 class="text-sm font-semibold text-gray-700 mb-2">
+        <h3 class="text-sm font-semibold text-stone-700 mb-2">
           {{ key === 'licensesByCategory' ? $t('config.withoutTrailer') : $t('config.withTrailer') }}
         </h3>
         <div class="overflow-x-auto">
           <table class="text-sm">
             <thead>
               <tr>
-                <th class="text-left font-medium text-gray-500 pr-4 pb-2">{{ $t('vehicles.category') }}</th>
+                <th class="text-left font-medium text-stone-500 pr-4 pb-2">{{ $t('vehicles.category') }}</th>
                 <th v-for="code in draft.licenses" :key="code"
-                  class="px-2 pb-2 font-mono text-xs text-gray-500">{{ code }}</th>
+                  class="px-2 pb-2 font-mono text-xs text-stone-500">{{ code }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="category in VEHICLE_CATEGORIES" :key="category" class="border-t border-gray-100">
-                <td class="pr-4 py-1.5 text-gray-700">{{ $t(`vehicles.categories.${category}`) }}</td>
+              <tr v-for="category in VEHICLE_CATEGORIES" :key="category" class="border-t border-stone-100">
+                <td class="pr-4 py-1.5 text-stone-700">{{ $t(`vehicles.categories.${category}`) }}</td>
                 <td v-for="code in draft.licenses" :key="code" class="px-1 py-0.5 text-center">
                   <!-- The label carries the tap area; the box stays small. -->
-                  <label class="flex items-center justify-center min-w-[36px] min-h-[36px] cursor-pointer rounded hover:bg-gray-50">
+                  <label class="flex items-center justify-center min-w-[36px] min-h-[36px] cursor-pointer rounded hover:bg-stone-50">
                     <input type="checkbox"
                       :checked="matrix[category]?.includes(code)"
                       @change="toggleMatrix(matrix, category, code)"
                       :aria-label="`${$t(`vehicles.categories.${category}`)} — ${code}`"
-                      class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      class="w-4 h-4 rounded border-stone-300 text-olive-600 focus:ring-olive-500" />
                   </label>
                 </td>
               </tr>

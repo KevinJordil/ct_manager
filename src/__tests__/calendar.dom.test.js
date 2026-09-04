@@ -144,7 +144,7 @@ describe('StatusBadge', () => {
 
   it('changes colour when the status changes', async () => {
     const wrapper = mountBadge('planned')
-    expect(wrapper.classes().join(' ')).toContain('bg-blue-100')
+    expect(wrapper.classes().join(' ')).toContain('bg-olive-100')
 
     await wrapper.setProps({ status: 'ongoing' })
     expect(wrapper.classes().join(' ')).toContain('bg-orange-100')
@@ -154,7 +154,7 @@ describe('StatusBadge', () => {
   })
 
   it('falls back to a neutral colour for an unknown status', () => {
-    expect(mountBadge('unknown').classes().join(' ')).toContain('bg-gray-100')
+    expect(mountBadge('unknown').classes().join(' ')).toContain('bg-stone-100')
   })
 
   it('translates the label', () => {

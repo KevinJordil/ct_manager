@@ -20,18 +20,18 @@ const entries = computed(() =>
 
 const DOT = {
   taken: 'bg-amber-500',
-  transferred: 'bg-blue-500',
+  transferred: 'bg-sky-600',
   returned: 'bg-green-500',
 }
 </script>
 
 <template>
-  <BaseModal :title="$t('keys.historyTitle', { vehicle: vehicle.name })" @close="$emit('close')">
+  <BaseModal :title="$t('keys.historyTitle', { vehicle: vehicle.plate || vehicle.name })" @close="$emit('close')">
     <ol v-if="entries.length" class="space-y-3 max-h-80 overflow-y-auto">
       <li v-for="entry in entries" :key="entry.id" class="flex gap-3 text-sm">
-        <span :class="['mt-1.5 w-2 h-2 rounded-full shrink-0', DOT[entry.action] ?? 'bg-gray-400']" />
+        <span :class="['mt-1.5 w-2 h-2 rounded-full shrink-0', DOT[entry.action] ?? 'bg-stone-400']" />
         <div class="min-w-0">
-          <p class="text-gray-800">
+          <p class="text-stone-800">
             <template v-if="entry.action === 'returned'">
               {{ $t('keys.log.returned', { name: entry.name }) }}
             </template>
@@ -42,14 +42,14 @@ const DOT = {
               {{ $t('keys.log.taken', { name: entry.name }) }}
             </template>
           </p>
-          <p class="text-xs text-gray-400">
+          <p class="text-xs text-stone-400">
             {{ formatDateTime(entry.at) }}
             <span v-if="entry.byOther"> · {{ $t('keys.recordedBy', { user: entry.recordedBy }) }}</span>
           </p>
         </div>
       </li>
     </ol>
-    <p v-else class="text-sm text-gray-500 italic">{{ $t('keys.noHistory') }}</p>
+    <p v-else class="text-sm text-stone-500 italic">{{ $t('keys.noHistory') }}</p>
 
     <div class="flex justify-end pt-4">
       <button type="button" @click="$emit('close')" class="btn-secondary">{{ $t('actions.close') }}</button>

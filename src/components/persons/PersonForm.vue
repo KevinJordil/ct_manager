@@ -87,7 +87,7 @@ function submit() {
             :class="['px-3 py-1.5 rounded-lg text-sm font-medium border transition-all',
               form.licenses.includes(license)
                 ? LICENSE_PICKER_COLORS[license]
-                : 'bg-white border-gray-300 text-gray-500 hover:border-gray-400']">
+                : 'bg-white border-stone-300 text-stone-500 hover:border-stone-400']">
             {{ license }}
           </button>
         </div>
@@ -101,7 +101,7 @@ function submit() {
         </label>
         <input id="person-password" v-model="form.password" type="password" class="input"
           autocomplete="new-password" :required="passwordRequired" />
-        <p class="mt-1 text-xs text-gray-400">
+        <p class="mt-1 text-xs text-stone-400">
           {{ $t('persons.passwordHint') }}
           <span v-if="futureUsername.length >= 3">
             {{ $t('persons.loginAs', { username: futureUsername }) }}

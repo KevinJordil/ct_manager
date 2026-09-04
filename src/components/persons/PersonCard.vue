@@ -43,28 +43,28 @@ const unavailabilityLabel = computed(() =>
 
 <template>
   <div class="card">
-    <div class="flex items-start justify-between gap-2">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
       <div class="flex-1 min-w-0">
-        <p class="font-semibold text-gray-900">
-          <span v-if="person.rank" class="text-gray-500 font-normal text-sm mr-1">{{ person.rank }}</span>
+        <p class="font-semibold text-stone-900">
+          <span v-if="person.rank" class="text-stone-500 font-normal text-sm mr-1">{{ person.rank }}</span>
           {{ person.firstName }} {{ person.lastName }}
         </p>
         <div class="mt-1.5 flex flex-wrap gap-1">
           <StatusBadge :status="status" />
           <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-            hasAccount ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500']">
+            hasAccount ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500']">
             {{ hasAccount ? $t('persons.accountActive') : $t('persons.noAccount') }}
           </span>
           <span v-for="license in person.licenses" :key="license"
-            :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', LICENSE_COLORS[license] ?? 'bg-gray-100 text-gray-700']">
+            :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', LICENSE_COLORS[license] ?? 'bg-stone-100 text-stone-700']">
             {{ license }}
           </span>
         </div>
 
-        <p v-if="person.phone" class="mt-1.5 text-sm text-gray-500">
+        <p v-if="person.phone" class="mt-1.5 text-sm text-stone-500">
           <a :href="`tel:${person.phone.replace(/\s/g, '')}`"
-            class="inline-flex items-center gap-1.5 min-h-[36px] hover:text-blue-600 transition-colors">
-            <svg class="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            class="inline-flex items-center gap-1.5 min-h-[36px] hover:text-olive-600 transition-colors">
+            <svg class="w-3.5 h-3.5 shrink-0 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
             </svg>
@@ -96,33 +96,17 @@ const unavailabilityLabel = computed(() =>
           </div>
         </div>
 
-        <p v-if="person.notes" class="mt-2 text-sm text-gray-500 italic">{{ person.notes }}</p>
+        <p v-if="person.notes" class="mt-2 text-sm text-stone-500 italic">{{ person.notes }}</p>
       </div>
 
-      <div class="flex gap-1 shrink-0">
+      <div class="flex flex-wrap gap-1.5 shrink-0">
         <button @click="$emit('toggle-unavailable')"
-          :class="['icon-btn', person.unavailable ? 'text-yellow-500 hover:text-yellow-700' : '']"
-          :title="unavailabilityLabel" :aria-label="unavailabilityLabel">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-          </svg>
+          :class="['btn-action', person.unavailable ? 'border-amber-300 bg-amber-50 text-amber-800' : '']">
+          {{ unavailabilityLabel }}
         </button>
-        <button @click="$emit('manage-leaves')" class="icon-btn"
-          :title="$t('persons.leaves.manage')" :aria-label="$t('persons.leaves.manage')">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-        </button>
-        <button @click="$emit('edit')" :aria-label="$t('persons.edit')" :title="$t('actions.edit')" class="icon-btn">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-        </button>
-        <button @click="$emit('delete')" :aria-label="$t('persons.deleteTitle')" :title="$t('actions.delete')" class="icon-btn text-red-400 hover:text-red-600">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
-        </button>
+        <button @click="$emit('manage-leaves')" class="btn-action">{{ $t('persons.leaves.short') }}</button>
+        <button @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
+        <button @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>
     </div>
   </div>

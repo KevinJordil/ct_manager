@@ -81,9 +81,9 @@ function onDelete() {
     </div>
 
     <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="stat-card bg-gray-50 border border-gray-200">
-        <p class="stat-value text-gray-800">{{ rows.length }}</p>
-        <p class="stat-label text-gray-600">{{ $t('checks.total') }}</p>
+      <div class="stat-card bg-stone-50 border border-stone-200">
+        <p class="stat-value text-stone-800">{{ rows.length }}</p>
+        <p class="stat-label text-stone-600">{{ $t('checks.total') }}</p>
       </div>
       <div class="stat-card stat-green">
         <p class="stat-value">{{ upToDate }}</p>
@@ -101,14 +101,14 @@ function onDelete() {
           <button class="flex-1 min-w-0 text-left" @click="toggleExpanded(row.vehicle.id)"
             :aria-expanded="expandedId === row.vehicle.id">
             <div class="flex items-center gap-2 flex-wrap">
-              <p class="font-semibold text-gray-900">{{ row.vehicle.name }}</p>
-              <span class="text-xs text-gray-500 font-mono">{{ row.vehicle.plate }}</span>
+              <p class="plate">{{ row.vehicle.plate }}</p>
+              <span class="text-xs text-stone-500">{{ row.vehicle.name }}</span>
               <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
                 STATUS_CLASSES[row.status]]">
                 {{ $t(`checks.status.${row.status}`, { days: row.days }) }}
               </span>
             </div>
-            <p v-if="row.history.length" class="text-sm text-gray-500 mt-1">
+            <p v-if="row.history.length" class="text-sm text-stone-500 mt-1">
               {{ formatDate(row.history[0].date) }} · {{ performerLabel(row.history[0]) }}
             </p>
           </button>
@@ -118,24 +118,23 @@ function onDelete() {
           </button>
         </div>
 
-        <div v-if="expandedId === row.vehicle.id" class="mt-3 pt-3 border-t border-gray-100">
-          <p class="text-sm font-medium text-gray-700 mb-2">{{ $t('checks.history') }}</p>
+        <div v-if="expandedId === row.vehicle.id" class="mt-3 pt-3 border-t border-stone-100">
+          <p class="text-sm font-medium text-stone-700 mb-2">{{ $t('checks.history') }}</p>
           <ul v-if="row.history.length" class="space-y-1">
             <li v-for="check in row.history" :key="check.id"
-              class="flex items-center justify-between text-sm text-gray-600 py-1">
+              class="flex items-center justify-between text-sm text-stone-600 py-1">
               <span class="flex items-center gap-2">
                 <span class="font-medium">{{ formatDate(check.date) }}</span>
-                <span class="text-gray-400">·</span>
+                <span class="text-stone-400">·</span>
                 <span>{{ performerLabel(check) }}</span>
               </span>
               <button @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
-                :aria-label="$t('checks.deleteTitle')"
-                class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 min-h-[36px] rounded transition-colors">
+                class="btn-action btn-action-danger">
                 {{ $t('actions.delete') }}
               </button>
             </li>
           </ul>
-          <p v-else class="text-sm text-gray-400 italic">{{ $t('checks.noHistory') }}</p>
+          <p v-else class="text-sm text-stone-400 italic">{{ $t('checks.noHistory') }}</p>
         </div>
       </div>
     </div>

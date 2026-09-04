@@ -113,7 +113,7 @@ function onDelete() {
       <button v-for="filter in FILTERS" :key="filter" @click="statusFilter = filter"
         :aria-pressed="statusFilter === filter"
         :class="['px-3 py-2 rounded-lg text-sm font-medium transition-colors border',
-          statusFilter === filter ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300']">
+          statusFilter === filter ? 'bg-olive-600 border-olive-600 text-white' : 'bg-white border-stone-200 text-stone-600 hover:border-olive-300']">
         {{ $t(`missions.filters.${filter}`) }}
         <span class="ml-1 text-xs opacity-70">({{ counts[filter] }})</span>
       </button>

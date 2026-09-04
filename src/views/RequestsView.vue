@@ -153,7 +153,7 @@ async function onDelete() {
       <button v-for="filter in FILTERS" :key="filter" @click="statusFilter = filter"
         :aria-pressed="statusFilter === filter"
         :class="['px-3 py-2 rounded-lg text-sm font-medium transition-colors border',
-          statusFilter === filter ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300']">
+          statusFilter === filter ? 'bg-olive-600 border-olive-600 text-white' : 'bg-white border-stone-200 text-stone-600 hover:border-olive-300']">
         {{ $t(`requests.filters.${filter}`) }}
         <span class="ml-1 text-xs opacity-70">({{ counts[filter] }})</span>
       </button>
@@ -167,7 +167,7 @@ async function onDelete() {
           <button class="flex-1 min-w-0 text-left" @click="toggleExpanded(request.id)"
             :aria-expanded="expandedId === request.id">
             <div class="flex items-center gap-2 flex-wrap">
-              <p class="font-semibold text-gray-900">
+              <p class="font-semibold text-stone-900">
                 {{ request.contact.company }}{{ request.contact.section ? ` / ${request.contact.section}` : '' }}
               </p>
               <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
@@ -175,17 +175,17 @@ async function onDelete() {
                 {{ $t(`status.${request.status}`) }}
               </span>
             </div>
-            <p class="text-sm text-gray-600 mt-0.5">
+            <p class="text-sm text-stone-600 mt-0.5">
               {{ request.contact.firstName }} {{ request.contact.lastName }} · {{ request.contact.phone }}
             </p>
-            <p class="text-sm text-gray-500 mt-1">
+            <p class="text-sm text-stone-500 mt-1">
               {{ formatDateTime(request.startDate) }} → {{ formatDateTime(request.endDate) }}
             </p>
-            <p class="text-xs text-gray-400 mt-1">
+            <p class="text-xs text-stone-400 mt-1">
               {{ $t('requests.submittedOn', { date: formatDateTime(request.createdAt) }) }}
               · {{ $t('requests.vehicleCount', request.vehicles.length, { count: request.vehicles.length }) }}
             </p>
-            <p v-if="request.decidedBy" class="text-xs text-gray-500 mt-1">
+            <p v-if="request.decidedBy" class="text-xs text-stone-500 mt-1">
               {{ $t('requests.decidedBy', {
                 status: $t(`status.${request.status}`),
                 user: request.decidedBy,
@@ -196,42 +196,41 @@ async function onDelete() {
 
           <div class="flex flex-col gap-1 shrink-0">
             <button v-if="request.status !== 'approved'" @click="openApproval(request)"
-              class="text-xs px-2.5 min-h-[36px] rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">
+              class="btn-action border-green-300 bg-green-50 text-green-800 hover:bg-green-100 hover:border-green-400">
               {{ $t('requests.approve') }}
             </button>
             <button v-if="request.status !== 'rejected'" @click="openRejection(request)"
-              class="text-xs px-2.5 min-h-[36px] rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+              class="btn-action">
               {{ $t('requests.reject') }}
             </button>
             <button v-if="request.status !== 'pending'" @click="store.setStatus(request.id, 'pending')"
-              class="text-xs px-2.5 min-h-[36px] rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+              class="btn-action">
               {{ $t('requests.reopen') }}
             </button>
-            <button @click="deletedId = request.id" :aria-label="$t('requests.deleteTitle')"
-              class="text-xs px-2.5 min-h-[36px] rounded-lg text-red-500 hover:bg-red-50 transition-colors">
+            <button @click="deletedId = request.id" class="btn-action btn-action-danger">
               {{ $t('actions.delete') }}
             </button>
           </div>
         </div>
 
-        <div v-if="expandedId === request.id" class="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm">
-          <p class="text-gray-600">
-            <span class="font-medium text-gray-700">{{ $t('requests.meetingPoint') }} :</span>
+        <div v-if="expandedId === request.id" class="mt-3 pt-3 border-t border-stone-100 space-y-2 text-sm">
+          <p class="text-stone-600">
+            <span class="font-medium text-stone-700">{{ $t('requests.meetingPoint') }} :</span>
             {{ request.meetingPoint }}
           </p>
           <ul class="space-y-1">
-            <li v-for="(entry, index) in request.vehicles" :key="index" class="flex items-center gap-2 text-gray-600">
-              <span class="text-xs text-gray-400">{{ $t('requests.vehicleNumber', { number: index + 1 }) }}</span>
+            <li v-for="(entry, index) in request.vehicles" :key="index" class="flex items-center gap-2 text-stone-600">
+              <span class="text-xs text-stone-400">{{ $t('requests.vehicleNumber', { number: index + 1 }) }}</span>
               <span class="font-medium">{{ typeLabel(entry.type) }}</span>
               <span v-if="entry.driverRequired"
-                class="text-xs bg-blue-100 text-blue-700 rounded px-1.5 py-0.5">
+                class="text-xs bg-olive-100 text-olive-700 rounded px-1.5 py-0.5">
                 {{ $t('requests.driverRequired') }}
               </span>
             </li>
           </ul>
-          <p v-if="request.comment" class="text-gray-500 italic">{{ request.comment }}</p>
-          <p v-if="request.decisionReason" class="text-gray-600">
-            <span class="font-medium text-gray-700">{{ $t('requests.reason') }} :</span>
+          <p v-if="request.comment" class="text-stone-500 italic">{{ request.comment }}</p>
+          <p v-if="request.decisionReason" class="text-stone-600">
+            <span class="font-medium text-stone-700">{{ $t('requests.reason') }} :</span>
             {{ request.decisionReason }}
           </p>
         </div>
@@ -244,7 +243,7 @@ async function onDelete() {
 
     <BaseModal v-if="rejecting" :title="$t('requests.rejectTitle')" @close="rejecting = null">
       <form @submit.prevent="confirmRejection" class="space-y-4">
-        <p class="text-sm text-gray-600">
+        <p class="text-sm text-stone-600">
           {{ rejecting.contact.company }} — {{ rejecting.contact.firstName }} {{ rejecting.contact.lastName }}
         </p>
         <div>

@@ -267,36 +267,36 @@ function submit() {
       </div>
 
       <!-- Vehicles -->
-      <div class="border border-gray-200 rounded-lg overflow-hidden">
-        <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+      <div class="border border-stone-200 rounded-lg overflow-hidden">
+        <div class="flex items-center justify-between px-3 py-2 bg-stone-50 border-b border-stone-200">
           <div class="flex items-center gap-2">
-            <h3 class="text-sm font-semibold text-gray-700">{{ $t('missions.vehiclesSection') }}</h3>
+            <h3 class="text-sm font-semibold text-stone-700">{{ $t('missions.vehiclesSection') }}</h3>
             <span v-if="capacity.seats > 0 || capacity.drivers > 0"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-olive-100 text-olive-700">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
               {{ $t('missions.capacity', capacity.seats, { seats: capacity.seats }) }}
-              <span class="text-blue-400">+</span>
+              <span class="text-olive-400">+</span>
               {{ $t('missions.drivers', capacity.drivers, { count: capacity.drivers }) }}
             </span>
           </div>
           <button type="button" @click="addVehicleRow"
-            class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+            class="text-xs text-olive-600 hover:text-olive-800 font-medium flex items-center gap-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             {{ $t('actions.add') }}
           </button>
         </div>
-        <div v-if="vehicleRows.length" class="divide-y divide-gray-100">
+        <div v-if="vehicleRows.length" class="divide-y divide-stone-100">
           <div v-for="row in vehicleRows" :key="row.rowId" class="p-3 space-y-2">
             <div class="flex gap-2 items-start">
               <select v-model="row.vehicleId" @change="onVehicleChange(row)" class="input text-sm flex-1"
                 :aria-label="$t('missions.vehiclesSection')">
                 <option value="">{{ $t('common.selectVehicle') }}</option>
                 <option v-for="vehicle in availableVehiclesFor(row)" :key="vehicle.id" :value="vehicle.id">
-                  {{ vehicle.name }} {{ vehicle.plate }}{{ vehicle.seats ? ` — ${$t('missions.capacity', vehicle.seats, { seats: vehicle.seats })}` : '' }}
+                  {{ vehicle.plate }} — {{ vehicle.name }}{{ vehicle.seats ? ` — ${$t('missions.capacity', vehicle.seats, { seats: vehicle.seats })}` : '' }}
                 </option>
               </select>
               <button type="button" @click="removeVehicleRow(row.rowId)" :aria-label="$t('missions.removeVehicle')"
@@ -309,9 +309,9 @@ function submit() {
             <div v-if="row.vehicleId" class="space-y-2">
               <label class="flex items-center gap-2 cursor-pointer w-fit">
                 <input type="checkbox" v-model="row.withTrailer" @change="dropDriverIfUnqualified(row)"
-                  class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                <span class="text-sm text-gray-700">{{ $t('missions.withTrailer') }}</span>
-                <span v-if="row.withTrailer" class="text-xs text-blue-600 font-medium">
+                  class="w-4 h-4 rounded border-stone-300 text-olive-600 focus:ring-olive-500" />
+                <span class="text-sm text-stone-700">{{ $t('missions.withTrailer') }}</span>
+                <span v-if="row.withTrailer" class="text-xs text-olive-600 font-medium">
                   {{ $t('missions.trailerLicense') }}
                 </span>
               </label>
@@ -321,7 +321,7 @@ function submit() {
                   {{ personName(person) }} ({{ person.licenses.join(', ') }})
                 </option>
               </select>
-              <p v-if="requiredLicensesFor(row)" class="text-xs text-gray-400">
+              <p v-if="requiredLicensesFor(row)" class="text-xs text-stone-400">
                 {{ $t('missions.requiredLicenses', { list: requiredLicensesFor(row).join(', ') }) }}
               </p>
               <p v-if="form.startDate && form.endDate && availableDriversFor(row).length === 0"
@@ -329,22 +329,22 @@ function submit() {
             </div>
           </div>
         </div>
-        <p v-else class="px-3 py-4 text-sm text-gray-400 italic text-center">{{ $t('missions.noVehicleAdded') }}</p>
+        <p v-else class="px-3 py-4 text-sm text-stone-400 italic text-center">{{ $t('missions.noVehicleAdded') }}</p>
       </div>
 
       <!-- Unmounted staff -->
-      <div class="border border-gray-200 rounded-lg overflow-hidden">
-        <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-sm font-semibold text-gray-700">{{ $t('missions.staffSection') }}</h3>
+      <div class="border border-stone-200 rounded-lg overflow-hidden">
+        <div class="flex items-center justify-between px-3 py-2 bg-stone-50 border-b border-stone-200">
+          <h3 class="text-sm font-semibold text-stone-700">{{ $t('missions.staffSection') }}</h3>
           <button type="button" @click="addStaffRow"
-            class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+            class="text-xs text-olive-600 hover:text-olive-800 font-medium flex items-center gap-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             {{ $t('actions.add') }}
           </button>
         </div>
-        <div v-if="staffRows.length" class="divide-y divide-gray-100">
+        <div v-if="staffRows.length" class="divide-y divide-stone-100">
           <div v-for="row in staffRows" :key="row.rowId" class="flex gap-2 items-center p-3">
             <select v-model="row.personId" class="input text-sm flex-1" :aria-label="$t('missions.staffSection')">
               <option value="">{{ $t('common.selectPerson') }}</option>
@@ -360,7 +360,7 @@ function submit() {
             </button>
           </div>
         </div>
-        <p v-else class="px-3 py-4 text-sm text-gray-400 italic text-center">{{ $t('missions.noStaffAdded') }}</p>
+        <p v-else class="px-3 py-4 text-sm text-stone-400 italic text-center">{{ $t('missions.noStaffAdded') }}</p>
       </div>
 
       <div>

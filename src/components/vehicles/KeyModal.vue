@@ -66,9 +66,9 @@ function submit() {
 <template>
   <BaseModal :title="holder ? $t('keys.transferTitle') : $t('keys.takeTitle')" @close="emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
-      <p class="text-sm text-gray-600">
-        {{ $t('keys.vehicle') }} <strong>{{ vehicle.name }}</strong>
-        <span class="text-gray-400 font-mono ml-1">{{ vehicle.plate }}</span>
+      <p class="text-sm text-stone-600">
+        {{ $t('keys.vehicle') }} <strong class="plate">{{ vehicle.plate }}</strong>
+        <span class="text-stone-400 ml-1">{{ vehicle.name }}</span>
       </p>
 
       <p v-if="holder" class="text-sm rounded border border-amber-200 bg-amber-50 text-amber-800 px-3 py-2">
@@ -81,12 +81,12 @@ function submit() {
       <div class="flex gap-2">
         <button type="button" @click="mode = 'person'"
           :class="['flex-1 rounded-lg border px-3 py-2 text-sm font-medium min-h-[36px]',
-            mode === 'person' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 text-gray-600']">
+            mode === 'person' ? 'border-olive-500 bg-olive-50 text-olive-700' : 'border-stone-300 text-stone-600']">
           {{ $t('keys.aPerson') }}
         </button>
         <button type="button" @click="mode = 'outside'"
           :class="['flex-1 rounded-lg border px-3 py-2 text-sm font-medium min-h-[36px]',
-            mode === 'outside' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 text-gray-600']">
+            mode === 'outside' ? 'border-olive-500 bg-olive-50 text-olive-700' : 'border-stone-300 text-stone-600']">
           {{ $t('keys.outside') }}
         </button>
       </div>
@@ -95,15 +95,15 @@ function submit() {
         <label class="label" for="key-search">{{ $t('keys.whoTakes') }}</label>
         <input id="key-search" v-model="search" type="search" class="input"
           :placeholder="$t('keys.searchPerson')" autocomplete="off" />
-        <div class="max-h-56 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+        <div class="max-h-56 overflow-y-auto rounded-lg border border-stone-200 divide-y divide-stone-100">
           <button v-for="person in matching" :key="person.id" type="button"
             @click="personId = person.id"
             :class="['w-full text-left px-3 py-2 text-sm min-h-[40px]',
-              personId === person.id ? 'bg-blue-50 text-blue-800 font-medium' : 'hover:bg-gray-50']">
+              personId === person.id ? 'bg-olive-50 text-olive-800 font-medium' : 'hover:bg-stone-50']">
             {{ personName(person) }}
-            <span v-if="isSelf(person.id)" class="text-gray-400 font-normal">{{ $t('keys.you') }}</span>
+            <span v-if="isSelf(person.id)" class="text-stone-400 font-normal">{{ $t('keys.you') }}</span>
           </button>
-          <p v-if="!matching.length" class="px-3 py-2 text-sm text-gray-400 italic">
+          <p v-if="!matching.length" class="px-3 py-2 text-sm text-stone-400 italic">
             {{ $t('keys.noPerson') }}
           </p>
         </div>
@@ -113,7 +113,7 @@ function submit() {
         <label class="label" for="key-outside">{{ $t('keys.outsideName') }} *</label>
         <input id="key-outside" v-model="outsideName" type="text" class="input"
           :placeholder="$t('keys.outsidePlaceholder')" maxlength="80" />
-        <p class="mt-1 text-xs text-gray-500">{{ $t('keys.outsideHint') }}</p>
+        <p class="mt-1 text-xs text-stone-500">{{ $t('keys.outsideHint') }}</p>
       </div>
 
       <div class="flex justify-end gap-3 pt-2">

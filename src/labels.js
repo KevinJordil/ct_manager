@@ -6,6 +6,27 @@ export function personName(person) {
   return [person.rank, person.firstName, person.lastName].filter(Boolean).join(' ')
 }
 
+/**
+ * A vehicle is called by its plate — that is what is written on the key tag,
+ * on the mission order and on the board — so the plate is the name and the
+ * model only tells two of them apart.
+ */
+export function vehiclePlate(vehicle) {
+  return vehicle?.plate || vehicle?.name || '—'
+}
+
+/** "Duro" — the secondary line under the plate. */
+export function vehicleModel(vehicle) {
+  return vehicle?.name ?? ''
+}
+
+/** "M12345 · Duro", for one-line contexts such as a select or a log entry. */
+export function vehicleLabel(vehicle) {
+  if (!vehicle) return '—'
+  const model = vehicleModel(vehicle)
+  return model ? `${vehiclePlate(vehicle)} · ${model}` : vehiclePlate(vehicle)
+}
+
 /** Badge colours per Swiss military driving licence. */
 export const LICENSE_COLORS = {
   '920': 'bg-sky-100 text-sky-700',

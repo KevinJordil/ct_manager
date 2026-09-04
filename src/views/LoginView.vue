@@ -37,19 +37,19 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+  <div class="min-h-screen bg-stone-100 flex items-center justify-center px-4">
     <div class="w-full max-w-sm">
       <div class="flex items-center justify-center gap-3 mb-8">
-        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <svg class="w-10 h-10 text-olive-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7M3 7l3-4h12l3 4M5 21V7"/>
         </svg>
-        <span class="text-2xl font-bold text-gray-900">{{ $t('app.name') }}</span>
+        <span class="text-2xl font-bold text-stone-900">{{ $t('app.name') }}</span>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
-        <h1 class="text-xl font-bold text-gray-900 mb-1">{{ $t('auth.title') }}</h1>
-        <p class="text-sm text-gray-500 mb-6">{{ $t('auth.subtitle') }}</p>
+      <div class="bg-white rounded-2xl shadow-md border border-stone-200 p-8">
+        <h1 class="text-xl font-bold text-stone-900 mb-1">{{ $t('auth.title') }}</h1>
+        <p class="text-sm text-stone-500 mb-6">{{ $t('auth.subtitle') }}</p>
 
         <form @submit.prevent="submit" class="space-y-4">
           <div>
@@ -81,7 +81,7 @@ async function submit() {
       </div>
 
       <div class="flex items-center justify-between mt-4">
-        <RouterLink to="/request" class="text-xs text-gray-400 hover:text-gray-600 underline">
+        <RouterLink to="/request" class="text-xs text-stone-400 hover:text-stone-600 underline">
           {{ $t('auth.makeRequest') }}
         </RouterLink>
         <LanguageSwitcher variant="light" />

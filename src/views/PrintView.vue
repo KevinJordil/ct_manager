@@ -131,8 +131,8 @@ const calendarRows = computed(() => {
   const source = calendarTab.value === 'persons' ? personsStore.persons : vehiclesStore.vehicles
   return source.map(item => ({
     id: item.id,
-    label: calendarTab.value === 'persons' ? personName(item) : item.name,
-    sublabel: calendarTab.value === 'persons' ? (item.licenses ?? []).join(', ') : item.plate,
+    label: calendarTab.value === 'persons' ? personName(item) : item.plate,
+    sublabel: calendarTab.value === 'persons' ? (item.licenses ?? []).join(', ') : item.name,
   }))
 })
 
@@ -174,12 +174,12 @@ const documentTitle = computed(() => {
 <template>
   <div class="print-page">
     <!-- Toolbar, never printed -->
-    <div class="no-print sticky top-0 z-10 bg-gray-100 border-b border-gray-300 px-4 py-3 flex items-center gap-3">
+    <div class="no-print sticky top-0 z-10 bg-stone-100 border-b border-stone-300 px-4 py-3 flex items-center gap-3">
       <button @click="goBack" class="btn-secondary">← {{ $t('printing.backToApp') }}</button>
       <button @click="printNow" class="btn-primary">{{ $t('printing.printNow') }}</button>
     </div>
 
-    <div v-if="!ready" class="p-8 text-gray-400">{{ $t('common.loading') }}</div>
+    <div v-if="!ready" class="p-8 text-stone-400">{{ $t('common.loading') }}</div>
 
     <article v-else class="document">
       <header class="doc-header">
@@ -210,19 +210,19 @@ const documentTitle = computed(() => {
         <table v-if="missionCrew.length" class="doc-table">
           <thead>
             <tr>
-              <th>{{ $t('vehicles.name') }}</th>
               <th>{{ $t('vehicles.plate') }}</th>
+              <th>{{ $t('vehicles.name') }}</th>
               <th>{{ $t('printing.driver') }}</th>
               <th>{{ $t('persons.phone') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="entry in missionCrew" :key="entry.id">
+              <td>{{ entry.vehicle?.plate ?? '—' }}</td>
               <td>
                 {{ entry.vehicle?.name ?? '—' }}
                 <span v-if="entry.withTrailer"> ({{ $t('missions.trailerBadge') }})</span>
               </td>
-              <td>{{ entry.vehicle?.plate ?? '—' }}</td>
               <td>{{ entry.driver ? personName(entry.driver) : $t('missions.noDriver') }}</td>
               <td>{{ entry.driver?.phone || '—' }}</td>
             </tr>
@@ -275,8 +275,8 @@ const documentTitle = computed(() => {
         <table class="doc-table">
           <thead>
             <tr>
-              <th>{{ $t('vehicles.name') }}</th>
               <th>{{ $t('vehicles.plate') }}</th>
+              <th>{{ $t('vehicles.name') }}</th>
               <th>{{ $t('printing.lastCheck') }}</th>
               <th>{{ $t('printing.status') }}</th>
             </tr>
@@ -284,8 +284,8 @@ const documentTitle = computed(() => {
           <tbody>
             <tr v-for="row in checkRows" :key="row.vehicle.id"
               :class="{ 'row-warn': row.status !== 'ok' }">
-              <td>{{ row.vehicle.name }}</td>
               <td>{{ row.vehicle.plate }}</td>
+              <td>{{ row.vehicle.name }}</td>
               <td>{{ row.last ? formatDateTime(row.last.date) : '—' }}</td>
               <td>{{ $t(`checks.status.${row.status}`, { days: row.days }) }}</td>
             </tr>

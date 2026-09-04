@@ -55,7 +55,7 @@ const days = computed(() => {
 
 const DOT = {
   taken: 'bg-amber-500',
-  transferred: 'bg-blue-500',
+  transferred: 'bg-sky-600',
   returned: 'bg-green-500',
 }
 
@@ -68,7 +68,7 @@ function timeOf(at) {
 <template>
   <div>
     <h1 class="page-title">{{ $t('log.title') }}</h1>
-    <p class="-mt-2 mb-4 text-sm text-gray-500">{{ $t('log.subtitle') }}</p>
+    <p class="-mt-2 mb-4 text-sm text-stone-500">{{ $t('log.subtitle') }}</p>
 
     <SearchField v-model="search" class="mb-4 max-w-md" :placeholder="$t('log.searchPlaceholder')" />
 
@@ -78,11 +78,11 @@ function timeOf(at) {
         <ol class="space-y-2">
           <li v-for="entry in day.entries" :key="entry.id"
             class="card flex flex-wrap items-baseline gap-x-2 gap-y-1 py-2.5">
-            <span class="font-mono text-sm text-gray-500 tabular-nums">{{ timeOf(entry.at) }}</span>
-            <span :class="['w-2 h-2 rounded-full shrink-0 self-center', DOT[entry.action] ?? 'bg-gray-400']" />
-            <span class="font-medium text-gray-900">{{ entry.vehicleName }}</span>
-            <span class="font-mono text-xs text-gray-400">{{ entry.vehiclePlate }}</span>
-            <span class="text-gray-700">
+            <span class="font-mono text-sm text-stone-500 tabular-nums">{{ timeOf(entry.at) }}</span>
+            <span :class="['w-2 h-2 rounded-full shrink-0 self-center', DOT[entry.action] ?? 'bg-stone-400']" />
+            <span class="plate">{{ entry.vehiclePlate }}</span>
+            <span class="text-xs text-stone-400">{{ entry.vehicleName }}</span>
+            <span class="text-stone-700">
               <template v-if="entry.action === 'returned'">
                 {{ $t('keys.log.returned', { name: entry.name }) }}
               </template>
@@ -93,7 +93,7 @@ function timeOf(at) {
                 {{ $t('keys.log.taken', { name: entry.name }) }}
               </template>
             </span>
-            <span v-if="entry.byOther" class="text-xs text-gray-400">
+            <span v-if="entry.byOther" class="text-xs text-stone-400">
               {{ $t('keys.recordedBy', { user: entry.recordedBy }) }}
             </span>
           </li>

@@ -110,7 +110,8 @@
       "current": "In corso",
       "upcoming": "In arrivo",
       "past": "Passato",
-      "addLeave": "Aggiungi il congedo"
+      "addLeave": "Aggiungi il congedo",
+      "short": "Congedi"
     },
     "unavailability": {
       "title": "Indisponibilità — {name}",
@@ -209,7 +210,10 @@
       "returned": "{name} ha restituito la chiave"
     },
     "you": " (lei)",
-    "returnFor": "Restituire la chiave di {name}"
+    "returnFor": "Restituire la chiave di {name}",
+    "takeShort": "Prendere la chiave",
+    "transferShort": "Trasferire la chiave",
+    "returnShort": "Restituire la chiave"
   },
   "log": {
     "title": "Giornale di combattimento",
@@ -577,6 +581,7 @@
     "lastCheck": "Ultimo controllo",
     "status": "Stato",
     "resource": "Risorsa",
-    "driver": "Conducente"
+    "driver": "Conducente",
+    "short": "Ordine di missione"
   }
 }

@@ -154,10 +154,10 @@ const NAV_ITEMS = [
     <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-20 lg:hidden" @click="sidebarOpen = false" />
 
     <!-- Sidebar -->
-    <aside :class="['fixed inset-y-0 left-0 z-30 w-64 h-full shrink-0 bg-gray-900 text-white flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
-      <div class="px-6 py-5 border-b border-gray-700">
+    <aside :class="['fixed inset-y-0 left-0 z-30 w-64 h-full shrink-0 bg-olive-900 text-white flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
+      <div class="px-6 py-5 border-b border-olive-800">
         <div class="flex items-center gap-2">
-          <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-7 h-7 text-olive-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7M3 7l3-4h12l3 4M5 21V7"/>
           </svg>
           <span class="font-bold text-lg tracking-tight">{{ $t('app.name') }}</span>
@@ -170,7 +170,7 @@ const NAV_ITEMS = [
           :key="item.to"
           :to="item.to"
           @click="sidebarOpen = false"
-          :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors', (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white']">
+          :class="['flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium border-l-2 transition-colors', (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'border-olive-300 bg-olive-800 text-white' : 'border-transparent text-olive-100/70 hover:bg-olive-800/70 hover:text-white']">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" v-html="item.icon" aria-hidden="true" />
           <span class="flex-1">{{ $t(`nav.${item.key}`) }}</span>
           <span v-if="item.badge && item.badge() > 0"
@@ -182,7 +182,7 @@ const NAV_ITEMS = [
 
       <div class="px-3 pb-2 space-y-1">
         <button @click="changingPassword = true"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-olive-100/60 hover:bg-olive-800/70 hover:text-white transition-colors">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M5 8a8 8 0 001.921 5.191"/>
@@ -191,7 +191,7 @@ const NAV_ITEMS = [
         </button>
 
         <button @click="signOut"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-olive-100/60 hover:bg-olive-800/70 hover:text-white transition-colors">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -200,8 +200,8 @@ const NAV_ITEMS = [
         </button>
       </div>
 
-      <div class="px-4 py-3 border-t border-gray-700 space-y-2">
-        <p class="text-xs text-gray-500 px-2">{{ $t('app.tagline') }}</p>
+      <div class="px-4 py-3 border-t border-stone-700 space-y-2">
+        <p class="text-xs text-stone-500 px-2">{{ $t('app.tagline') }}</p>
         <LanguageSwitcher />
       </div>
     </aside>
@@ -209,19 +209,19 @@ const NAV_ITEMS = [
     <!-- Main -->
     <div class="flex-1 flex flex-col min-w-0 h-full">
       <!-- Header -->
-      <header class="shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <header class="shrink-0 bg-white border-b border-stone-200 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3 lg:hidden">
           <button @click="sidebarOpen = true" :aria-label="$t('app.openMenu')"
-            class="-m-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+            class="-m-2 p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
-          <span class="font-semibold text-gray-900">{{ $t('app.name') }}</span>
+          <span class="font-semibold text-stone-900">{{ $t('app.name') }}</span>
         </div>
         <div class="hidden lg:block" />
         <div class="flex items-center gap-4">
-          <span v-if="saving" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400" role="status" aria-live="polite">
+          <span v-if="saving" class="hidden sm:flex items-center gap-1.5 text-xs text-stone-400" role="status" aria-live="polite">
             <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
@@ -229,8 +229,8 @@ const NAV_ITEMS = [
             {{ $t('app.saving') }}
           </span>
           <div class="text-right">
-            <div class="text-xs font-medium text-gray-500">{{ currentDate }}</div>
-            <div class="text-sm font-bold text-gray-800 tabular-nums">{{ currentTime }}</div>
+            <div class="text-xs font-medium text-stone-500">{{ currentDate }}</div>
+            <div class="text-sm font-bold text-stone-800 tabular-nums">{{ currentTime }}</div>
           </div>
         </div>
       </header>
@@ -268,33 +268,46 @@ const NAV_ITEMS = [
 </template>
 
 <style>
-/* Global utility classes */
-.page-title { @apply text-2xl font-bold text-gray-900 mb-6; }
-.section-title { @apply text-base font-semibold text-gray-700 mb-3; }
-.card { @apply bg-white rounded-xl border border-gray-200 p-4 shadow-sm; }
-.input { @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors; }
-.label { @apply block text-sm font-medium text-gray-700 mb-1; }
-.btn-primary { @apply inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors; }
-.btn-secondary { @apply inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors; }
-.btn-danger { @apply inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors; }
-/* The icon keeps its size; the button around it is sized so the target is
-   comfortable on a touch screen. Not conditioned on a media query: pointer
-   detection is unreliable, and a 36px target harms nothing with a mouse. */
-.icon-btn { @apply inline-flex items-center justify-center min-w-[36px] min-h-[36px] p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors; }
-.badge-gray { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700; }
+/* Global utility classes.
 
-.stat-card { @apply rounded-xl p-4 text-center; }
-.stat-green { @apply bg-green-50 border border-green-200; }
-.stat-orange { @apply bg-orange-50 border border-orange-200; }
-.stat-red { @apply bg-red-50 border border-red-200; }
-.stat-value { @apply text-3xl font-bold; }
+   The look is meant to read like a service register: warm neutrals, one
+   field-green accent, square corners and no decoration that does not carry
+   information. Status colours stay conventional — green free, amber busy,
+   red overdue — because they are read at a glance. */
+.page-title { @apply text-2xl font-bold text-stone-900 mb-6; }
+.section-title { @apply text-xs font-semibold uppercase tracking-wider text-stone-500 mb-3; }
+.card { @apply bg-white rounded-md border border-stone-200 p-4 shadow-sm; }
+.input { @apply w-full border border-stone-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-olive-600 transition-colors; }
+.label { @apply block text-sm font-medium text-stone-700 mb-1; }
+.btn-primary { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-olive-700 text-white text-sm font-medium rounded-md hover:bg-olive-800 transition-colors; }
+.btn-secondary { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-white border border-stone-300 text-stone-700 text-sm font-medium rounded-md hover:bg-stone-50 transition-colors; }
+.btn-danger { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-red-700 text-white text-sm font-medium rounded-md hover:bg-red-800 transition-colors; }
+
+/* Actions on a list item are written out. An icon alone is a guess; the word
+   is read once and never mistaken, and the target is comfortable either way. */
+.btn-action { @apply inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1.5 rounded-md border border-stone-300 bg-white text-stone-700 text-sm font-medium hover:bg-stone-50 hover:border-stone-400 transition-colors; }
+.btn-action-key { @apply border-olive-300 bg-olive-50 text-olive-800 hover:bg-olive-100 hover:border-olive-400; }
+.btn-action-danger { @apply text-red-700 hover:bg-red-50 hover:border-red-300; }
+
+/* Kept for the close cross of a dialog, where the word would be in the way. */
+.icon-btn { @apply inline-flex items-center justify-center min-w-[36px] min-h-[36px] p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-md transition-colors; }
+.badge-gray { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-stone-100 text-stone-700; }
+
+/* A vehicle is called by its plate; the model only tells them apart. */
+.plate { @apply font-mono font-semibold tracking-wide text-stone-900; }
+
+.stat-card { @apply rounded-md p-4 text-center border; }
+.stat-green { @apply bg-green-50 border-green-200; }
+.stat-orange { @apply bg-amber-50 border-amber-200; }
+.stat-red { @apply bg-red-50 border-red-200; }
+.stat-value { @apply text-3xl font-bold tabular; }
 .stat-label { @apply text-sm font-medium mt-1; }
-.stat-green .stat-value { @apply text-green-700; }
-.stat-green .stat-label { @apply text-green-600; }
-.stat-orange .stat-value { @apply text-orange-700; }
-.stat-orange .stat-label { @apply text-orange-600; }
-.stat-red .stat-value { @apply text-red-700; }
-.stat-red .stat-label { @apply text-red-600; }
+.stat-green .stat-value { @apply text-green-800; }
+.stat-green .stat-label { @apply text-green-700; }
+.stat-orange .stat-value { @apply text-amber-800; }
+.stat-orange .stat-label { @apply text-amber-700; }
+.stat-red .stat-value { @apply text-red-800; }
+.stat-red .stat-label { @apply text-red-700; }
 
 /* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }

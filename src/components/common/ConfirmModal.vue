@@ -10,7 +10,7 @@ defineEmits(['confirm', 'cancel'])
 
 <template>
   <BaseModal :title="title || $t('actions.confirmation')" @close="$emit('cancel')">
-    <p class="text-gray-600 mb-6">{{ message }}</p>
+    <p class="text-stone-600 mb-6">{{ message }}</p>
     <div class="flex justify-end gap-3">
       <button @click="$emit('cancel')" class="btn-secondary">{{ $t('actions.cancel') }}</button>
       <button @click="$emit('confirm')" class="btn-danger">{{ $t('actions.confirm') }}</button>

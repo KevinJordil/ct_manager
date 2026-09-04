@@ -214,30 +214,30 @@ function displayMode(event) {
 </script>
 
 <template>
-  <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm bg-white w-full">
+  <div class="overflow-x-auto rounded-lg border border-stone-200 shadow-sm bg-white w-full">
     <div class="timeline" :style="{ minWidth: minWidth + 'px' }">
 
       <!-- Sticky header, two rows -->
       <div class="sticky top-0 z-10 shadow-sm">
 
         <!-- Days -->
-        <div class="flex bg-gray-50 border-b border-gray-200">
-          <div class="resource-column shrink-0 sticky left-0 z-20 bg-gray-50 border-r border-gray-200 px-3 flex items-center"
+        <div class="flex bg-stone-50 border-b border-stone-200">
+          <div class="resource-column shrink-0 sticky left-0 z-20 bg-stone-50 border-r border-stone-200 px-3 flex items-center"
             style="height: 34px;">
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">{{ $t('calendar.resource') }}</span>
+            <span class="text-xs font-semibold text-stone-500 uppercase tracking-wide">{{ $t('calendar.resource') }}</span>
           </div>
           <div class="flex-1 flex overflow-hidden">
             <div v-for="segment in daySegments" :key="segment.dateStr"
               :style="{ width: segment.width + '%' }"
               :class="['flex flex-col justify-center px-2 py-1 border-l overflow-hidden',
-                segment.isToday ? 'bg-blue-50 border-blue-200'
-                : segment.isWeekend ? 'bg-gray-100 border-gray-200'
-                : 'bg-gray-50 border-gray-200']">
+                segment.isToday ? 'bg-olive-50 border-olive-200'
+                : segment.isWeekend ? 'bg-stone-100 border-stone-200'
+                : 'bg-stone-50 border-stone-200']">
               <span :class="['text-xs font-semibold truncate leading-tight',
-                segment.isToday ? 'text-blue-700' : 'text-gray-700']">
+                segment.isToday ? 'text-olive-700' : 'text-stone-700']">
                 {{ segment.label }}
               </span>
-              <span v-if="segment.sublabel" class="text-[10px] text-gray-400 leading-none mt-0.5">
+              <span v-if="segment.sublabel" class="text-[10px] text-stone-400 leading-none mt-0.5">
                 {{ segment.sublabel }}
               </span>
             </div>
@@ -245,18 +245,18 @@ function displayMode(event) {
         </div>
 
         <!-- Hours -->
-        <div class="flex bg-white border-b-2 border-gray-300">
-          <div class="resource-column shrink-0 sticky left-0 z-20 bg-white border-r border-gray-200"
+        <div class="flex bg-white border-b-2 border-stone-300">
+          <div class="resource-column shrink-0 sticky left-0 z-20 bg-white border-r border-stone-200"
             style="height: 22px;" />
           <div class="flex-1 relative overflow-hidden" style="height: 22px;">
             <div v-for="tick in hourTicks" :key="tick.percent"
               :style="{ left: tick.percent + '%' }"
               :class="['absolute top-0 bottom-0 flex items-center',
-                tick.isDayStart ? 'border-l-2 border-gray-400'
-                : tick.major ? 'border-l border-gray-300'
-                : 'border-l border-gray-100']">
+                tick.isDayStart ? 'border-l-2 border-stone-400'
+                : tick.major ? 'border-l border-stone-300'
+                : 'border-l border-stone-100']">
               <span v-if="tick.hasLabel"
-                class="text-[10px] font-semibold text-gray-500 pl-1 whitespace-nowrap leading-none">
+                class="text-[10px] font-semibold text-stone-500 pl-1 whitespace-nowrap leading-none">
                 {{ tick.label }}
               </span>
             </div>
@@ -267,12 +267,12 @@ function displayMode(event) {
       <!-- Resource rows -->
       <div v-for="{ row, events, height } in rowsData" :key="row.id"
         :style="{ height: height + 'px' }"
-        class="flex border-b border-gray-100 hover:bg-gray-50/30 transition-colors">
+        class="flex border-b border-stone-100 hover:bg-stone-50/30 transition-colors">
 
-        <div class="resource-column shrink-0 sticky left-0 z-10 bg-white border-r border-gray-200 px-3 flex items-center">
+        <div class="resource-column shrink-0 sticky left-0 z-10 bg-white border-r border-stone-200 px-3 flex items-center">
           <div class="min-w-0">
-            <p class="font-medium text-gray-800 text-sm truncate leading-tight">{{ row.label }}</p>
-            <p v-if="row.sublabel" class="text-[11px] text-gray-400 truncate leading-tight mt-0.5">{{ row.sublabel }}</p>
+            <p class="font-medium text-stone-800 text-sm truncate leading-tight">{{ row.label }}</p>
+            <p v-if="row.sublabel" class="text-[11px] text-stone-400 truncate leading-tight mt-0.5">{{ row.sublabel }}</p>
           </div>
         </div>
 
@@ -280,18 +280,18 @@ function displayMode(event) {
 
           <div v-for="segment in daySegments.filter(s => s.isWeekend)" :key="'weekend-' + segment.dateStr"
             :style="{ left: segment.percent + '%', width: segment.width + '%' }"
-            class="absolute top-0 bottom-0 bg-gray-50/70 pointer-events-none" />
+            class="absolute top-0 bottom-0 bg-stone-50/70 pointer-events-none" />
 
           <div v-for="segment in daySegments.filter(s => s.isToday)" :key="'today-' + segment.dateStr"
             :style="{ left: segment.percent + '%', width: segment.width + '%' }"
-            class="absolute top-0 bottom-0 bg-blue-50/40 pointer-events-none" />
+            class="absolute top-0 bottom-0 bg-olive-50/40 pointer-events-none" />
 
           <div v-for="line in gridLines" :key="line.percent + '-' + line.dayBorder"
             :style="{ left: line.percent + '%' }"
             :class="['absolute top-0 bottom-0 pointer-events-none',
-              line.dayBorder ? 'border-l-2 border-gray-300'
-              : line.major ? 'border-l border-gray-200'
-              : 'border-l border-gray-100']" />
+              line.dayBorder ? 'border-l-2 border-stone-300'
+              : line.major ? 'border-l border-stone-200'
+              : 'border-l border-stone-100']" />
 
           <div v-if="nowPercent !== null"
             :style="{ left: nowPercent + '%' }"
@@ -327,7 +327,7 @@ function displayMode(event) {
         </div>
       </div>
 
-      <div v-if="rows.length === 0" class="py-10 text-center text-sm text-gray-400 italic">
+      <div v-if="rows.length === 0" class="py-10 text-center text-sm text-stone-400 italic">
         {{ $t('calendar.noResource') }}
       </div>
     </div>

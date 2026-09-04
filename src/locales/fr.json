@@ -110,7 +110,8 @@
       "current": "En cours",
       "upcoming": "À venir",
       "past": "Passé",
-      "addLeave": "Ajouter le congé"
+      "addLeave": "Ajouter le congé",
+      "short": "Congés"
     },
     "unavailability": {
       "title": "Indisponibilité — {name}",
@@ -209,7 +210,10 @@
       "returned": "{name} a rendu la clé"
     },
     "you": " (vous)",
-    "returnFor": "Rendre la clé de {name}"
+    "returnFor": "Rendre la clé de {name}",
+    "takeShort": "Prendre la clé",
+    "transferShort": "Transférer la clé",
+    "returnShort": "Rendre la clé"
   },
   "log": {
     "title": "Journal de combat",
@@ -577,6 +581,7 @@
     "lastCheck": "Dernier contrôle",
     "status": "Statut",
     "resource": "Ressource",
-    "driver": "Chauffeur"
+    "driver": "Chauffeur",
+    "short": "Ordre de mission"
   }
 }

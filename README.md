@@ -52,6 +52,11 @@ mois du calendrier.
 - Statut calculé automatiquement : *disponible*, *en congé*, *indisponible*
 
 ### Véhicules
+- **Un véhicule est appelé par son immatriculation** — `M12345` — et non par
+  son modèle : c'est ce qui figure sur l'étiquette de clé, sur l'ordre de
+  mission et sur le tableau. La plaque est donc le titre partout dans
+  l'application et la première colonne des documents imprimés ; le modèle
+  reste affiché juste à côté, pour distinguer deux véhicules identiques
 - Fiche par véhicule avec nom, immatriculation, catégorie (léger / moyen / lourd)
 - Statut dynamique : *libre*, *en mission* (calculé depuis les missions actives), *en prêt* (manuel, avec commentaire et date de retour prévue signalée en cas de dépassement)
 - Mise en prêt et libération depuis la fiche véhicule
@@ -152,6 +157,23 @@ Trois modes de visualisation, deux onglets de ressources (Véhicules / Personnes
 - Navigation prev/next et bouton *Aujourd'hui*
 
 ---
+
+## Apparence
+
+Neutres chauds, un seul accent vert-armée, angles droits et aucune couleur
+décorative : l'interface doit se lire comme un registre de service, pas comme
+une application grand public. Les couleurs d'état restent conventionnelles —
+vert libre, ambre occupé, rouge en retard — parce qu'elles se lisent d'un
+coup d'œil.
+
+Les actions sur une ligne sont écrites en toutes lettres (*Prendre la clé*,
+*Modifier*, *Supprimer*) plutôt que réduites à une icône : une icône seule se
+devine, un mot se lit une fois et ne se confond pas. Les icônes ne subsistent
+que là où le mot gênerait — la croix de fermeture d'une fenêtre, les flèches
+de navigation du calendrier.
+
+Les chiffres sont à chasse fixe : immatriculations, heures et compteurs se
+lisent en colonne, pas en phrase.
 
 ## Langues
 

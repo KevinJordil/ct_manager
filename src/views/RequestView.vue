@@ -76,20 +76,20 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <header class="bg-white border-b border-gray-200 px-4 py-4">
+  <div class="min-h-screen bg-stone-50">
+    <header class="bg-white border-b border-stone-200 px-4 py-4">
       <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
         <div class="flex items-center gap-2.5">
-          <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-7 h-7 text-olive-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7M3 7l3-4h12l3 4M5 21V7"/>
           </svg>
-          <span class="font-bold text-gray-900">{{ $t('app.name') }}</span>
+          <span class="font-bold text-stone-900">{{ $t('app.name') }}</span>
         </div>
         <div class="flex items-center gap-3">
           <LanguageSwitcher variant="light" />
           <RouterLink to="/login"
-            class="text-xs text-gray-400 hover:text-gray-600 underline py-2.5 px-1 -my-2.5">
+            class="text-xs text-stone-400 hover:text-stone-600 underline py-2.5 px-1 -my-2.5">
             {{ $t('requests.administration') }}
           </RouterLink>
         </div>
@@ -103,21 +103,21 @@ async function submit() {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
         </div>
-        <h2 class="text-xl font-bold text-gray-900 mb-2">{{ $t('requests.sent') }}</h2>
-        <p class="text-gray-600 mb-6">{{ $t('requests.sentDetail') }}</p>
+        <h2 class="text-xl font-bold text-stone-900 mb-2">{{ $t('requests.sent') }}</h2>
+        <p class="text-stone-600 mb-6">{{ $t('requests.sentDetail') }}</p>
         <button @click="reset" class="btn-secondary">{{ $t('requests.newRequest') }}</button>
       </div>
 
       <template v-else>
         <div class="mb-8">
-          <h1 class="text-2xl font-bold text-gray-900">{{ $t('requests.publicTitle') }}</h1>
-          <p class="text-sm text-gray-500 mt-1">{{ $t('requests.publicIntro') }}</p>
+          <h1 class="text-2xl font-bold text-stone-900">{{ $t('requests.publicTitle') }}</h1>
+          <p class="text-sm text-stone-500 mt-1">{{ $t('requests.publicIntro') }}</p>
         </div>
 
         <form @submit.prevent="submit" class="space-y-6">
           <!-- Contact -->
           <div class="card space-y-4">
-            <h2 class="text-base font-semibold text-gray-800">{{ $t('requests.contactSection') }}</h2>
+            <h2 class="text-base font-semibold text-stone-800">{{ $t('requests.contactSection') }}</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="label" for="request-first-name">{{ $t('requests.firstName') }} *</label>
@@ -147,7 +147,7 @@ async function submit() {
 
           <!-- Planning -->
           <div class="card space-y-4">
-            <h2 class="text-base font-semibold text-gray-800">{{ $t('requests.planningSection') }}</h2>
+            <h2 class="text-base font-semibold text-stone-800">{{ $t('requests.planningSection') }}</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="label" for="request-start">{{ $t('requests.pickup') }} *</label>
@@ -173,17 +173,17 @@ async function submit() {
 
           <!-- Vehicles -->
           <div class="space-y-4">
-            <h2 class="text-base font-semibold text-gray-800">
+            <h2 class="text-base font-semibold text-stone-800">
               {{ $t('requests.vehiclesSection') }}
-              <span class="ml-1.5 text-xs font-normal text-gray-400">
+              <span class="ml-1.5 text-xs font-normal text-stone-400">
                 ({{ vehicles.length }})
               </span>
             </h2>
 
             <div v-for="(row, index) in vehicles" :key="row.rowId"
-              class="card border-l-4 border-l-blue-500 space-y-4">
+              class="card border-l-4 border-l-olive-500 space-y-4">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-semibold text-gray-700">
+                <span class="text-sm font-semibold text-stone-700">
                   {{ $t('requests.vehicleNumber', { number: index + 1 }) }}
                 </span>
                 <button v-if="vehicles.length > 1" type="button" @click="removeVehicle(row.rowId)"
@@ -205,12 +205,12 @@ async function submit() {
                 <div class="flex items-end">
                   <!-- The whole row is the tap target: this page is filled in
                        on a phone almost every time. -->
-                  <label class="flex items-center gap-3 cursor-pointer select-none w-full min-h-[44px] py-2 -mx-1 px-1 rounded-lg hover:bg-gray-50">
+                  <label class="flex items-center gap-3 cursor-pointer select-none w-full min-h-[44px] py-2 -mx-1 px-1 rounded-lg hover:bg-stone-50">
                     <input type="checkbox" v-model="row.driverRequired"
-                      class="w-6 h-6 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      class="w-6 h-6 shrink-0 rounded border-stone-300 text-olive-600 focus:ring-olive-500" />
                     <span>
-                      <span class="text-sm font-medium text-gray-700">{{ $t('requests.driverRequired') }}</span>
-                      <span class="block text-xs text-gray-400">{{ $t('requests.driverRequiredHint') }}</span>
+                      <span class="text-sm font-medium text-stone-700">{{ $t('requests.driverRequired') }}</span>
+                      <span class="block text-xs text-stone-400">{{ $t('requests.driverRequiredHint') }}</span>
                     </span>
                   </label>
                 </div>
@@ -218,7 +218,7 @@ async function submit() {
             </div>
 
             <button type="button" @click="addVehicle"
-              class="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm font-medium text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/30 transition-colors">
+              class="w-full py-3 border-2 border-dashed border-stone-300 rounded-xl text-sm font-medium text-stone-500 hover:border-olive-400 hover:text-olive-600 hover:bg-olive-50/30 transition-colors">
               + {{ $t('requests.addVehicle') }}
             </button>
           </div>

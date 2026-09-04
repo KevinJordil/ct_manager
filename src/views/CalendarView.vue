@@ -96,13 +96,13 @@ const gridMonth = computed(() => parseInt(currentDate.value.slice(5, 7)))
 // ── Mission colours, from the computed status ──
 
 const COLOR_BY_STATUS = {
-  [MISSION_STATUS.PLANNED]: 'bg-blue-100 text-blue-800',
+  [MISSION_STATUS.PLANNED]: 'bg-olive-100 text-olive-800',
   [MISSION_STATUS.ONGOING]: 'bg-orange-100 text-orange-800',
   [MISSION_STATUS.COMPLETED]: 'bg-green-100 text-green-700',
 }
 
 function missionColor(mission) {
-  return COLOR_BY_STATUS[getMissionStatus(mission, nowString.value)] ?? 'bg-gray-100 text-gray-700'
+  return COLOR_BY_STATUS[getMissionStatus(mission, nowString.value)] ?? 'bg-stone-100 text-stone-700'
 }
 
 // ── Vehicle rows and events ──
@@ -110,8 +110,8 @@ function missionColor(mission) {
 const vehicleRows = computed(() =>
   vehiclesStore.vehicles.map(vehicle => ({
     id: vehicle.id,
-    label: vehicle.name,
-    sublabel: `${vehicle.plate} · ${t(`vehicles.categories.${vehicle.category}`)}`,
+    label: vehicle.plate,
+    sublabel: `${vehicle.name} · ${t(`vehicles.categories.${vehicle.category}`)}`,
   }))
 )
 
@@ -203,22 +203,22 @@ const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEven
 
     <!-- Controls -->
     <div class="flex flex-wrap items-center gap-2 mb-4">
-      <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+      <div class="flex rounded-lg border border-stone-200 overflow-hidden">
         <button v-for="mode in VIEW_MODES" :key="mode"
           @click="viewMode = mode"
           :aria-pressed="viewMode === mode"
-          :class="['px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200',
-            viewMode === mode ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50']">
+          :class="['px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-stone-200',
+            viewMode === mode ? 'bg-olive-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-50']">
           {{ $t(`calendar.views.${mode}`) }}
         </button>
       </div>
 
-      <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+      <div class="flex rounded-lg border border-stone-200 overflow-hidden">
         <button v-for="tab in TABS" :key="tab"
           @click="activeTab = tab"
           :aria-pressed="activeTab === tab"
-          :class="['px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-gray-200',
-            activeTab === tab ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50']">
+          :class="['px-3 py-2 text-sm font-medium transition-colors border-r last:border-r-0 border-stone-200',
+            activeTab === tab ? 'bg-olive-600 text-white' : 'bg-white text-stone-600 hover:bg-stone-50']">
           {{ $t(`calendar.tabs.${tab}`) }}
         </button>
       </div>
@@ -233,17 +233,17 @@ const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEven
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
       </button>
-      <span class="text-sm font-semibold text-gray-800 min-w-[160px]">{{ periodLabel }}</span>
+      <span class="text-sm font-semibold text-stone-800 min-w-[160px]">{{ periodLabel }}</span>
       <button @click="goToToday"
-        class="text-xs px-3 min-h-[36px] rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+        class="text-xs px-3 min-h-[36px] rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-50 transition-colors">
         {{ $t('calendar.today') }}
       </button>
     </div>
 
     <!-- Legend -->
-    <div class="flex flex-wrap gap-4 mb-4 text-xs text-gray-600">
+    <div class="flex flex-wrap gap-4 mb-4 text-xs text-stone-600">
       <div class="flex items-center gap-1.5">
-        <div class="w-3 h-3 rounded bg-blue-100 border border-blue-300" /> {{ $t('status.planned') }}
+        <div class="w-3 h-3 rounded bg-olive-100 border border-olive-300" /> {{ $t('status.planned') }}
       </div>
       <div class="flex items-center gap-1.5">
         <div class="w-3 h-3 rounded bg-orange-100 border border-orange-300" /> {{ $t('status.ongoing') }}

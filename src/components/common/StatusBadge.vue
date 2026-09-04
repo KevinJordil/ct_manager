@@ -13,17 +13,17 @@ const COLOR_BY_STATUS = {
   ongoing: 'bg-orange-100 text-orange-800',
   'on-loan': 'bg-red-100 text-red-800',
   'on-leave': 'bg-red-100 text-red-800',
-  planned: 'bg-blue-100 text-blue-800',
-  unavailable: 'bg-yellow-100 text-yellow-800',
+  planned: 'bg-sky-100 text-sky-800',
+  unavailable: 'bg-amber-100 text-amber-800',
 }
 
 // Computed, not a constant: a mission's status changes over time without the
 // component being recreated.
-const colorClass = computed(() => COLOR_BY_STATUS[props.status] ?? 'bg-gray-100 text-gray-800')
+const colorClass = computed(() => COLOR_BY_STATUS[props.status] ?? 'bg-stone-100 text-stone-800')
 </script>
 
 <template>
-  <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', colorClass]">
+  <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide', colorClass]">
     {{ $t(`status.${status}`) }}
   </span>
 </template>

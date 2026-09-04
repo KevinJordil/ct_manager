@@ -79,24 +79,24 @@ const rowSegments = computed(() =>
 </script>
 
 <template>
-  <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm bg-white">
+  <div class="overflow-x-auto rounded-lg border border-stone-200 shadow-sm bg-white">
     <table class="border-collapse text-xs" style="min-width: max-content; table-layout: fixed;">
       <colgroup>
         <col style="width: 160px;" />
         <col v-for="day in days" :key="day.day" style="width: 34px;" />
       </colgroup>
       <thead>
-        <tr class="bg-gray-50">
-          <th class="sticky left-0 z-20 bg-gray-50 border-b-2 border-r border-gray-200 px-3 py-2 text-left font-semibold text-gray-600 text-xs">
+        <tr class="bg-stone-50">
+          <th class="sticky left-0 z-20 bg-stone-50 border-b-2 border-r border-stone-200 px-3 py-2 text-left font-semibold text-stone-600 text-xs">
             {{ $t('calendar.resource') }}
           </th>
           <th v-for="day in days" :key="day.day"
-            :class="['border-b-2 border-r border-gray-200 py-1.5 px-0 text-center font-medium',
-              day.isToday ? 'bg-blue-50 border-b-blue-400' : day.isWeekend ? 'bg-gray-100' : 'bg-gray-50']">
-            <div :class="['text-[10px] leading-none', day.isToday ? 'text-blue-600' : day.isWeekend ? 'text-gray-400' : 'text-gray-500']">
+            :class="['border-b-2 border-r border-stone-200 py-1.5 px-0 text-center font-medium',
+              day.isToday ? 'bg-olive-50 border-b-olive-400' : day.isWeekend ? 'bg-stone-100' : 'bg-stone-50']">
+            <div :class="['text-[10px] leading-none', day.isToday ? 'text-olive-600' : day.isWeekend ? 'text-stone-400' : 'text-stone-500']">
               {{ day.weekday }}
             </div>
-            <div :class="['text-xs font-bold leading-tight mt-0.5', day.isToday ? 'text-blue-700' : day.isWeekend ? 'text-gray-400' : 'text-gray-700']">
+            <div :class="['text-xs font-bold leading-tight mt-0.5', day.isToday ? 'text-olive-700' : day.isWeekend ? 'text-stone-400' : 'text-stone-700']">
               {{ day.day }}
             </div>
           </th>
@@ -104,14 +104,14 @@ const rowSegments = computed(() =>
       </thead>
       <tbody>
         <tr v-for="{ row, segments } in rowSegments" :key="row.id"
-          class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-          <td class="sticky left-0 z-10 bg-white border-r border-gray-200 px-3 py-2">
-            <p class="font-medium text-gray-800 text-sm leading-tight truncate">{{ row.label }}</p>
-            <p v-if="row.sublabel" class="text-[11px] text-gray-400 leading-tight mt-0.5">{{ row.sublabel }}</p>
+          class="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
+          <td class="sticky left-0 z-10 bg-white border-r border-stone-200 px-3 py-2">
+            <p class="font-medium text-stone-800 text-sm leading-tight truncate">{{ row.label }}</p>
+            <p v-if="row.sublabel" class="text-[11px] text-stone-400 leading-tight mt-0.5">{{ row.sublabel }}</p>
           </td>
           <td v-for="segment in segments" :key="segment.day"
             :colspan="segment.span"
-            :class="['p-0.5', !segment.event && days[segment.day - 1]?.isWeekend ? 'bg-gray-50' : '']">
+            :class="['p-0.5', !segment.event && days[segment.day - 1]?.isWeekend ? 'bg-stone-50' : '']">
             <div v-if="segment.event"
               :class="['h-7 rounded flex items-center px-2 overflow-hidden', segment.event.colorClass]"
               :title="segment.event.label">
@@ -123,7 +123,7 @@ const rowSegments = computed(() =>
           </td>
         </tr>
         <tr v-if="rows.length === 0">
-          <td :colspan="days.length + 1" class="py-8 text-center text-sm text-gray-400 italic">
+          <td :colspan="days.length + 1" class="py-8 text-center text-sm text-stone-400 italic">
             {{ $t('calendar.noResource') }}
           </td>
         </tr>

@@ -38,9 +38,9 @@ function submit() {
 <template>
   <BaseModal :title="$t('checks.record')" @close="emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
-      <p class="text-sm text-gray-600">
+      <p class="text-sm text-stone-600">
         {{ $t('checks.vehicle') }}
-        <strong>{{ vehicle.name }} — {{ vehicle.plate }}</strong>
+        <strong class="plate">{{ vehicle.plate }}</strong> <span class="text-stone-500">{{ vehicle.name }}</span>
       </p>
 
       <div>
@@ -54,12 +54,12 @@ function submit() {
         <div class="flex gap-2 mb-3" role="group" aria-labelledby="check-mode-label">
           <button type="button" @click="mode = 'person'" :aria-pressed="mode === 'person'"
             :class="['flex-1 py-1.5 text-sm font-medium rounded-lg border transition-colors',
-              mode === 'person' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-600 hover:border-blue-300']">
+              mode === 'person' ? 'bg-olive-600 border-olive-600 text-white' : 'bg-white border-stone-300 text-stone-600 hover:border-olive-300']">
             {{ $t('checks.byPerson') }}
           </button>
           <button type="button" @click="mode = 'note'" :aria-pressed="mode === 'note'"
             :class="['flex-1 py-1.5 text-sm font-medium rounded-lg border transition-colors',
-              mode === 'note' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-600 hover:border-blue-300']">
+              mode === 'note' ? 'bg-olive-600 border-olive-600 text-white' : 'bg-white border-stone-300 text-stone-600 hover:border-olive-300']">
             {{ $t('checks.byNote') }}
           </button>
         </div>

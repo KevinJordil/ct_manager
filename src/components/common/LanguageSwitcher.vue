@@ -12,14 +12,14 @@ const { locale } = useI18n()
 
 const styles = computed(() => props.variant === 'light'
   ? {
-      frame: 'border-gray-300',
-      active: 'bg-blue-600 text-white',
-      idle: 'text-gray-500 hover:text-gray-900 hover:bg-gray-100',
+      frame: 'border-stone-300',
+      active: 'bg-olive-600 text-white',
+      idle: 'text-stone-500 hover:text-stone-900 hover:bg-stone-100',
     }
   : {
-      frame: 'border-gray-700',
-      active: 'bg-blue-600 text-white',
-      idle: 'text-gray-400 hover:text-white hover:bg-gray-800',
+      frame: 'border-stone-700',
+      active: 'bg-olive-600 text-white',
+      idle: 'text-stone-400 hover:text-white hover:bg-stone-800',
     })
 </script>
 

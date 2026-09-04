@@ -17,7 +17,7 @@ function submit() {
 <template>
   <BaseModal :title="$t('persons.unavailability.title', { name: personName(person) })" @close="emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
-      <p class="text-sm text-gray-600">
+      <p class="text-sm text-stone-600">
         {{ $t('persons.unavailability.person') }} <strong>{{ personName(person) }}</strong>
       </p>
       <div>

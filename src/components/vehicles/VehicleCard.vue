@@ -8,6 +8,7 @@ import { getVehicleStatus, currentMissionOfVehicle } from '../../availability.js
 import { formatDateTime } from '../../datetime.js'
 import { VEHICLE_STATUS } from '../../constants.js'
 import { holderName } from '../../keys.js'
+import { vehiclePlate, vehicleModel } from '../../labels.js'
 import StatusBadge from '../common/StatusBadge.vue'
 
 const props = defineProps({ vehicle: { type: Object, required: true } })
@@ -41,16 +42,16 @@ const loanOverdue = computed(() =>
 
 <template>
   <div class="card">
-    <div class="flex items-start justify-between gap-2">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 flex-wrap">
-          <p class="font-semibold text-gray-900">{{ vehicle.name }}</p>
-          <span class="text-xs text-gray-500 font-mono">{{ vehicle.plate }}</span>
+        <div class="flex items-baseline gap-2 flex-wrap">
+          <p class="plate text-lg">{{ vehiclePlate(vehicle) }}</p>
+          <span class="text-sm text-stone-500">{{ vehicleModel(vehicle) }}</span>
         </div>
         <div class="mt-1.5 flex flex-wrap gap-1 items-center">
           <StatusBadge :status="status" />
           <span class="badge-gray">{{ $t(`vehicles.categories.${vehicle.category}`) }}</span>
-          <span v-if="vehicle.seats" class="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+          <span v-if="vehicle.seats" class="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-olive-50 text-olive-700">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
@@ -81,7 +82,7 @@ const loanOverdue = computed(() =>
           <p v-if="vehicle.loanNote" class="text-sm text-red-600 italic">{{ vehicle.loanNote }}</p>
           <p v-if="vehicle.loanUntil"
             :class="['text-xs inline-flex items-center gap-1.5 rounded px-2 py-1 border',
-              loanOverdue ? 'text-red-700 bg-red-50 border-red-200 font-medium' : 'text-gray-500 bg-gray-50 border-gray-200']">
+              loanOverdue ? 'text-red-700 bg-red-50 border-red-200 font-medium' : 'text-stone-500 bg-stone-50 border-stone-200']">
             <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
@@ -92,44 +93,18 @@ const loanOverdue = computed(() =>
         </div>
       </div>
 
-      <div class="flex gap-1 shrink-0">
-        <button @click="$emit('key-take')" class="icon-btn text-amber-500 hover:text-amber-700"
-          :title="keyHolder ? $t('keys.transferTitle') : $t('keys.takeTitle')"
-          :aria-label="keyHolder ? $t('keys.transferTitle') : $t('keys.takeTitle')">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-          </svg>
+      <div class="flex flex-wrap gap-1.5 shrink-0">
+        <button @click="$emit('key-take')" class="btn-action btn-action-key">
+          {{ keyHolder ? $t('keys.transferShort') : $t('keys.takeShort') }}
         </button>
-        <button v-if="keyHolder" @click="$emit('key-return')" class="icon-btn text-green-600 hover:text-green-800"
-          :title="$t('keys.returnFor', { name: keyHolderName })"
-          :aria-label="$t('keys.returnFor', { name: keyHolderName })">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h11m0 0l-4-4m4 4l-4 4m10-9v14"/>
-          </svg>
+        <button v-if="keyHolder" @click="$emit('key-return')" class="btn-action btn-action-key"
+          :title="$t('keys.returnFor', { name: keyHolderName })">
+          {{ $t('keys.returnShort') }}
         </button>
-        <button v-if="isFree" @click="$emit('lend')" class="icon-btn"
-          :title="$t('vehicles.loan.lend')" :aria-label="$t('vehicles.loan.lend')">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-          </svg>
-        </button>
-        <button v-if="isOnLoan" @click="$emit('release')" class="icon-btn text-green-600 hover:text-green-800"
-          :title="$t('vehicles.loan.release')" :aria-label="$t('vehicles.loan.releaseLabel')">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </button>
-        <button @click="$emit('edit')" :aria-label="$t('vehicles.edit')" :title="$t('actions.edit')" class="icon-btn">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-        </button>
-        <button @click="$emit('delete')" :aria-label="$t('vehicles.deleteTitle')" :title="$t('actions.delete')" class="icon-btn text-red-400 hover:text-red-600">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
-        </button>
+        <button v-if="isFree" @click="$emit('lend')" class="btn-action">{{ $t('vehicles.loan.lend') }}</button>
+        <button v-if="isOnLoan" @click="$emit('release')" class="btn-action">{{ $t('vehicles.loan.release') }}</button>
+        <button @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
+        <button @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>
     </div>
   </div>

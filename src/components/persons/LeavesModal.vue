@@ -39,7 +39,7 @@ function leaveState(leave) {
 const STATE_CLASSES = {
   current: 'bg-red-50 border-red-200 text-red-700',
   upcoming: 'bg-orange-50 border-orange-200 text-orange-700',
-  past: 'bg-gray-50 border-gray-200 text-gray-500',
+  past: 'bg-stone-50 border-stone-200 text-stone-500',
 }
 
 const sortedLeaves = computed(() =>
@@ -52,7 +52,7 @@ const sortedLeaves = computed(() =>
     <div class="space-y-5">
 
       <div>
-        <p class="text-sm font-medium text-gray-700 mb-2">{{ $t('persons.leaves.recorded') }}</p>
+        <p class="text-sm font-medium text-stone-700 mb-2">{{ $t('persons.leaves.recorded') }}</p>
         <div v-if="sortedLeaves.length" class="space-y-2">
           <div v-for="leave in sortedLeaves" :key="leave.id"
             :class="['flex items-center justify-between p-2.5 border rounded-lg text-sm', STATE_CLASSES[leaveState(leave)]]">
@@ -73,11 +73,11 @@ const sortedLeaves = computed(() =>
             </button>
           </div>
         </div>
-        <p v-else class="text-sm text-gray-400 italic">{{ $t('persons.leaves.empty') }}</p>
+        <p v-else class="text-sm text-stone-400 italic">{{ $t('persons.leaves.empty') }}</p>
       </div>
 
-      <div class="border-t border-gray-100 pt-4">
-        <p class="text-sm font-medium text-gray-700 mb-3">{{ $t('persons.leaves.addPeriod') }}</p>
+      <div class="border-t border-stone-100 pt-4">
+        <p class="text-sm font-medium text-stone-700 mb-3">{{ $t('persons.leaves.addPeriod') }}</p>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="label" for="leave-start">{{ $t('missions.start') }}</label>

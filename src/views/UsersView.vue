@@ -116,34 +116,25 @@ async function onDelete() {
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-              <p class="font-semibold text-gray-900 font-mono">{{ user.username }}</p>
+              <p class="font-semibold text-stone-900 font-mono">{{ user.username }}</p>
               <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                user.role === 'admin' ? 'bg-violet-100 text-violet-800' : 'bg-gray-100 text-gray-700']">
+                user.role === 'admin' ? 'bg-violet-100 text-violet-800' : 'bg-stone-100 text-stone-700']">
                 {{ user.role === 'admin' ? $t('users.roleAdmin') : $t('users.roleUser') }}
               </span>
               <span v-if="user.id === auth.user?.id" class="badge-gray">{{ $t('users.you') }}</span>
             </div>
-            <p v-if="personLabel(user.personId)" class="text-sm text-gray-600 mt-0.5">
+            <p v-if="personLabel(user.personId)" class="text-sm text-stone-600 mt-0.5">
               {{ personLabel(user.personId) }}
             </p>
-            <p class="text-xs text-gray-400 mt-1">
+            <p class="text-xs text-stone-400 mt-1">
               {{ $t('users.createdOn', { date: formatDateTime(user.createdAt) }) }}
             </p>
           </div>
 
-          <div class="flex gap-1 shrink-0">
-            <button @click="openEdit(user)" :aria-label="$t('users.edit')" :title="$t('actions.edit')" class="icon-btn">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-              </svg>
-            </button>
+          <div class="flex flex-wrap gap-1.5 shrink-0">
+            <button @click="openEdit(user)" class="btn-action">{{ $t('actions.edit') }}</button>
             <button v-if="user.id !== auth.user?.id" @click="deletedId = user.id"
-              :aria-label="$t('users.deleteTitle')" :title="$t('actions.delete')"
-              class="icon-btn text-red-400 hover:text-red-600">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </button>
+              class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
           </div>
         </div>
       </div>
@@ -168,7 +159,7 @@ async function onDelete() {
         <div>
           <label class="label" for="user-username">
             {{ $t('users.username') }} *
-            <span class="font-normal text-gray-400">({{ $t('users.usernameHint') }})</span>
+            <span class="font-normal text-stone-400">({{ $t('users.usernameHint') }})</span>
           </label>
           <input id="user-username" v-model="form.username" class="input"
             autocapitalize="none" spellcheck="false" required />
@@ -187,13 +178,13 @@ async function onDelete() {
           <div class="space-y-2" role="radiogroup" aria-labelledby="user-role-label">
             <label v-for="role in ['user', 'admin']" :key="role"
               class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors"
-              :class="form.role === role ? 'border-blue-400 bg-blue-50/40' : 'border-gray-200 hover:border-gray-300'">
-              <input type="radio" :value="role" v-model="form.role" class="mt-0.5 w-4 h-4 text-blue-600" />
+              :class="form.role === role ? 'border-olive-400 bg-olive-50/40' : 'border-stone-200 hover:border-stone-300'">
+              <input type="radio" :value="role" v-model="form.role" class="mt-0.5 w-4 h-4 text-olive-600" />
               <span>
-                <span class="text-sm font-medium text-gray-800">
+                <span class="text-sm font-medium text-stone-800">
                   {{ role === 'admin' ? $t('users.roleAdmin') : $t('users.roleUser') }}
                 </span>
-                <span class="block text-xs text-gray-500">
+                <span class="block text-xs text-stone-500">
                   {{ role === 'admin' ? $t('users.roleAdminHint') : $t('users.roleUserHint') }}
                 </span>
               </span>
