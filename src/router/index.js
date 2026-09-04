@@ -14,6 +14,7 @@ import ChecksView from '../views/ChecksView.vue'
 import BattleLogView from '../views/BattleLogView.vue'
 import ConfigView from '../views/ConfigView.vue'
 import UsersView from '../views/UsersView.vue'
+import PermissionsView from '../views/PermissionsView.vue'
 import PrintView from '../views/PrintView.vue'
 
 const routes = [
@@ -36,6 +37,7 @@ const routes = [
   // ── Administrators only ──
   { path: '/config', name: 'config', component: ConfigView, meta: { admin: true } },
   { path: '/users', name: 'users', component: UsersView, meta: { admin: true } },
+  { path: '/permissions', name: 'permissions', component: PermissionsView, meta: { admin: true } },
 ]
 
 const router = createRouter({

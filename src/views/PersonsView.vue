@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { usePersonsStore } from '../stores/persons.js'
 import { useMissionsStore } from '../stores/missions.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
+import { useAuthStore } from '../stores/auth.js'
 import PersonCard from '../components/persons/PersonCard.vue'
 import PersonForm from '../components/persons/PersonForm.vue'
 import LeavesModal from '../components/persons/LeavesModal.vue'
@@ -16,6 +17,7 @@ import { filterBySearch } from '../search.js'
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
+const auth = useAuthStore()
 const { t, te } = useI18n()
 
 onMounted(async () => {
@@ -120,7 +122,7 @@ function confirmUnavailable(note) {
   <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="page-title mb-0">{{ $t('persons.title') }}</h1>
-      <button @click="openCreate" class="btn-primary">
+      <button v-if="auth.can('persons.manage')" @click="openCreate" class="btn-primary">
         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -138,6 +140,7 @@ function confirmUnavailable(note) {
         @edit="openEdit(person)"
         @delete="deletedId = person.id"
         @manage-leaves="leavesPerson = person"
+        :can-manage="auth.can('persons.manage')"
         @toggle-unavailable="toggleUnavailable(person)"
       />
     </TransitionGroup>

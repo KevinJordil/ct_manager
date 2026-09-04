@@ -5,6 +5,7 @@ import { useMissionsStore } from '../stores/missions.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
 import { useClock } from '../stores/clock.js'
+import { useAuthStore } from '../stores/auth.js'
 import { getMissionStatus } from '../availability.js'
 import { MISSION_STATUS } from '../constants.js'
 import MissionCard from '../components/missions/MissionCard.vue'
@@ -18,6 +19,7 @@ import { personName } from '../labels.js'
 const store = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
+const auth = useAuthStore()
 const { nowString } = useClock()
 const router = useRouter()
 
@@ -100,7 +102,7 @@ function onDelete() {
       <h1 class="page-title mb-0">{{ $t('missions.title') }}</h1>
       <div class="flex gap-2">
         <button @click="printList" class="btn-secondary">{{ $t('printing.printList') }}</button>
-        <button @click="openCreate" class="btn-primary">
+        <button v-if="auth.can('missions.manage')" @click="openCreate" class="btn-primary">
         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -128,6 +130,7 @@ function onDelete() {
         :mission="mission"
         @edit="openEdit(mission)"
         @delete="deletedId = mission.id"
+        :can-manage="auth.can('missions.manage')"
         @print="printMission(mission)"
       />
     </TransitionGroup>

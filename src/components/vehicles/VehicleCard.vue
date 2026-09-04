@@ -11,7 +11,11 @@ import { holderName } from '../../keys.js'
 import { vehiclePlate, vehicleModel } from '../../labels.js'
 import StatusBadge from '../common/StatusBadge.vue'
 
-const props = defineProps({ vehicle: { type: Object, required: true } })
+const props = defineProps({
+  vehicle: { type: Object, required: true },
+  // Using a vehicle is everybody's business; changing its record is granted.
+  canManage: { type: Boolean, default: false },
+})
 defineEmits(['edit', 'delete', 'lend', 'release', 'key-take', 'key-return', 'key-history'])
 
 const router = useRouter()
@@ -103,8 +107,8 @@ const loanOverdue = computed(() =>
         </button>
         <button v-if="isFree" @click="$emit('lend')" class="btn-action">{{ $t('vehicles.loan.lend') }}</button>
         <button v-if="isOnLoan" @click="$emit('release')" class="btn-action">{{ $t('vehicles.loan.release') }}</button>
-        <button @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
-        <button @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
+        <button v-if="canManage" @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
+        <button v-if="canManage" @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>
     </div>
   </div>

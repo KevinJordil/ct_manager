@@ -8,7 +8,10 @@ import { getMissionStatus } from '../../availability.js'
 import { personName, vehiclePlate, vehicleModel } from '../../labels.js'
 import StatusBadge from '../common/StatusBadge.vue'
 
-const props = defineProps({ mission: { type: Object, required: true } })
+const props = defineProps({
+  mission: { type: Object, required: true },
+  canManage: { type: Boolean, default: false },
+})
 defineEmits(['edit', 'delete', 'print'])
 
 const personsStore = usePersonsStore()
@@ -85,8 +88,8 @@ const unmountedStaff = computed(() =>
 
       <div class="flex flex-wrap gap-1.5 shrink-0">
         <button @click="$emit('print')" class="btn-action">{{ $t('printing.short') }}</button>
-        <button @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
-        <button @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
+        <button v-if="canManage" @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
+        <button v-if="canManage" @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>
     </div>
   </div>

@@ -673,6 +673,138 @@ describe('accounts', () => {
   })
 })
 
+// ── Rights ──
+// Everything here is enforced on the server: hiding a button in the browser
+// is a courtesy, not a right.
+
+describe('rights', () => {
+  let workerToken
+  let workerId
+  const asWorker = () => ({ Authorization: `Bearer ${workerToken}` })
+
+  const fleet = [{
+    id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', seats: 8,
+    status: 'free', loanNote: '', loanUntil: '', checks: [], keyHolder: null, keyHistory: [],
+  }]
+
+  async function currentFleet() {
+    const res = await get('vehicles')
+    return { data: await res.json(), version: versionFrom(res) }
+  }
+
+  it('creates an account that manages nothing', async () => {
+    const created = await createAccount({ username: 'sdtworker', password: 'x', role: 'user' })
+    expect(created.status).toBe(201)
+    const account = await created.json()
+    workerId = account.id
+    expect(account.permissions).toEqual({})
+
+    workerToken = (await (await signIn('x', 'sdtworker')).json()).token
+    await put('vehicles', fleet)
+  })
+
+  it('lets it record a key movement on a vehicle it does not manage', async () => {
+    const { data, version } = await currentFleet()
+    data[0].keyHolder = { personId: null, name: 'Sdt Worker', since: '2026-09-04T07:00', recordedBy: 'sdtworker' }
+    data[0].keyHistory = [{ id: 'e1', at: '2026-09-04T07:00', action: 'taken', name: 'Sdt Worker' }]
+    const res = await put('vehicles', data, { version, headers: asWorker() })
+    expect(res.status).toBe(200)
+  })
+
+  it('lets it record a check and lend the vehicle out', async () => {
+    const { data, version } = await currentFleet()
+    data[0].checks = [{ id: 'c1', date: '2026-09-04', performedBy: 'sdtworker' }]
+    data[0].status = 'on-loan'
+    data[0].loanNote = 'cp EM'
+    expect((await put('vehicles', data, { version, headers: asWorker() })).status).toBe(200)
+  })
+
+  it('refuses a change of identity, and says which field', async () => {
+    const { data, version } = await currentFleet()
+    data[0].plate = 'M999'
+    const res = await put('vehicles', data, { version, headers: asWorker() })
+    expect(res.status).toBe(403)
+    expect(await res.json()).toMatchObject({
+      code: 'permissions.edited', params: { entity: 'vehicles', field: 'plate' },
+    })
+  })
+
+  it('refuses a creation and a deletion', async () => {
+    const { data, version } = await currentFleet()
+    const added = await put('vehicles', [...data, { ...fleet[0], id: 'v2', plate: 'M2' }],
+      { version, headers: asWorker() })
+    expect(added.status).toBe(403)
+    expect((await added.json()).code).toBe('permissions.created')
+
+    const removed = await put('vehicles', [], { version, headers: asWorker() })
+    expect(removed.status).toBe(403)
+    expect((await removed.json()).code).toBe('permissions.deleted')
+  })
+
+  it('keeps the stored data untouched by a refused write', async () => {
+    const { data } = await currentFleet()
+    expect(data).toHaveLength(1)
+    expect(data[0].plate).toBe('M1')
+  })
+
+  it('refuses giving a person a login, which is managing that person', async () => {
+    const res = await fetch(`${BASE}/api/persons/p1/account`, {
+      method: 'PUT',
+      headers: { ...asWorker(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: 'x', lastName: 'Müller' }),
+    })
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('permissions.denied')
+  })
+
+  it('refuses laying out the park plan', async () => {
+    const res = await fetch(`${BASE}/api/parc`, {
+      method: 'PUT',
+      headers: { ...asWorker(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zones: [] }),
+    })
+    expect(res.status).toBe(403)
+  })
+
+  it('accepts the same writes once the right is granted', async () => {
+    const granted = await fetch(`${BASE}/api/users/${workerId}`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ permissions: { 'vehicles.manage': true } }),
+    })
+    expect(granted.status).toBe(200)
+    expect((await granted.json()).permissions).toEqual({ 'vehicles.manage': true })
+
+    // Granting a right does not end the session; it widens it.
+    const { data, version } = await currentFleet()
+    data[0].plate = 'M999'
+    expect((await put('vehicles', data, { version, headers: asWorker() })).status).toBe(200)
+  })
+
+  it('still refuses what was not granted', async () => {
+    const { data, version } = await currentFleet()
+    const persons = await put('persons', [person()], { version: '*', headers: asWorker() })
+    expect(persons.status).toBe(403)
+    expect(data[0].plate).toBe('M999')
+    expect(version).toBeDefined()
+  })
+
+  it('drops an invented right rather than storing it', async () => {
+    const res = await fetch(`${BASE}/api/users/${workerId}`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ permissions: { 'vehicles.manage': true, 'secrets.read': true } }),
+    })
+    expect((await res.json()).permissions).toEqual({ 'vehicles.manage': true })
+  })
+
+  it('leaves the administrator able to do everything', async () => {
+    const { data, version } = await currentFleet()
+    expect((await put('vehicles', [...data, { ...fleet[0], id: 'v3', plate: 'M3' }],
+      { version })).status).toBe(200)
+  })
+})
+
 describe('own password', () => {
   it('refuses a wrong current password', async () => {
     const res = await fetch(`${BASE}/api/auth/password`, {

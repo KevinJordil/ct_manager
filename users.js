@@ -85,6 +85,7 @@ export function publicUser(user) {
     id: user.id,
     username: user.username,
     role: user.role,
+    permissions: user.permissions ?? {},
     personId: user.personId ?? null,
     createdAt: user.createdAt,
   }

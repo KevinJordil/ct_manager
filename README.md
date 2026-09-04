@@ -325,8 +325,40 @@ Deux rôles :
 
 | Rôle | Peut faire |
 |------|-----------|
-| **Administrateur** | Tout, y compris la gestion des comptes et la configuration |
-| **Utilisateur** | Personnes, véhicules, missions, demandes, parc et SPH. Ni comptes ni configuration |
+| **Administrateur** | Tout, y compris les comptes, les droits et la configuration |
+| **Utilisateur** | Travailler avec la flotte ; la gestion des ressources s'accorde droit par droit |
+
+### Droits
+
+Un compte peut **utiliser** la flotte dès sa création : prendre, transférer et
+rendre une clé, enregistrer un SPH, mettre un véhicule en prêt et le libérer,
+marquer une personne indisponible ou lui saisir un congé, approuver ou refuser
+une demande. Ce sont les gestes de la journée : les soumettre à un droit
+reviendrait simplement à ce qu'ils ne soient plus saisis.
+
+Ce qui s'accorde compte par compte, depuis la page **Droits**, c'est le droit
+de **tenir le registre** — créer, modifier ou supprimer une ressource :
+
+| Droit | Ouvre |
+|-------|-------|
+| `persons.manage` | Créer, modifier et supprimer des personnes, et leur donner un mot de passe |
+| `vehicles.manage` | Créer, modifier et supprimer des véhicules, et supprimer un SPH enregistré |
+| `missions.manage` | Créer, modifier et supprimer des missions |
+| `requests.manage` | Supprimer des demandes (les approuver ou les refuser reste ouvert) |
+| `park.manage` | Charger le plan de parc et disposer les zones |
+
+Rien n'est accordé par défaut : un nouveau compte peut travailler, pas
+réécrire le registre.
+
+**Le contrôle est fait par le serveur**, pas seulement par l'interface.
+Comme l'API enregistre des collections entières, un refus pur et simple
+bloquerait aussi les mouvements de clé et les SPH que tout le monde peut
+saisir : la requête est donc comparée champ par champ à ce qui est stocké.
+Sans le droit de gestion, seuls les champs d'état passent — `keyHolder`,
+`keyHistory`, `checks`, `status`, `loanNote`, `loanUntil` pour un véhicule,
+`unavailable`, `unavailabilityNote`, `leaves` pour une personne — et ni
+création ni suppression. Une mission n'a aucun champ de ce genre : elle est
+de la planification de bout en bout, donc la modifier, c'est la gérer.
 
 **Un militaire se connecte avec son nom de famille.** Le mot de passe se
 définit sur sa fiche, à la création ou plus tard : tant qu'il n'est pas

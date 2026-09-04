@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
 import { useClock } from '../stores/clock.js'
+import { useAuthStore } from '../stores/auth.js'
 import { byCheckUrgency, checkStatus, checkHistory, CHECK_STATUS } from '../checks.js'
 import { formatDateTime } from '../datetime.js'
 import { personName } from '../labels.js'
@@ -13,6 +14,7 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
+const auth = useAuthStore()
 const { todayString } = useClock()
 const router = useRouter()
 
@@ -128,7 +130,8 @@ function onDelete() {
                 <span class="text-stone-400">·</span>
                 <span>{{ performerLabel(check) }}</span>
               </span>
-              <button @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
+              <button v-if="auth.can('vehicles.manage')"
+                @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
                 class="btn-action btn-action-danger">
                 {{ $t('actions.delete') }}
               </button>

@@ -17,7 +17,8 @@
     "checks": "SPH",
     "config": "Configurazione",
     "users": "Account",
-    "log": "Giornale di combattimento"
+    "log": "Giornale di combattimento",
+    "permissions": "Diritti"
   },
   "actions": {
     "add": "Aggiungi",
@@ -354,6 +355,12 @@
       "lastAdmin": "Deve restare almeno un amministratore",
       "selfDelete": "Non puoi eliminare il tuo account",
       "invalidLastName": "Il cognome non permette di creare un identificatore (almeno tre lettere)"
+    },
+    "permissions": {
+      "denied": "Questo account non è autorizzato a farlo.",
+      "created": "Creare una risorsa richiede il diritto di gestione.",
+      "edited": "Modificare una risorsa richiede il diritto di gestione.",
+      "deleted": "Eliminare una risorsa richiede il diritto di gestione."
     }
   },
   "auth": {
@@ -556,6 +563,24 @@
     "selfDelete": "Non puoi eliminare il tuo account",
     "loadFailed": "Impossibile caricare gli account: {reason}",
     "saveFailed": "Impossibile salvare l'account: {reason}"
+  },
+  "permissions": {
+    "title": "Diritti",
+    "intro": "Ogni account può lavorare con il parco fin dalla creazione. Qui si concede il diritto di tenere il registro: creare, modificare o eliminare una risorsa.",
+    "alwaysAllowed": "Sempre permesso, senza diritto particolare: prendere, trasferire e restituire una chiave, registrare un servizio di parco, prestare un veicolo e riprenderlo, segnare una persona indisponibile o registrarne il congedo, approvare o rifiutare una richiesta.",
+    "granted": "Concesso account per account: creare, modificare ed eliminare persone, veicoli e missioni, eliminare richieste e disporre la piantina del parco.",
+    "adminNote": "Un amministratore ha tutti i diritti, più gli account e la configurazione; le sue caselle non si tolgono.",
+    "account": "Account",
+    "saving": "salvataggio…",
+    "empty": "Nessun account.",
+    "toggleLabel": "{permission} per {account}",
+    "labels": {
+      "persons": "Persone",
+      "vehicles": "Veicoli",
+      "missions": "Missioni",
+      "requests": "Richieste",
+      "park": "Piantina"
+    }
   },
   "printing": {
     "print": "Stampa / PDF",

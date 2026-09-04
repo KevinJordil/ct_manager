@@ -103,7 +103,7 @@ function confirmLoan(loan) {
   <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="page-title mb-0">{{ $t('vehicles.title') }}</h1>
-      <button @click="openCreate" class="btn-primary">
+      <button v-if="auth.can('vehicles.manage')" @click="openCreate" class="btn-primary">
         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -125,6 +125,7 @@ function confirmLoan(loan) {
         @key-take="keyVehicle = vehicle"
         @key-return="returnKey(vehicle)"
         @key-history="historyVehicle = vehicle"
+        :can-manage="auth.can('vehicles.manage')"
       />
     </TransitionGroup>
 

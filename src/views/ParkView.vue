@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useParkStore } from '../stores/park.js'
+import { useAuthStore } from '../stores/auth.js'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 
 /**
@@ -13,6 +14,7 @@ import ConfirmModal from '../components/common/ConfirmModal.vue'
  * image pixels, and fractions.
  */
 const store = useParkStore()
+const auth = useAuthStore()
 const { t } = useI18n()
 
 onMounted(() => store.init())
@@ -399,7 +401,7 @@ const RESIZE_HANDLES = [
   <div class="flex flex-col gap-4">
     <div class="flex items-center justify-between flex-wrap gap-2">
       <h1 class="page-title mb-0">{{ $t('park.title') }}</h1>
-      <div v-if="store.imageUrl" class="flex gap-2 flex-wrap">
+      <div v-if="store.imageUrl && auth.can('park.manage')" class="flex gap-2 flex-wrap">
         <label class="btn-secondary cursor-pointer text-sm"
           :class="{ 'opacity-60 pointer-events-none': uploading }">
           {{ uploading ? $t('park.uploading') : $t('park.change') }}
@@ -428,16 +430,17 @@ const RESIZE_HANDLES = [
     <!-- No plan yet -->
     <div v-if="!store.imageUrl && store.loaded"
       class="border-2 border-dashed border-stone-300 rounded-2xl bg-stone-50 flex flex-col items-center justify-center py-20 gap-4 transition-colors hover:border-olive-400 hover:bg-olive-50/30"
-      @dragover.prevent @drop.prevent="onDrop">
+      @dragover.prevent @drop.prevent="auth.can('park.manage') && onDrop($event)">
       <svg class="w-14 h-14 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>
       <div class="text-center">
         <p class="text-stone-700 font-medium">{{ $t('park.noImage') }}</p>
-        <p class="text-sm text-stone-500 mt-1">{{ $t('park.dropHint') }}</p>
+        <p v-if="auth.can('park.manage')" class="text-sm text-stone-500 mt-1">{{ $t('park.dropHint') }}</p>
       </div>
-      <label class="btn-primary cursor-pointer" :class="{ 'opacity-60 pointer-events-none': uploading }">
+      <label v-if="auth.can('park.manage')" class="btn-primary cursor-pointer"
+        :class="{ 'opacity-60 pointer-events-none': uploading }">
         {{ uploading ? $t('park.uploading') : $t('park.choose') }}
         <input type="file" accept="image/*" class="hidden" @change="onFileChange" :disabled="uploading" />
       </label>
@@ -469,7 +472,7 @@ const RESIZE_HANDLES = [
 
         <div class="rounded-xl shadow-md border border-stone-200 overflow-hidden"
           style="width: fit-content; max-width: 100%;"
-          @dragover.prevent @drop.prevent="onDrop">
+          @dragover.prevent @drop.prevent="auth.can('park.manage') && onDrop($event)">
           <div class="relative inline-block max-w-full">
             <img ref="imageElement" :src="store.imageUrl" @load="onImageLoad" alt=""
               class="block max-w-full select-none"

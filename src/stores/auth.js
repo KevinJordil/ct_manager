@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api, setSessionToken, hasSessionToken } from '../api.js'
 import { clearError } from './sync.js'
+import { can } from '../../permissions.js'
 
 const ADMIN = 'admin'
 
@@ -19,6 +20,15 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => user.value !== null)
   const isAdmin = computed(() => user.value?.role === ADMIN)
   const username = computed(() => user.value?.username ?? '')
+
+  /**
+   * Every account may use the fleet; managing a resource is granted one by
+   * one. The interface asks this to decide what to offer — the server asks
+   * it again to decide what to accept.
+   */
+  function allowed(permission) {
+    return can(user.value, permission)
+  }
 
   async function login(name, password) {
     const { token, user: account } = await api.login(name, password)
@@ -70,6 +80,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user, isAuthenticated, isAdmin, username, checking,
+    can: allowed,
     login, logout, verify, changePassword, clear,
   }
 })

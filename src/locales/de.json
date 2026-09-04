@@ -17,7 +17,8 @@
     "checks": "SPH",
     "config": "Konfiguration",
     "users": "Konten",
-    "log": "Gefechtsjournal"
+    "log": "Gefechtsjournal",
+    "permissions": "Rechte"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -354,6 +355,12 @@
       "lastAdmin": "Es muss mindestens ein Administrator bleiben",
       "selfDelete": "Sie können Ihr eigenes Konto nicht löschen",
       "invalidLastName": "Aus dem Familiennamen lässt sich keine Kennung bilden (mindestens drei Buchstaben)"
+    },
+    "permissions": {
+      "denied": "Dieses Konto darf das nicht.",
+      "created": "Eine Ressource zu erstellen verlangt das Verwaltungsrecht.",
+      "edited": "Eine Ressource zu ändern verlangt das Verwaltungsrecht.",
+      "deleted": "Eine Ressource zu löschen verlangt das Verwaltungsrecht."
     }
   },
   "auth": {
@@ -556,6 +563,24 @@
     "selfDelete": "Sie können Ihr eigenes Konto nicht löschen",
     "loadFailed": "Konten konnten nicht geladen werden: {reason}",
     "saveFailed": "Konto konnte nicht gespeichert werden: {reason}"
+  },
+  "permissions": {
+    "title": "Rechte",
+    "intro": "Jedes Konto kann von Anfang an mit der Flotte arbeiten. Hier wird das Recht vergeben, das Register zu führen: eine Ressource erstellen, ändern oder löschen.",
+    "alwaysAllowed": "Immer erlaubt, ohne besonderes Recht: Schlüssel nehmen, übergeben und zurückgeben, einen Parkdienst erfassen, ein Fahrzeug ausleihen und zurücknehmen, eine Person als nicht verfügbar markieren oder ihren Urlaub erfassen, ein Gesuch bewilligen oder ablehnen.",
+    "granted": "Konto für Konto vergeben: Personen, Fahrzeuge und Aufträge erstellen, ändern und löschen, Gesuche löschen und den Parkplan einrichten.",
+    "adminNote": "Ein Administrator hat alle Rechte, dazu Konten und Konfiguration; seine Felder lassen sich nicht abwählen.",
+    "account": "Konto",
+    "saving": "wird gespeichert…",
+    "empty": "Kein Konto.",
+    "toggleLabel": "{permission} für {account}",
+    "labels": {
+      "persons": "Personen",
+      "vehicles": "Fahrzeuge",
+      "missions": "Aufträge",
+      "requests": "Gesuche",
+      "park": "Parkplan"
+    }
   },
   "printing": {
     "print": "Drucken / PDF",

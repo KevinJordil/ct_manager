@@ -95,9 +95,22 @@ describe('publicUser', () => {
   it('strips the secrets', () => {
     const user = { id: 'u1', username: 'a', role: ROLES.USER, personId: 'p1', createdAt: 'x', ...hashPassword('pw') }
     const exposed = publicUser(user)
-    expect(exposed).toEqual({ id: 'u1', username: 'a', role: 'user', personId: 'p1', createdAt: 'x' })
+    expect(exposed).toEqual({
+      id: 'u1', username: 'a', role: 'user', personId: 'p1', createdAt: 'x', permissions: {},
+    })
     expect(exposed).not.toHaveProperty('salt')
     expect(exposed).not.toHaveProperty('digest')
+  })
+})
+
+describe('publicUser — rights', () => {
+  it('carries the rights, since the interface offers what they allow', () => {
+    const user = { id: 'u1', username: 'a', role: ROLES.USER, permissions: { 'vehicles.manage': true } }
+    expect(publicUser(user).permissions).toEqual({ 'vehicles.manage': true })
+  })
+
+  it('reads an account saved before rights existed as holding none', () => {
+    expect(publicUser({ id: 'u1', username: 'a', role: ROLES.USER }).permissions).toEqual({})
   })
 })
 

@@ -17,7 +17,8 @@
     "checks": "SPH",
     "config": "Configuration",
     "users": "Comptes",
-    "log": "Journal de combat"
+    "log": "Journal de combat",
+    "permissions": "Droits"
   },
   "actions": {
     "add": "Ajouter",
@@ -354,6 +355,12 @@
       "lastAdmin": "Il doit rester au moins un administrateur",
       "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
       "invalidLastName": "Le nom de famille ne permet pas de créer un identifiant (au moins trois lettres)"
+    },
+    "permissions": {
+      "denied": "Ce compte n'a pas le droit de faire cela.",
+      "created": "Créer une ressource demande le droit de gestion.",
+      "edited": "Modifier une ressource demande le droit de gestion.",
+      "deleted": "Supprimer une ressource demande le droit de gestion."
     }
   },
   "auth": {
@@ -556,6 +563,24 @@
     "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
     "loadFailed": "Chargement des comptes impossible : {reason}",
     "saveFailed": "Enregistrement du compte impossible : {reason}"
+  },
+  "permissions": {
+    "title": "Droits",
+    "intro": "Chaque compte peut travailler avec la flotte dès sa création. Ce qui s'accorde ici, c'est le droit de tenir le registre : créer, modifier ou supprimer une ressource.",
+    "alwaysAllowed": "Toujours permis, sans droit particulier : prendre, transférer et rendre une clé, enregistrer un SPH, mettre un véhicule en prêt et le libérer, marquer une personne indisponible ou lui saisir un congé, approuver ou refuser une demande.",
+    "granted": "Accordé compte par compte : créer, modifier et supprimer des personnes, des véhicules, des missions, supprimer des demandes, et disposer le plan de parc.",
+    "adminNote": "Un administrateur a tous les droits, plus les comptes et la configuration ; ses cases ne se décochent pas.",
+    "account": "Compte",
+    "saving": "enregistrement…",
+    "empty": "Aucun compte.",
+    "toggleLabel": "{permission} pour {account}",
+    "labels": {
+      "persons": "Personnes",
+      "vehicles": "Véhicules",
+      "missions": "Missions",
+      "requests": "Demandes",
+      "park": "Vue de parc"
+    }
   },
   "printing": {
     "print": "Imprimer / PDF",

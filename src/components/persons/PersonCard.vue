@@ -10,7 +10,11 @@ import { formatDateTime } from '../../datetime.js'
 import { getDisplayedPersonStatus, currentMissionOfPerson } from '../../availability.js'
 import { personName, LICENSE_COLORS } from '../../labels.js'
 
-const props = defineProps({ person: { type: Object, required: true } })
+const props = defineProps({
+  person: { type: Object, required: true },
+  // Recording an absence is daily work; changing the record is granted.
+  canManage: { type: Boolean, default: false },
+})
 defineEmits(['edit', 'delete', 'manage-leaves', 'toggle-unavailable'])
 
 const router = useRouter()
@@ -105,8 +109,8 @@ const unavailabilityLabel = computed(() =>
           {{ unavailabilityLabel }}
         </button>
         <button @click="$emit('manage-leaves')" class="btn-action">{{ $t('persons.leaves.short') }}</button>
-        <button @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
-        <button @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
+        <button v-if="canManage" @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
+        <button v-if="canManage" @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>
     </div>
   </div>

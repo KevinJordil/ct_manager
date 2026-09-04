@@ -6,6 +6,7 @@ import { useMissionsStore } from '../stores/missions.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
 import { useConfigStore } from '../stores/config.js'
+import { useAuthStore } from '../stores/auth.js'
 import { REQUEST_STATUS, REQUEST_STATUSES } from '../constants.js'
 import { formatDateTime } from '../datetime.js'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
@@ -20,6 +21,7 @@ const missionsStore = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
 const configStore = useConfigStore()
+const auth = useAuthStore()
 const { t } = useI18n()
 
 /** A configured type may be custom, so its label comes from the store. */
@@ -207,7 +209,8 @@ async function onDelete() {
               class="btn-action">
               {{ $t('requests.reopen') }}
             </button>
-            <button @click="deletedId = request.id" class="btn-action btn-action-danger">
+            <button v-if="auth.can('requests.manage')" @click="deletedId = request.id"
+              class="btn-action btn-action-danger">
               {{ $t('actions.delete') }}
             </button>
           </div>

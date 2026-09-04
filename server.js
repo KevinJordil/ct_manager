@@ -17,6 +17,7 @@ import {
   publicUser, isLastAdmin, usernameFromLastName,
 } from './users.js'
 import { createRateLimiter } from './rate-limit.js'
+import { PERMISSIONS, can, sanitisePermissions, forbiddenChange } from './permissions.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, 'data')
@@ -118,6 +119,16 @@ async function requireAuth(req, res, next) {
     next()
   } catch (err) {
     next(err)
+  }
+}
+
+/** Refuses a request the account has not been granted. */
+function requirePermission(permission) {
+  return (req, res, next) => {
+    if (!can(req.user, permission)) {
+      return fail(res, 403, 'permissions.denied', { permission }, 'Not allowed')
+    }
+    next()
   }
 }
 
@@ -300,7 +311,7 @@ app.put('/api/requests/:id/status', async (req, res, next) => {
   }
 })
 
-app.delete('/api/requests/:id', async (req, res, next) => {
+app.delete('/api/requests/:id', requirePermission('requests.manage'), async (req, res, next) => {
   try {
     await withLock('requests', async () => {
       const stored = JSON.parse(await readRaw('requests'))
@@ -399,6 +410,18 @@ for (const entity of ENTITIES) {
             'Data was modified elsewhere since your load')
         }
 
+        // Without the right to manage this collection, an account may still
+        // record what it does with it — a key movement, a check, an absence.
+        // The write is therefore weighed field by field rather than refused.
+        if (!can(req.user, `${entity}.manage`)) {
+          const stored = JSON.parse(await readRaw(entity))
+          const forbidden = forbiddenChange(entity, stored, req.body)
+          if (forbidden) {
+            return fail(res, 403, `permissions.${forbidden.code}`, forbidden.params,
+              'Not allowed to change this collection')
+          }
+        }
+
         const content = JSON.stringify(req.body, null, 2)
         await write(entity, content)
         const version = versionOf(content)
@@ -426,7 +449,7 @@ app.get('/api/persons/accounts', async (_req, res, next) => {
   }
 })
 
-app.put('/api/persons/:id/account', async (req, res, next) => {
+app.put('/api/persons/:id/account', requirePermission('persons.manage'), async (req, res, next) => {
   const { password, lastName } = req.body ?? {}
   const weak = validatePassword(password)
   if (weak) return fail(res, 400, `users.${weak.code}`, weak.params, 'Password too short')
@@ -453,6 +476,7 @@ app.put('/api/persons/:id/account', async (req, res, next) => {
           id: crypto.randomUUID(),
           username,
           role: ROLES.USER,
+          permissions: {},
           personId: req.params.id,
           createdAt: localDateTime(),
           ...hashPassword(password),
@@ -472,7 +496,7 @@ app.put('/api/persons/:id/account', async (req, res, next) => {
   }
 })
 
-app.delete('/api/persons/:id/account', async (req, res, next) => {
+app.delete('/api/persons/:id/account', requirePermission('persons.manage'), async (req, res, next) => {
   try {
     await withLock('users', async () => {
       const users = await readUsers()
@@ -503,7 +527,7 @@ app.get('/api/users', requireAdmin, async (_req, res, next) => {
 })
 
 app.post('/api/users', requireAdmin, async (req, res, next) => {
-  const { username, password, role = ROLES.USER, personId = null } = req.body ?? {}
+  const { username, password, role = ROLES.USER, personId = null, permissions } = req.body ?? {}
   if (!Object.values(ROLES).includes(role)) {
     return fail(res, 400, 'validation.unknownValue', { field: 'role' }, 'Unknown role')
   }
@@ -520,6 +544,7 @@ app.post('/api/users', requireAdmin, async (req, res, next) => {
         id: crypto.randomUUID(),
         username,
         role,
+        permissions: sanitisePermissions(permissions),
         personId: personId || null,
         createdAt: localDateTime(),
         ...hashPassword(password),
@@ -533,7 +558,7 @@ app.post('/api/users', requireAdmin, async (req, res, next) => {
 })
 
 app.put('/api/users/:id', requireAdmin, async (req, res, next) => {
-  const { username, role, personId, password } = req.body ?? {}
+  const { username, role, personId, password, permissions } = req.body ?? {}
   try {
     await withLock('users', async () => {
       const users = await readUsers()
@@ -559,6 +584,7 @@ app.put('/api/users/:id', requireAdmin, async (req, res, next) => {
         next_.role = role
       }
       if (personId !== undefined) next_.personId = personId || null
+      if (permissions !== undefined) next_.permissions = sanitisePermissions(permissions)
 
       if (password !== undefined) {
         const weakPassword = validatePassword(password)
@@ -656,7 +682,7 @@ app.get('/api/parc', async (_req, res, next) => {
   }
 })
 
-app.put('/api/parc', async (req, res, next) => {
+app.put('/api/parc', requirePermission('park.manage'), async (req, res, next) => {
   const invalid = validateParkLayout(req.body)
   if (invalid) {
     return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid layout')
@@ -688,7 +714,7 @@ app.get('/api/parc/image', async (_req, res, next) => {
   }
 })
 
-app.put('/api/parc/image', async (req, res, next) => {
+app.put('/api/parc/image', requirePermission('park.manage'), async (req, res, next) => {
   const decoded = decodeImageDataUrl(req.body?.image)
   if (decoded.code) return fail(res, 400, `validation.${decoded.code}`, decoded.params, 'Invalid image')
   try {
@@ -703,7 +729,7 @@ app.put('/api/parc/image', async (req, res, next) => {
   }
 })
 
-app.delete('/api/parc/image', async (_req, res, next) => {
+app.delete('/api/parc/image', requirePermission('park.manage'), async (req, res, next) => {
   try {
     await withLock('parc-image', async () => {
       await removeParkImages()
