@@ -83,7 +83,8 @@
     "pendingRequests": "richieste in attesa | richiesta in attesa | richieste in attesa",
     "overdueChecks": "SPH da fare | SPH da fare | SPH da fare",
     "overdueLoans": "prestiti in ritardo | prestito in ritardo | prestiti in ritardo",
-    "nothingPending": "Niente da trattare"
+    "nothingPending": "Niente da trattare",
+    "keysOvernight": "chiave non restituita da ieri | 1 chiave non restituita da ieri | {count} chiavi non restituite da ieri"
   },
   "persons": {
     "title": "Persone",
@@ -246,7 +247,14 @@
       "returned": "Restituzione"
     },
     "fromTo": "{from} → {to}",
-    "seeAction": "Vedere: {action}"
+    "seeAction": "Vedere: {action}",
+    "outstandingOnly": "Chiavi non restituite",
+    "notReturned": "Non restituita",
+    "elapsed": {
+      "minutes": "da meno di un minuto | da 1 min | da {count} min",
+      "hours": "da 1 h | da 1 h | da {count} h",
+      "days": "da 1 g | da 1 g | da {count} g"
+    }
   },
   "missions": {
     "title": "Missioni",

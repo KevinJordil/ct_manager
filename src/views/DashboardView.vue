@@ -7,7 +7,7 @@ import { useVehiclesStore } from '../stores/vehicles.js'
 import { useMissionsStore } from '../stores/missions.js'
 import { useRequestsStore } from '../stores/requests.js'
 import { useClock } from '../stores/clock.js'
-import { formatDateTime } from '../datetime.js'
+import { formatDateTime, elapsedSince } from '../datetime.js'
 import {
   getPersonStatus, getVehicleStatus, isOnLeaveDuring,
   missionInvolvesPerson, ongoingMissions,
@@ -51,6 +51,14 @@ const attention = computed(() => [
     count: vehiclesStore.vehicles.filter(vehicle => needsCheck(vehicle, todayString.value)).length,
     frame: 'bg-red-50 border-red-200 text-red-800 hover:border-red-400',
     value: 'text-red-700',
+  },
+  {
+    key: 'keysOvernight',
+    to: '/log',
+    count: vehiclesStore.vehicles.filter(vehicle =>
+      vehicle.keyHolder && (vehicle.keyHolder.since ?? '').slice(0, 10) < todayString.value).length,
+    frame: 'bg-amber-50 border-amber-200 text-amber-800 hover:border-amber-400',
+    value: 'text-amber-700',
   },
   {
     key: 'overdueLoans',
@@ -111,6 +119,10 @@ const keysOut = computed(() =>
     model: vehicleModel(vehicle),
     holder: holderName(vehicle.keyHolder, personsStore.persons),
     since: vehicle.keyHolder.since,
+    elapsed: elapsedSince(vehicle.keyHolder.since ?? '', nowString.value),
+    // Out since a day that is not today: it should have been on the board
+    // at the end of that day.
+    overnight: (vehicle.keyHolder.since ?? '').slice(0, 10) < todayString.value,
   }))
 )
 
@@ -257,6 +269,10 @@ const alerts = computed(() => {
               <span class="text-xs text-stone-400">{{ vehicle.model }}</span>
               <span class="text-amber-800">{{ $t('keys.heldBy', { name: vehicle.holder }) }}</span>
               <span class="text-xs text-stone-400">{{ formatDateTime(vehicle.since) }}</span>
+              <span :class="['text-xs font-medium px-1.5 py-0.5 rounded',
+                vehicle.overnight ? 'bg-red-100 text-red-800' : 'text-stone-500']">
+                {{ $t(`log.elapsed.${vehicle.elapsed.unit}`, vehicle.elapsed.value, { count: vehicle.elapsed.value }) }}
+              </span>
             </li>
           </ul>
           <p v-else class="mt-3 text-sm text-stone-500 italic">{{ $t('keys.noneTaken') }}</p>

@@ -83,7 +83,8 @@
     "pendingRequests": "ausstehende Anfragen | ausstehende Anfrage | ausstehende Anfragen",
     "overdueChecks": "fällige SPH | fälliger SPH | fällige SPH",
     "overdueLoans": "überfällige Ausleihen | überfällige Ausleihe | überfällige Ausleihen",
-    "nothingPending": "Nichts zu erledigen"
+    "nothingPending": "Nichts zu erledigen",
+    "keysOvernight": "Schlüssel seit gestern nicht zurück | 1 Schlüssel seit gestern nicht zurück | {count} Schlüssel seit gestern nicht zurück"
   },
   "persons": {
     "title": "Personen",
@@ -246,7 +247,14 @@
       "returned": "Rückgabe"
     },
     "fromTo": "{from} → {to}",
-    "seeAction": "Siehe: {action}"
+    "seeAction": "Siehe: {action}",
+    "outstandingOnly": "Nicht zurückgegebene Schlüssel",
+    "notReturned": "Nicht zurück",
+    "elapsed": {
+      "minutes": "seit weniger als einer Minute | seit 1 Min. | seit {count} Min.",
+      "hours": "seit 1 Std. | seit 1 Std. | seit {count} Std.",
+      "days": "seit 1 Tag | seit 1 Tag | seit {count} Tagen"
+    }
   },
   "missions": {
     "title": "Einsätze",

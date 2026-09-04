@@ -96,7 +96,14 @@ personnes — et **saisi par**. Les deux bouts d'une même détention se
 renvoient l'un à l'autre : un retour pointe vers la prise qui a sorti la clé,
 cette prise pointe vers le retour, et un transfert vers les deux. Suivre le
 lien met la ligne visée en évidence, en rouvrant la liste si une recherche la
-masquait. Deux mouvements enregistrés dans la même minute
+masquait.
+
+**Les clés non rendues se voient sans les chercher.** Chaque ligne encore
+ouverte porte le marqueur *Non rendue · depuis 3 h*, un bouton **Clés non
+rendues** avec leur nombre ne laisse qu'elles, la fiche véhicule dit depuis
+combien de temps la clé est sortie, et le tableau de bord ouvre une tuile
+*« N clés non rendues depuis hier »* — le seul cas qui appelle vraiment une
+décision, puisqu'une clé aurait dû revenir au tableau en fin de journée. Deux mouvements enregistrés dans la même minute
 restent dans l'ordre où ils ont eu lieu. La recherche porte sur le véhicule
 comme sur les noms. La page est accessible à tous les comptes.
 

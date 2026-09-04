@@ -5,7 +5,7 @@ import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
 import { useClock } from '../stores/clock.js'
 import { keyMovements } from '../keys.js'
-import { parseLocal, addDays } from '../datetime.js'
+import { parseLocal, addDays, elapsedSince } from '../datetime.js'
 import { formatLongDate, formatClock } from '../i18n/formats.js'
 import { localeTag } from '../i18n/index.js'
 import { filterBySearch } from '../search.js'
@@ -15,7 +15,7 @@ import SearchField from '../components/common/SearchField.vue'
 const vehiclesStore = useVehiclesStore()
 const personsStore = usePersonsStore()
 const { t, te, locale } = useI18n()
-const { todayString: today } = useClock()
+const { todayString: today, nowString } = useClock()
 
 onMounted(() => {
   vehiclesStore.init()
@@ -24,6 +24,19 @@ onMounted(() => {
 
 const search = ref('')
 const tag = computed(() => localeTag(locale.value))
+
+/** Only the movements whose key never came back. */
+const outstandingOnly = ref(false)
+
+/** A movement that opened a holding nobody has closed. */
+function stillOut(entry) {
+  return entry.action !== 'returned' && !entry.closedBy
+}
+
+function elapsedLabel(at) {
+  const { unit, value } = elapsedSince(at, nowString.value)
+  return t(`log.elapsed.${unit}`, value, { count: value })
+}
 
 /** A category the fleet no longer declares still has to print as something. */
 function categoryLabel(category) {
@@ -47,9 +60,10 @@ const rows = computed(() =>
     entry.vehiclePlate, entry.vehicleName, categoryLabel(entry.vehicleCategory),
     entry.name, entry.from, entry.recordedBy,
     t(`log.actions.${entry.action}`),
-  ]).map(entry => ({
+  ]).filter(entry => !outstandingOnly.value || stillOut(entry)).map(entry => ({
     ...entry,
     day: (entry.at ?? '').slice(0, 10),
+    stillOut: stillOut(entry),
     time: entry.at?.includes('T') ? formatClock(parseLocal(entry.at), tag.value).slice(0, 5) : '',
     category: categoryLabel(entry.vehicleCategory),
     holder: holderLabel(entry),
@@ -70,6 +84,11 @@ function dayLabel(date) {
  * the log can be read from either end.
  */
 const byId = computed(() => new Map(rows.value.map(entry => [entry.id, entry])))
+
+/** Counted on the whole fleet, not on what the filters leave visible. */
+const outstandingCount = computed(() =>
+  keyMovements(vehiclesStore.vehicles).filter(stillOut).length
+)
 
 const highlighted = ref('')
 let clearHighlight = null
@@ -106,7 +125,14 @@ const ACTION_COLOR = {
     <h1 class="page-title">{{ $t('log.title') }}</h1>
     <p class="-mt-2 mb-4 text-sm text-stone-500">{{ $t('log.subtitle') }}</p>
 
-    <SearchField v-model="search" class="mb-4 max-w-md" :placeholder="$t('log.searchPlaceholder')" />
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <SearchField v-model="search" class="max-w-md flex-1 min-w-[12rem]" :placeholder="$t('log.searchPlaceholder')" />
+      <button type="button" @click="outstandingOnly = !outstandingOnly"
+        :class="['btn-action', outstandingOnly ? 'border-amber-400 bg-amber-50 text-amber-800' : '']">
+        {{ $t('log.outstandingOnly') }}
+        <span class="font-mono text-xs">{{ outstandingCount }}</span>
+      </button>
+    </div>
 
     <div v-if="rows.length" class="overflow-x-auto">
       <table class="w-full text-sm bg-white border border-stone-200 rounded-md">
@@ -154,7 +180,13 @@ const ACTION_COLOR = {
                 </button>
               </span>
             </td>
-            <td class="px-3 py-2 text-stone-800">{{ entry.holder }}</td>
+            <td class="px-3 py-2 text-stone-800">
+              {{ entry.holder }}
+              <span v-if="entry.stillOut"
+                class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800 whitespace-nowrap">
+                {{ $t('log.notReturned') }} · {{ elapsedLabel(entry.at) }}
+              </span>
+            </td>
             <td class="px-3 py-2 text-stone-500">{{ entry.recordedBy || '—' }}</td>
           </tr>
         </tbody>

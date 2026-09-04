@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import {
   keyIsOut, holderName, makeHolder, pushHistory, recorderName, keyMovements,
-  openHolding, vehiclesWithKeyIn, vehiclesWithKeyOut, keysHeldBy,
+  openHolding, keysNotReturned, vehiclesWithKeyIn, vehiclesWithKeyOut, keysHeldBy,
 } from '../keys.js'
 import { KEY_HISTORY_LIMIT } from '../constants.js'
 
@@ -176,6 +176,35 @@ describe('the fleet-wide log', () => {
   it('copes with a vehicle that has no history at all', () => {
     expect(keyMovements([{ id: 'v3', name: 'X' }])).toEqual([])
     expect(keyMovements([])).toEqual([])
+  })
+})
+
+describe('the keys nobody brought back', () => {
+  const out = (id, since) => ({
+    id, plate: `M${id}`, name: 'Duro', category: 'medium',
+    keyHolder: { personId: 'p1', name: 'Sgt Favre', since },
+  })
+
+  it('lists only the keys that are out, longest out first', () => {
+    const fleet = [
+      out('v1', '2026-09-04T09:00'),
+      { id: 'v2', plate: 'M2', keyHolder: null },
+      out('v3', '2026-09-02T07:00'),
+    ]
+    expect(keysNotReturned(fleet).map(k => k.vehicleId)).toEqual(['v3', 'v1'])
+  })
+
+  it('carries what the board needs to name the vehicle and the holder', () => {
+    const [key] = keysNotReturned([out('v1', '2026-09-04T09:00')])
+    expect(key).toMatchObject({
+      vehicleId: 'v1', plate: 'Mv1', model: 'Duro', category: 'medium',
+      since: '2026-09-04T09:00',
+    })
+    expect(key.holder.name).toBe('Sgt Favre')
+  })
+
+  it('says nothing when every key is on the board', () => {
+    expect(keysNotReturned([{ id: 'v1', keyHolder: null }, { id: 'v2' }])).toEqual([])
   })
 })
 

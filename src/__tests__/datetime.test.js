@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   toDateString, toDateTimeString, parseLocal, todayString, nowString,
   addDays, addMonths, mondayOf, overlaps, formatDateTime, withDefaultTime,
+  elapsedSince,
 } from '../datetime.js'
 
 afterEach(() => vi.useRealTimers())
@@ -173,5 +174,28 @@ describe('withDefaultTime', () => {
   it('passes empty values through', () => {
     expect(withDefaultTime('')).toBe('')
     expect(withDefaultTime(null)).toBe(null)
+  })
+})
+
+describe('elapsedSince', () => {
+  it('counts in minutes below the hour', () => {
+    expect(elapsedSince('2026-09-04T08:00', '2026-09-04T08:45')).toEqual({ unit: 'minutes', value: 45 })
+    expect(elapsedSince('2026-09-04T08:00', '2026-09-04T08:00')).toEqual({ unit: 'minutes', value: 0 })
+  })
+
+  it('counts in whole hours, dropping the minutes on top', () => {
+    expect(elapsedSince('2026-09-04T08:00', '2026-09-04T11:59')).toEqual({ unit: 'hours', value: 3 })
+  })
+
+  it('counts in whole days past twenty-four hours', () => {
+    expect(elapsedSince('2026-09-01T08:00', '2026-09-04T09:00')).toEqual({ unit: 'days', value: 3 })
+  })
+
+  it('reads a bare date as the start of that day', () => {
+    expect(elapsedSince('2026-09-04', '2026-09-04T02:00')).toEqual({ unit: 'hours', value: 2 })
+  })
+
+  it('never reports a negative age for a date in the future', () => {
+    expect(elapsedSince('2026-09-05T08:00', '2026-09-04T08:00')).toEqual({ unit: 'minutes', value: 0 })
   })
 })

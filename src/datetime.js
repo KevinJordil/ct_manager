@@ -93,3 +93,18 @@ export function withDefaultTime(dt, defaultTime = '00:00') {
   if (!dt) return dt
   return dt.includes('T') ? dt : `${dt}T${defaultTime}`
 }
+
+/**
+ * How long ago a local date-time was, in whole units.
+ *
+ * Only the largest unit matters here: a key out since Tuesday is "3 days
+ * out", and nobody counts the hours on top.
+ *
+ * @returns {{unit: 'days'|'hours'|'minutes', value: number}}
+ */
+export function elapsedSince(from, to = nowString()) {
+  const minutes = Math.max(0, Math.round((parseLocal(to) - parseLocal(withDefaultTime(from))) / 60000))
+  if (minutes >= 1440) return { unit: 'days', value: Math.floor(minutes / 1440) }
+  if (minutes >= 60) return { unit: 'hours', value: Math.floor(minutes / 60) }
+  return { unit: 'minutes', value: minutes }
+}

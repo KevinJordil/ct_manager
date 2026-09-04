@@ -109,6 +109,27 @@ export function keyMovements(vehicles) {
   return all.sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
 }
 
+/**
+ * The keys nobody has brought back, longest out first.
+ *
+ * This is the question asked at the end of the day — which keys are missing
+ * from the board — so it is answered from the holders themselves, not from
+ * the log.
+ */
+export function keysNotReturned(vehicles) {
+  return vehicles
+    .filter(keyIsOut)
+    .map(vehicle => ({
+      vehicleId: vehicle.id,
+      plate: vehicle.plate,
+      model: vehicle.name,
+      category: vehicle.category ?? '',
+      holder: vehicle.keyHolder,
+      since: vehicle.keyHolder.since ?? '',
+    }))
+    .sort((a, b) => (a.since || '').localeCompare(b.since || ''))
+}
+
 /** The keys a person is currently holding. */
 export function keysHeldBy(personId, vehicles) {
   return vehicles.filter(vehicle => vehicle.keyHolder?.personId === personId)

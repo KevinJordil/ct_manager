@@ -5,7 +5,7 @@ import { useMissionsStore } from '../../stores/missions.js'
 import { usePersonsStore } from '../../stores/persons.js'
 import { useClock } from '../../stores/clock.js'
 import { getVehicleStatus, currentMissionOfVehicle } from '../../availability.js'
-import { formatDateTime } from '../../datetime.js'
+import { formatDateTime, elapsedSince } from '../../datetime.js'
 import { VEHICLE_STATUS } from '../../constants.js'
 import { holderName } from '../../keys.js'
 import { vehiclePlate, vehicleModel } from '../../labels.js'
@@ -37,6 +37,9 @@ const isOnMission = computed(() => status.value === VEHICLE_STATUS.ON_MISSION)
 
 const keyHolder = computed(() => props.vehicle.keyHolder ?? null)
 const keyHolderName = computed(() => holderName(keyHolder.value, personsStore.persons))
+const keyElapsed = computed(() =>
+  keyHolder.value ? elapsedSince(keyHolder.value.since ?? '', nowString.value) : null
+)
 
 /** A loan whose expected return date has passed. */
 const loanOverdue = computed(() =>
@@ -73,6 +76,9 @@ const loanOverdue = computed(() =>
           </svg>
           <span class="min-w-0 truncate">
             {{ keyHolder ? $t('keys.heldBy', { name: keyHolderName }) : $t('keys.onBoard') }}
+          </span>
+          <span v-if="keyElapsed" class="shrink-0 text-xs opacity-75">
+            {{ $t(`log.elapsed.${keyElapsed.unit}`, keyElapsed.value, { count: keyElapsed.value }) }}
           </span>
         </button>
 

@@ -80,8 +80,8 @@ async function submit() {
     <header class="bg-white border-b border-stone-200 px-4 py-4">
       <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
         <div class="flex items-center gap-2.5">
-          <svg class="w-7 h-7 text-olive-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3.6 8.4C5.9 6 8.8 4.8 12 4.8s6.1 1.2 8.4 3.6"/><circle cx="12" cy="14" r="5.8"/><circle cx="12" cy="14" r="2"/><path d="M12 8.2v1.8M12 18v1.8M6.2 14H8M16 14h1.8"/>
+          <svg class="w-7 h-7 text-olive-600" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill-rule="evenodd" d="M12 1.4C7.4 1.4 3.7 3.4 3.7 5.9S7.4 10.4 12 10.4s8.3-2 8.3-4.5S16.6 1.4 12 1.4zm0 2.3c3.1 0 5.6 1 5.6 2.2S15.1 8.1 12 8.1 6.4 7.1 6.4 5.9 8.9 3.7 12 3.7z"/><path d="M4.2 5h15.6v1.8H4.2z"/><path d="M11 6h2v15.2h-2z"/><path d="M3.2 10.4l7.3 3.1v2.7l-7.3-3.1zM20.8 10.4l-7.3 3.1v2.7l7.3-3.1z"/><path d="M5 15.2l5.5 2.3v2.6L5 17.8zM19 15.2l-5.5 2.3v2.6l5.5-2.3z"/>
           </svg>
           <span class="font-bold text-stone-900">{{ $t('app.name') }}</span>
         </div>

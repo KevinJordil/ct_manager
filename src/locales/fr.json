@@ -83,7 +83,8 @@
     "pendingRequests": "demande en attente | demande en attente | demandes en attente",
     "overdueChecks": "SPH à faire | SPH à faire | SPH à faire",
     "overdueLoans": "prêt en retard | prêt en retard | prêts en retard",
-    "nothingPending": "Rien à traiter"
+    "nothingPending": "Rien à traiter",
+    "keysOvernight": "clé non rendue depuis hier | 1 clé non rendue depuis hier | {count} clés non rendues depuis hier"
   },
   "persons": {
     "title": "Personnes",
@@ -246,7 +247,14 @@
       "returned": "Retour"
     },
     "fromTo": "{from} → {to}",
-    "seeAction": "Voir : {action}"
+    "seeAction": "Voir : {action}",
+    "outstandingOnly": "Clés non rendues",
+    "notReturned": "Non rendue",
+    "elapsed": {
+      "minutes": "depuis moins d'une minute | depuis 1 min | depuis {count} min",
+      "hours": "depuis 1 h | depuis 1 h | depuis {count} h",
+      "days": "depuis 1 j | depuis 1 j | depuis {count} j"
+    }
   },
   "missions": {
     "title": "Missions",
