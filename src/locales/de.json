@@ -236,7 +236,7 @@
     "columns": {
       "when": "Datum und Zeit",
       "plate": "Kennzeichen",
-      "type": "Typ",
+      "model": "Modell",
       "movement": "Bewegung",
       "holder": "Halter",
       "recordedBy": "Erfasst von"

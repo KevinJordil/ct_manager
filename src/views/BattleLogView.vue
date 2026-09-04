@@ -38,10 +38,14 @@ function elapsedLabel(at) {
   return t(`log.elapsed.${unit}`, value, { count: value })
 }
 
-/** A category the fleet no longer declares still has to print as something. */
+/**
+ * The column names the model — a Duro is not a Class G, and that is what
+ * people picture. The category stays searchable, since somebody may well
+ * look for every heavy vehicle at once.
+ */
 function categoryLabel(category) {
   const key = `vehicles.categories.${category}`
-  return category && te(key) ? t(key) : '—'
+  return category && te(key) ? t(key) : ''
 }
 
 /**
@@ -65,7 +69,7 @@ const rows = computed(() =>
     day: (entry.at ?? '').slice(0, 10),
     stillOut: stillOut(entry),
     time: entry.at?.includes('T') ? formatClock(parseLocal(entry.at), tag.value).slice(0, 5) : '',
-    category: categoryLabel(entry.vehicleCategory),
+    model: entry.vehicleName || '—',
     holder: holderLabel(entry),
   }))
 )
@@ -145,7 +149,7 @@ const ACTION_COLOR = {
               {{ $t('log.columns.plate') }}
             </th>
             <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
-              {{ $t('log.columns.type') }}
+              {{ $t('log.columns.model') }}
             </th>
             <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
               {{ $t('log.columns.movement') }}
@@ -167,7 +171,7 @@ const ACTION_COLOR = {
               <span class="ml-1.5 font-mono text-stone-500">{{ entry.time }}</span>
             </td>
             <td class="px-3 py-2 plate whitespace-nowrap">{{ entry.vehiclePlate }}</td>
-            <td class="px-3 py-2 text-stone-600 whitespace-nowrap">{{ entry.category }}</td>
+            <td class="px-3 py-2 text-stone-600 whitespace-nowrap">{{ entry.model }}</td>
             <td class="px-3 py-2">
               <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide',
                 ACTION_COLOR[entry.action] ?? 'bg-stone-100 text-stone-700']">

@@ -236,7 +236,7 @@
     "columns": {
       "when": "Date et heure",
       "plate": "Plaque",
-      "type": "Type",
+      "model": "Modèle",
       "movement": "Mouvement",
       "holder": "Détenteur",
       "recordedBy": "Saisi par"

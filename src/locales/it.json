@@ -236,7 +236,7 @@
     "columns": {
       "when": "Data e ora",
       "plate": "Targa",
-      "type": "Tipo",
+      "model": "Modello",
       "movement": "Movimento",
       "holder": "Detentore",
       "recordedBy": "Registrato da"

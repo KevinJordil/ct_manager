@@ -90,7 +90,7 @@ véhicule ?* Il se lit indépendamment du planning.
 
 ### Journal de combat
 Les mouvements de clés de toute la flotte, en tableau, du plus récent au plus
-ancien : **date et heure**, **plaque**, **type de véhicule**, **mouvement**
+ancien : **date et heure**, **plaque**, **modèle**, **mouvement**
 (prise, transfert, retour), **détenteur** — un transfert nomme les deux
 personnes — et **saisi par**. Les deux bouts d'une même détention se
 renvoient l'un à l'autre : un retour pointe vers la prise qui a sorti la clé,
@@ -105,7 +105,8 @@ combien de temps la clé est sortie, et le tableau de bord ouvre une tuile
 *« N clés non rendues depuis hier »* — le seul cas qui appelle vraiment une
 décision, puisqu'une clé aurait dû revenir au tableau en fin de journée. Deux mouvements enregistrés dans la même minute
 restent dans l'ordre où ils ont eu lieu. La recherche porte sur le véhicule
-comme sur les noms. La page est accessible à tous les comptes.
+comme sur les noms — la catégorie reste cherchable (« lourd » sort toutes les
+lignes des véhicules lourds) même si elle n'a plus sa colonne. La page est accessible à tous les comptes.
 
 ### Missions
 - Titre, description, dates de début et fin avec précision à l'heure
