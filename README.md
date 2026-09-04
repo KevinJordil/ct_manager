@@ -57,6 +57,12 @@ mois du calendrier.
   mission et sur le tableau. La plaque est donc le titre partout dans
   l'application et la première colonne des documents imprimés ; le modèle
   reste affiché juste à côté, pour distinguer deux véhicules identiques
+- **La liste est lue par type** — on cherche rarement « un véhicule », on
+  cherche un lourd ou un léger tout-terrain. Chaque type porte son compte
+  `disponibles/total` et sert de filtre ; chaque groupe annonce ce qui bloque
+  les autres : en mission, en prêt, ou clé sortie. Un véhicule n'est compté
+  disponible que si rien n'est planifié pour lui **et** que sa clé est au
+  tableau
 - Fiche par véhicule avec nom, immatriculation, catégorie (léger / moyen / lourd)
 - Statut dynamique : *libre*, *en mission* (calculé depuis les missions actives), *en prêt* (manuel, avec commentaire et date de retour prévue signalée en cas de dépassement)
 - Mise en prêt et libération depuis la fiche véhicule

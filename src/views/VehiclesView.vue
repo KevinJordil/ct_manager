@@ -15,6 +15,8 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 import SearchField from '../components/common/SearchField.vue'
 import { filterBySearch } from '../search.js'
 import { holderName, recorderName } from '../keys.js'
+import { fleetByCategory } from '../fleet.js'
+import { useClock } from '../stores/clock.js'
 
 const store = useVehiclesStore()
 const missionsStore = useMissionsStore()
@@ -28,7 +30,33 @@ onMounted(() => {
   personsStore.init()
 })
 
+const { nowString } = useClock()
+
 const search = ref('')
+
+/**
+ * Somebody looking for a vehicle wants a type — a heavy one, a light
+ * off-road one — so the list is read type by type, each with what can be
+ * taken right now.
+ */
+const groups = computed(() =>
+  fleetByCategory(visibleVehicles.value, missionsStore.missions, nowString.value)
+)
+
+/** All types, or the one being looked at. */
+const category = ref('')
+const shownGroups = computed(() =>
+  category.value ? groups.value.filter(group => group.category === category.value) : groups.value
+)
+
+/** The tally of a type is read at a glance, so it is spelt out in words. */
+function summaryOf(group) {
+  const parts = []
+  if (group.onMission) parts.push(t('vehicles.onMissionCount', group.onMission, { count: group.onMission }))
+  if (group.onLoan) parts.push(t('vehicles.onLoanCount', group.onLoan, { count: group.onLoan }))
+  if (group.keyOut) parts.push(t('vehicles.keyOutCount', group.keyOut, { count: group.keyOut }))
+  return parts.join(' · ')
+}
 
 const visibleVehicles = computed(() =>
   filterBySearch(store.vehicles, search.value, vehicle => [
@@ -113,21 +141,48 @@ function confirmLoan(loan) {
 
     <SearchField v-model="search" class="mb-4 max-w-md" />
 
-    <TransitionGroup name="list" tag="div" class="space-y-3">
-      <VehicleCard
-        v-for="vehicle in visibleVehicles"
-        :key="vehicle.id"
-        :vehicle="vehicle"
-        @edit="openEdit(vehicle)"
-        @delete="deletedId = vehicle.id"
-        @lend="lentVehicle = vehicle"
-        @release="store.release(vehicle.id)"
-        @key-take="keyVehicle = vehicle"
-        @key-return="returnKey(vehicle)"
-        @key-history="historyVehicle = vehicle"
-        :can-manage="auth.can('vehicles.manage')"
-      />
-    </TransitionGroup>
+    <!-- One button per type: the count is the answer to "can I take one?" -->
+    <div v-if="groups.length > 1" class="mb-4 flex flex-wrap gap-2">
+      <button type="button" @click="category = ''"
+        :class="['btn-action', category === '' ? 'border-olive-400 bg-olive-50 text-olive-800' : '']">
+        {{ $t('vehicles.allTypes') }}
+        <span class="font-mono text-xs">{{ groups.reduce((n, g) => n + g.available, 0) }}/{{ visibleVehicles.length }}</span>
+      </button>
+      <button v-for="group in groups" :key="group.category" type="button"
+        @click="category = category === group.category ? '' : group.category"
+        :class="['btn-action', category === group.category ? 'border-olive-400 bg-olive-50 text-olive-800' : '']">
+        {{ $t(`vehicles.categories.${group.category}`) }}
+        <span :class="['font-mono text-xs', group.available ? 'text-green-700' : 'text-red-700']">
+          {{ group.available }}/{{ group.total }}
+        </span>
+      </button>
+    </div>
+
+    <section v-for="group in shownGroups" :key="group.category" class="mb-6 last:mb-0">
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+        <h2 class="section-title mb-0">{{ $t(`vehicles.categories.${group.category}`) }}</h2>
+        <p :class="['text-sm font-medium', group.available ? 'text-green-800' : 'text-red-800']">
+          {{ $t('vehicles.availableOf', { available: group.available, total: group.total }) }}
+        </p>
+        <p v-if="summaryOf(group)" class="text-xs text-stone-500">{{ summaryOf(group) }}</p>
+      </div>
+
+      <TransitionGroup name="list" tag="div" class="space-y-3">
+        <VehicleCard
+          v-for="vehicle in group.vehicles"
+          :key="vehicle.id"
+          :vehicle="vehicle"
+          @edit="openEdit(vehicle)"
+          @delete="deletedId = vehicle.id"
+          @lend="lentVehicle = vehicle"
+          @release="store.release(vehicle.id)"
+          @key-take="keyVehicle = vehicle"
+          @key-return="returnKey(vehicle)"
+          @key-history="historyVehicle = vehicle"
+          :can-manage="auth.can('vehicles.manage')"
+        />
+      </TransitionGroup>
+    </section>
 
     <ListPlaceholder v-if="visibleVehicles.length === 0"
       :loading="!store.loaded"

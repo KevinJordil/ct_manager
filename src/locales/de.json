@@ -177,7 +177,12 @@
     "loanUntil": "Bis",
     "loanUntilOptional": "Geplante Rückgabe (optional)",
     "loanOverdue": "Rückgabe überfällig seit dem {date}",
-    "loanUntilLabel": "Rückgabe geplant am {date}"
+    "loanUntilLabel": "Rückgabe geplant am {date}",
+    "allTypes": "Alle Typen",
+    "availableOf": "{available} von {total} verfügbar",
+    "keyOutCount": "Schlüssel ausgegeben | 1 Schlüssel ausgegeben | {count} Schlüssel ausgegeben",
+    "onMissionCount": "im Einsatz | 1 im Einsatz | {count} im Einsatz",
+    "onLoanCount": "ausgeliehen | 1 ausgeliehen | {count} ausgeliehen"
   },
   "keys": {
     "dashboardTitle": "Fahrzeugschlüssel",

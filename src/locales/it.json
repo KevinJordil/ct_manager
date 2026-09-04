@@ -177,7 +177,12 @@
     "loanUntil": "Fino al",
     "loanUntilOptional": "Restituzione prevista (facoltativa)",
     "loanOverdue": "Restituzione scaduta dal {date}",
-    "loanUntilLabel": "Restituzione prevista il {date}"
+    "loanUntilLabel": "Restituzione prevista il {date}",
+    "allTypes": "Tutti i tipi",
+    "availableOf": "{available} disponibili su {total}",
+    "keyOutCount": "chiave in uso | 1 chiave in uso | {count} chiavi in uso",
+    "onMissionCount": "in missione | 1 in missione | {count} in missione",
+    "onLoanCount": "in prestito | 1 in prestito | {count} in prestito"
   },
   "keys": {
     "dashboardTitle": "Chiavi dei veicoli",

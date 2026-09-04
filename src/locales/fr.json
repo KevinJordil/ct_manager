@@ -177,7 +177,12 @@
     "loanUntil": "Jusqu'au",
     "loanUntilOptional": "Retour prévu (facultatif)",
     "loanOverdue": "Retour dépassé depuis le {date}",
-    "loanUntilLabel": "Retour prévu le {date}"
+    "loanUntilLabel": "Retour prévu le {date}",
+    "allTypes": "Tous les types",
+    "availableOf": "{available} disponibles sur {total}",
+    "keyOutCount": "clé sortie | 1 clé sortie | {count} clés sorties",
+    "onMissionCount": "en mission | 1 en mission | {count} en mission",
+    "onLoanCount": "en prêt | 1 en prêt | {count} en prêt"
   },
   "keys": {
     "dashboardTitle": "Clés des véhicules",
