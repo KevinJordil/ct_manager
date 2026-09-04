@@ -245,7 +245,8 @@
       "transferred": "Transfert",
       "returned": "Retour"
     },
-    "fromTo": "{from} → {to}"
+    "fromTo": "{from} → {to}",
+    "seeAction": "Voir : {action}"
   },
   "missions": {
     "title": "Missions",

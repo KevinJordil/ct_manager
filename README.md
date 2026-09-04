@@ -92,7 +92,11 @@ véhicule ?* Il se lit indépendamment du planning.
 Les mouvements de clés de toute la flotte, en tableau, du plus récent au plus
 ancien : **date et heure**, **plaque**, **type de véhicule**, **mouvement**
 (prise, transfert, retour), **détenteur** — un transfert nomme les deux
-personnes — et **saisi par**. Deux mouvements enregistrés dans la même minute
+personnes — et **saisi par**. Les deux bouts d'une même détention se
+renvoient l'un à l'autre : un retour pointe vers la prise qui a sorti la clé,
+cette prise pointe vers le retour, et un transfert vers les deux. Suivre le
+lien met la ligne visée en évidence, en rouvrant la liste si une recherche la
+masquait. Deux mouvements enregistrés dans la même minute
 restent dans l'ordre où ils ont eu lieu. La recherche porte sur le véhicule
 comme sur les noms. La page est accessible à tous les comptes.
 

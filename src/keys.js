@@ -34,6 +34,21 @@ export function makeHolder({ personId = null, name = '', recordedBy = '' }, at) 
   }
 }
 
+/**
+ * The movement that gave the key to whoever holds it now — the one a return
+ * closes. It is the last one still open: every earlier holding was closed by
+ * the movement that ended it.
+ */
+export function openHolding(vehicle) {
+  const history = vehicle.keyHistory ?? []
+  for (let index = history.length - 1; index >= 0; index--) {
+    const entry = history[index]
+    if (entry.action === KEY_ACTION.RETURNED) return null
+    if (!entry.closedBy) return entry
+  }
+  return null
+}
+
 /** Appends a movement, keeping only the most recent ones. */
 export function pushHistory(vehicle, entry) {
   const history = vehicle.keyHistory ?? []

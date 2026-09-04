@@ -245,7 +245,8 @@
       "transferred": "Trasferimento",
       "returned": "Restituzione"
     },
-    "fromTo": "{from} → {to}"
+    "fromTo": "{from} → {to}",
+    "seeAction": "Vedere: {action}"
   },
   "missions": {
     "title": "Missioni",

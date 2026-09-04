@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import {
   keyIsOut, holderName, makeHolder, pushHistory, recorderName, keyMovements,
-  vehiclesWithKeyIn, vehiclesWithKeyOut, keysHeldBy,
+  openHolding, vehiclesWithKeyIn, vehiclesWithKeyOut, keysHeldBy,
 } from '../keys.js'
 import { KEY_HISTORY_LIMIT } from '../constants.js'
 
@@ -59,6 +59,29 @@ describe('key history', () => {
     const vehicle = {}
     pushHistory(vehicle, { id: 'e1' })
     expect(vehicle.keyHistory).toEqual([{ id: 'e1' }])
+  })
+})
+
+describe('the open holding', () => {
+  it('is nothing at all on a vehicle whose key never moved', () => {
+    expect(openHolding({})).toBe(null)
+    expect(openHolding({ keyHistory: [] })).toBe(null)
+  })
+
+  it('is the movement that handed the key to whoever holds it', () => {
+    const vehicle = { keyHistory: [
+      { id: 'a', action: 'taken', name: 'A', closedBy: 'b' },
+      { id: 'b', action: 'transferred', name: 'B' },
+    ] }
+    expect(openHolding(vehicle).id).toBe('b')
+  })
+
+  it('is nothing once the key is back on the board', () => {
+    const vehicle = { keyHistory: [
+      { id: 'a', action: 'taken', name: 'A', closedBy: 'b' },
+      { id: 'b', action: 'returned', name: 'A' },
+    ] }
+    expect(openHolding(vehicle)).toBe(null)
   })
 })
 
@@ -169,6 +192,44 @@ describe('the vehicles store', () => {
   })
 
   const vehicle = () => store.vehicles.find(v => v.id === 'v1')
+
+  it('links a return to the movement that handed the key over', () => {
+    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    store.returnKey('v1', { recordedBy: 'favre' })
+    const [taken, returned] = vehicle().keyHistory
+    expect(returned.closes).toBe(taken.id)
+    expect(taken.closedBy).toBe(returned.id)
+  })
+
+  it('links both ends of a transfer, which closes one holding and opens another', () => {
+    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
+    store.returnKey('v1')
+    const [taken, transferred, returned] = vehicle().keyHistory
+
+    expect(taken.closedBy).toBe(transferred.id)
+    expect(transferred.closes).toBe(taken.id)
+    expect(transferred.closedBy).toBe(returned.id)
+    expect(returned.closes).toBe(transferred.id)
+    // The first movement opened nothing before it.
+    expect(taken.closes).toBe('')
+  })
+
+  it('leaves a holding still open unlinked at its far end', () => {
+    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    expect(vehicle().keyHistory[0].closedBy).toBeUndefined()
+  })
+
+  it('starts a fresh pair after the key came back', () => {
+    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    store.returnKey('v1')
+    store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
+    store.returnKey('v1')
+    const [firstTake, firstReturn, secondTake, secondReturn] = vehicle().keyHistory
+    expect(firstReturn.closes).toBe(firstTake.id)
+    expect(secondReturn.closes).toBe(secondTake.id)
+    expect(secondTake.closes).toBe('')
+  })
 
   it('records who took the key', () => {
     store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre', recordedBy: 'admin' })

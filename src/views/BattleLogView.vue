@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { usePersonsStore } from '../stores/persons.js'
@@ -64,6 +64,36 @@ function dayLabel(date) {
   return formatLongDate(parseLocal(date), tag.value)
 }
 
+/**
+ * The two ends of one holding. A return points back at the movement that
+ * handed the key over, and that movement points forward at the return, so
+ * the log can be read from either end.
+ */
+const byId = computed(() => new Map(rows.value.map(entry => [entry.id, entry])))
+
+const highlighted = ref('')
+let clearHighlight = null
+
+function counterpart(entry, id) {
+  const target = id ? byId.value.get(id) : null
+  return target ? { id: target.id, action: target.action } : null
+}
+
+function linksOf(entry) {
+  return [counterpart(entry, entry.closes), counterpart(entry, entry.closedBy)].filter(Boolean)
+}
+
+async function goTo(id) {
+  // The counterpart may be hidden by the current search: showing everything
+  // again is the only way the link can keep its promise.
+  if (search.value) search.value = ''
+  await nextTick()
+  document.getElementById(`movement-${id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  highlighted.value = id
+  clearTimeout(clearHighlight)
+  clearHighlight = setTimeout(() => { highlighted.value = '' }, 3000)
+}
+
 const ACTION_COLOR = {
   taken: 'bg-amber-100 text-amber-800',
   transferred: 'bg-sky-100 text-sky-800',
@@ -103,7 +133,9 @@ const ACTION_COLOR = {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="entry in rows" :key="entry.id" class="border-b border-stone-100 last:border-0 align-top">
+          <tr v-for="entry in rows" :key="entry.id" :id="`movement-${entry.id}`"
+            :class="['border-b border-stone-100 last:border-0 align-top transition-colors',
+              highlighted === entry.id ? 'bg-olive-50' : '']">
             <td class="px-3 py-2 whitespace-nowrap">
               <span class="text-stone-800">{{ dayLabel(entry.day) }}</span>
               <span class="ml-1.5 font-mono text-stone-500">{{ entry.time }}</span>
@@ -114,6 +146,12 @@ const ACTION_COLOR = {
               <span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide',
                 ACTION_COLOR[entry.action] ?? 'bg-stone-100 text-stone-700']">
                 {{ $t(`log.actions.${entry.action}`) }}
+              </span>
+              <span v-for="link in linksOf(entry)" :key="link.id" class="block">
+                <button type="button" @click="goTo(link.id)"
+                  class="mt-1 text-xs text-olive-700 hover:text-olive-900 underline underline-offset-2 whitespace-nowrap">
+                  {{ $t('log.seeAction', { action: $t(`log.actions.${link.action}`) }) }}
+                </button>
               </span>
             </td>
             <td class="px-3 py-2 text-stone-800">{{ entry.holder }}</td>

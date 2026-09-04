@@ -115,7 +115,8 @@ function validateVehicle(v) {
         return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: 'at' } }
       }
       if (!isOptionalText(entry.name) || !isOptionalText(entry.recordedBy) ||
-          !isOptionalText(entry.from)) {
+          !isOptionalText(entry.from) ||
+          !isOptionalText(entry.closes) || !isOptionalText(entry.closedBy)) {
         return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: 'name' } }
       }
     }

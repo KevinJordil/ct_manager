@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { KEY_ACTION, VEHICLE_STATUS } from '../constants.js'
 import { newId } from '../id.js'
 import { nowString } from '../datetime.js'
-import { makeHolder, pushHistory } from '../keys.js'
+import { makeHolder, openHolding, pushHistory } from '../keys.js'
 import { migrateVehicles } from '../migrations.js'
 import { useCollection } from './collection.js'
 
@@ -35,14 +35,20 @@ export const useVehiclesStore = defineStore('vehicles', () => {
       const at = nowString()
       const previous = vehicle.keyHolder
       const holder = makeHolder({ personId, name, recordedBy }, at)
+      // A transfer ends one holding and opens another: the two entries point
+      // at each other, so the log can be read from either end.
+      const opened = previous ? openHolding(vehicle) : null
+      const id = newId()
+      if (opened) opened.closedBy = id
       vehicle.keyHolder = holder
       pushHistory(vehicle, {
-        id: newId(),
+        id,
         at,
         action: previous ? KEY_ACTION.TRANSFERRED : KEY_ACTION.TAKEN,
         personId: holder.personId,
         name: holder.name,
         from: previous ? previous.name : '',
+        closes: opened ? opened.id : '',
         recordedBy,
       })
     })
@@ -53,14 +59,18 @@ export const useVehiclesStore = defineStore('vehicles', () => {
     collection.mutate(vehicleId, vehicle => {
       const previous = vehicle.keyHolder
       if (!previous) return
+      const opened = openHolding(vehicle)
+      const id = newId()
+      if (opened) opened.closedBy = id
       vehicle.keyHolder = null
       pushHistory(vehicle, {
-        id: newId(),
+        id,
         at: nowString(),
         action: KEY_ACTION.RETURNED,
         personId: previous.personId,
         name: previous.name,
         from: '',
+        closes: opened ? opened.id : '',
         recordedBy,
       })
     })

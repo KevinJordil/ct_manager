@@ -245,7 +245,8 @@
       "transferred": "Übergabe",
       "returned": "Rückgabe"
     },
-    "fromTo": "{from} → {to}"
+    "fromTo": "{from} → {to}",
+    "seeAction": "Siehe: {action}"
   },
   "missions": {
     "title": "Einsätze",
