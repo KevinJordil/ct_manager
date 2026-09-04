@@ -74,19 +74,24 @@ export function vehiclesWithKeyIn(vehicles) {
 export function keyMovements(vehicles) {
   const all = []
   for (const vehicle of vehicles) {
-    for (const entry of vehicle.keyHistory ?? []) {
+    // Latest first within a vehicle: timestamps are to the minute, so two
+    // movements can share one, and the sort below must not undo their order.
+    for (const entry of [...(vehicle.keyHistory ?? [])].reverse()) {
       all.push({
         ...entry,
         vehicleId: vehicle.id,
         vehicleName: vehicle.name,
         vehiclePlate: vehicle.plate,
+        vehicleCategory: vehicle.category ?? '',
         // Who held the key and who recorded the movement are two different
         // questions: anybody may hand a key over on somebody else's behalf.
         byOther: Boolean(entry.recordedBy) && entry.recordedBy !== entry.name,
       })
     }
   }
-  return all.sort((a, b) => (b.at ?? '').localeCompare(a.at ?? '') || a.vehicleName.localeCompare(b.vehicleName))
+  // Array.prototype.sort is stable, so movements sharing a timestamp keep
+  // the order they were recorded in.
+  return all.sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
 }
 
 /** The keys a person is currently holding. */

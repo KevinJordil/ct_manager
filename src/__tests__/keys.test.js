@@ -98,7 +98,7 @@ describe('naming the account that records a movement', () => {
 describe('the fleet-wide log', () => {
   const fleet = [
     {
-      id: 'v1', name: 'Duro', plate: 'M1',
+      id: 'v1', name: 'Duro', plate: 'M1', category: 'heavy',
       keyHistory: [
         { id: 'a', at: '2026-09-02T07:15', action: 'taken', name: 'Sgt Favre', recordedBy: 'Sgt Favre' },
         { id: 'b', at: '2026-09-03T16:40', action: 'returned', name: 'Sgt Favre', recordedBy: 'Sdt Jacquemoud' },
@@ -115,9 +115,33 @@ describe('the fleet-wide log', () => {
     expect(keyMovements(fleet).map(m => m.id)).toEqual(['b', 'c', 'a'])
   })
 
+  it('keeps two movements of the same minute in the order they happened', () => {
+    // A key passed on and hung up within the same minute: the log must not
+    // claim the vehicle was taken after it came back.
+    const at = '2026-09-04T09:14'
+    const movements = keyMovements([{
+      id: 'v9', name: 'Duro', plate: 'M9', category: 'heavy',
+      keyHistory: [
+        { id: 'first', at, action: 'transferred', name: 'B', from: 'A' },
+        { id: 'second', at, action: 'returned', name: 'B' },
+      ],
+    }])
+    expect(movements.map(m => m.id)).toEqual(['second', 'first'])
+  })
+
   it('carries the vehicle, since the log reads across the fleet', () => {
     const [latest] = keyMovements(fleet)
-    expect(latest).toMatchObject({ vehicleId: 'v1', vehicleName: 'Duro', vehiclePlate: 'M1' })
+    expect(latest).toMatchObject({
+      vehicleId: 'v1', vehicleName: 'Duro', vehiclePlate: 'M1', vehicleCategory: 'heavy',
+    })
+  })
+
+  it('leaves the category empty rather than absent when the vehicle has none', () => {
+    const [movement] = keyMovements([{
+      id: 'v9', name: 'X', plate: 'M9',
+      keyHistory: [{ id: 'z', at: '2026-09-04T08:00', action: 'taken', name: 'A' }],
+    }])
+    expect(movement.vehicleCategory).toBe('')
   })
 
   it('flags a movement recorded by somebody other than the holder', () => {

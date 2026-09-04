@@ -81,8 +81,7 @@ async function submit() {
       <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
         <div class="flex items-center gap-2.5">
           <svg class="w-7 h-7 text-olive-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7M3 7l3-4h12l3 4M5 21V7"/>
+            <path d="M3.6 8.4C5.9 6 8.8 4.8 12 4.8s6.1 1.2 8.4 3.6"/><circle cx="12" cy="14" r="5.8"/><circle cx="12" cy="14" r="2"/><path d="M12 8.2v1.8M12 18v1.8M6.2 14H8M16 14h1.8"/>
           </svg>
           <span class="font-bold text-stone-900">{{ $t('app.name') }}</span>
         </div>

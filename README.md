@@ -89,10 +89,12 @@ véhicule ?* Il se lit indépendamment du planning.
   elle reste sortie, sous le nom enregistré
 
 ### Journal de combat
-Les mouvements de clés de toute la flotte sur une page, groupés par jour et du
-plus récent au plus ancien : heure, véhicule, ce qui s'est passé, et le compte
-qui l'a saisi quand ce n'est pas le détenteur lui-même. La recherche porte sur
-le véhicule comme sur les noms. La page est accessible à tous les comptes.
+Les mouvements de clés de toute la flotte, en tableau, du plus récent au plus
+ancien : **date et heure**, **plaque**, **type de véhicule**, **mouvement**
+(prise, transfert, retour), **détenteur** — un transfert nomme les deux
+personnes — et **saisi par**. Deux mouvements enregistrés dans la même minute
+restent dans l'ordre où ils ont eu lieu. La recherche porte sur le véhicule
+comme sur les noms. La page est accessible à tous les comptes.
 
 ### Missions
 - Titre, description, dates de début et fin avec précision à l'heure

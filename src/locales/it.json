@@ -231,7 +231,21 @@
     "today": "Oggi",
     "yesterday": "Ieri",
     "undated": "Senza data",
-    "empty": "Nessun movimento di chiave registrato."
+    "empty": "Nessun movimento di chiave registrato.",
+    "columns": {
+      "when": "Data e ora",
+      "plate": "Targa",
+      "type": "Tipo",
+      "movement": "Movimento",
+      "holder": "Detentore",
+      "recordedBy": "Registrato da"
+    },
+    "actions": {
+      "taken": "Presa",
+      "transferred": "Trasferimento",
+      "returned": "Restituzione"
+    },
+    "fromTo": "{from} → {to}"
   },
   "missions": {
     "title": "Missioni",

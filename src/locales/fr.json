@@ -231,7 +231,21 @@
     "today": "Aujourd'hui",
     "yesterday": "Hier",
     "undated": "Sans date",
-    "empty": "Aucun mouvement de clé enregistré."
+    "empty": "Aucun mouvement de clé enregistré.",
+    "columns": {
+      "when": "Date et heure",
+      "plate": "Plaque",
+      "type": "Type",
+      "movement": "Mouvement",
+      "holder": "Détenteur",
+      "recordedBy": "Saisi par"
+    },
+    "actions": {
+      "taken": "Prise",
+      "transferred": "Transfert",
+      "returned": "Retour"
+    },
+    "fromTo": "{from} → {to}"
   },
   "missions": {
     "title": "Missions",

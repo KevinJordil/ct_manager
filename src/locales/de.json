@@ -231,7 +231,21 @@
     "today": "Heute",
     "yesterday": "Gestern",
     "undated": "Ohne Datum",
-    "empty": "Keine Schlüsselbewegung erfasst."
+    "empty": "Keine Schlüsselbewegung erfasst.",
+    "columns": {
+      "when": "Datum und Zeit",
+      "plate": "Kennzeichen",
+      "type": "Typ",
+      "movement": "Bewegung",
+      "holder": "Halter",
+      "recordedBy": "Erfasst von"
+    },
+    "actions": {
+      "taken": "Ausgabe",
+      "transferred": "Übergabe",
+      "returned": "Rückgabe"
+    },
+    "fromTo": "{from} → {to}"
   },
   "missions": {
     "title": "Einsätze",
