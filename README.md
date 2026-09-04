@@ -117,6 +117,22 @@ lignes des véhicules lourds) même si elle n'a plus sa colonne. La page est acc
 - Les personnes en congé, indisponibles ou déjà affectées sont exclues des listes de sélection
 - Les véhicules en prêt ou déjà engagés sur la même période sont exclus
 
+### Dates et heures
+
+Le champ `datetime-local` natif est rendu dans la locale du **navigateur**, pas
+dans celle de la page : un navigateur en anglais affiche `09/10/2026, 02:30 PM`
+quoi qu'en dise le document, et `lang="fr"` n'y change rien.
+
+Les saisies de date et d'heure se font donc en deux contrôles : le jour garde
+le sélecteur natif — il vaut bien trop cher sur un téléphone pour qu'on s'en
+prive — et **l'heure vient d'une liste à nous, toujours sur 24 h**, par quart
+d'heure. Le jour choisi est écrit en toutes lettres sous le champ (*« Jeudi,
+10 septembre 2026 · 14:30 »*), de sorte qu'un lecteur voie tout de suite si
+son navigateur voulait dire le 9 octobre ou le 10 septembre.
+
+Cela vaut pour la demande publique, le formulaire de mission et la saisie des
+congés.
+
 ### Demandes de véhicules
 - **Page publique** `/#/request`, accessible sans compte : formulaire de contact, dates, point de rendez-vous et liste des véhicules souhaités, chacun avec ou sans chauffeur
 - **File de traitement** côté gestion : filtrage par statut, détail dépliable, compteur des demandes en attente dans la barre latérale

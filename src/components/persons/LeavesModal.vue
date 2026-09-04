@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
+import DateTimeField from '../common/DateTimeField.vue'
 import { usePersonsStore } from '../../stores/persons.js'
 import { useClock } from '../../stores/clock.js'
 import { formatDateTime } from '../../datetime.js'
@@ -81,11 +82,11 @@ const sortedLeaves = computed(() =>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="label" for="leave-start">{{ $t('missions.start') }}</label>
-            <input id="leave-start" v-model="form.startDate" type="datetime-local" class="input" />
+            <DateTimeField id="leave-start" v-model="form.startDate" default-time="00:00" />
           </div>
           <div>
             <label class="label" for="leave-end">{{ $t('missions.end') }}</label>
-            <input id="leave-end" v-model="form.endDate" type="datetime-local" class="input" :min="form.startDate" />
+            <DateTimeField id="leave-end" v-model="form.endDate" :min="form.startDate" default-time="23:59" />
           </div>
         </div>
         <p v-if="invalidRange" class="mt-1.5 text-xs text-red-600">{{ $t('persons.leaves.invalidRange') }}</p>

@@ -60,6 +60,12 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers())
 
+/** The date and the hour are separate controls; the hour list is 24-hour. */
+async function setWhen(wrapper, field, day, time) {
+  await wrapper.find(`#mission-${field}`).setValue(day)
+  await wrapper.find(`#mission-${field}-time`).setValue(time)
+}
+
 describe('MissionForm — assignments kept in step with the dates', () => {
   it('keeps the assignments while the dates do not conflict', async () => {
     const wrapper = mountForm(data.missions[0])
@@ -73,9 +79,10 @@ describe('MissionForm — assignments kept in step with the dates', () => {
     const wrapper = mountForm(data.missions[0])
     await settle()
 
-    // Move the mission onto the day the other one already books them.
-    await wrapper.find('#mission-start').setValue('2026-09-28T08:00')
-    await wrapper.find('#mission-end').setValue('2026-09-28T17:00')
+    // Move the mission onto the day the other one already books them. The
+    // day and the hour are two controls now, the hour on a 24-hour list.
+    await setWhen(wrapper, 'start', '2026-09-28', '08:00')
+    await setWhen(wrapper, 'end', '2026-09-28', '17:00')
     await settle()
 
     expect(wrapper.vm.vehicleRows[0].driverId).toBeNull()
@@ -86,8 +93,8 @@ describe('MissionForm — assignments kept in step with the dates', () => {
     const wrapper = mountForm(data.missions[0])
     await settle()
 
-    await wrapper.find('#mission-start').setValue('2026-09-28T08:00')
-    await wrapper.find('#mission-end').setValue('2026-09-28T17:00')
+    await setWhen(wrapper, 'start', '2026-09-28', '08:00')
+    await setWhen(wrapper, 'end', '2026-09-28', '17:00')
     await settle()
 
     expect(wrapper.text()).toContain('2 affectations')

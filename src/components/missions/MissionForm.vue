@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, computed, watch } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
+import DateTimeField from '../common/DateTimeField.vue'
 import { usePersonsStore } from '../../stores/persons.js'
 import { useVehiclesStore } from '../../stores/vehicles.js'
 import { useMissionsStore } from '../../stores/missions.js'
@@ -256,12 +257,12 @@ function submit() {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="label" for="mission-start">{{ $t('missions.start') }} *</label>
-            <input id="mission-start" v-model="form.startDate" type="datetime-local" class="input" required />
+            <DateTimeField id="mission-start" v-model="form.startDate" required />
           </div>
           <div>
             <label class="label" for="mission-end">{{ $t('missions.end') }} *</label>
-            <input id="mission-end" v-model="form.endDate" type="datetime-local" class="input"
-              :min="form.startDate" required />
+            <DateTimeField id="mission-end" v-model="form.endDate"
+              :min="form.startDate" default-time="17:00" required />
           </div>
         </div>
       </div>

@@ -41,7 +41,8 @@
     "selectVehicle": "— Fahrzeug auswählen —",
     "search": "Suchen",
     "noMatch": "Kein Ergebnis für «{query}»",
-    "clearSearch": "Suche löschen"
+    "clearSearch": "Suche löschen",
+    "time": "Uhrzeit"
   },
   "entities": {
     "persons": "Personen",

@@ -5,6 +5,7 @@ import { useRequestsStore } from '../stores/requests.js'
 import { useConfigStore } from '../stores/config.js'
 import { newId } from '../id.js'
 import LanguageSwitcher from '../components/common/LanguageSwitcher.vue'
+import DateTimeField from '../components/common/DateTimeField.vue'
 
 /** Public form: reachable without a session, so it carries its own layout. */
 const store = useRequestsStore()
@@ -150,12 +151,12 @@ async function submit() {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="label" for="request-start">{{ $t('requests.pickup') }} *</label>
-                <input id="request-start" v-model="planning.startDate" type="datetime-local" class="input" required />
+                <DateTimeField id="request-start" v-model="planning.startDate" required />
               </div>
               <div>
                 <label class="label" for="request-end">{{ $t('requests.dropoff') }} *</label>
-                <input id="request-end" v-model="planning.endDate" type="datetime-local" class="input"
-                  :min="planning.startDate" required />
+                <DateTimeField id="request-end" v-model="planning.endDate"
+                  :min="planning.startDate" default-time="17:00" required />
               </div>
               <div class="sm:col-span-2">
                 <label class="label" for="request-meeting-point">{{ $t('requests.meetingPoint') }} *</label>
