@@ -291,9 +291,15 @@
     "noDriver": "senza conducente",
     "requiredLicenses": "Licenze richieste: {list}",
     "noQualifiedDriver": "Nessun conducente qualificato disponibile in queste date",
-    "capacity": "{seats} posti | {seats} posto | {seats} posti",
+    "capacity": "{count} posti | {count} posto | {count} posti",
     "drivers": "{count} conducenti | {count} conducente | {count} conducenti",
-    "droppedAssignments": "Le nuove date non sono più compatibili con {count} assegnazioni, che sono state rimosse. | Le nuove date non sono più compatibili con {count} assegnazione, che è stata rimossa. | Le nuove date non sono più compatibili con {count} assegnazioni, che sono state rimosse."
+    "droppedAssignments": "Le nuove date non sono più compatibili con {count} assegnazioni, che sono state rimosse. | Le nuove date non sono più compatibili con {count} assegnazione, che è stata rimossa. | Le nuove date non sono più compatibili con {count} assegnazioni, che sono state rimosse.",
+    "requested": "Richiesto: {type}",
+    "noneOfThisType": "Nessuno disponibile di questo tipo",
+    "proposedAvailable": "Disponibile",
+    "randomDriver": "A caso",
+    "fillDrivers": "Completare gli autisti",
+    "pickVehicleFirst": "Scegliere prima un veicolo: la licenza richiesta dipende da questo."
   },
   "calendar": {
     "title": "Calendario",

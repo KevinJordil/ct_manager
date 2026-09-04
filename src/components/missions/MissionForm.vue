@@ -48,6 +48,11 @@ watch(() => props.mission, mission => {
       vehicleId: entry.vehicleId,
       driverId: entry.driverId ?? null,
       withTrailer: entry.withTrailer ?? false,
+      // Only set when the mission comes from a request: what was asked for,
+      // and whether that line found a vehicle at all.
+      requestedLabel: entry.requestedLabel ?? '',
+      driverRequired: entry.driverRequired ?? false,
+      unavailable: entry.unavailable ?? false,
     }))
     staffRows.value = (mission.staffIds ?? []).map(id => ({ rowId: newId(), personId: id }))
     droppedAssignments.value = 0
@@ -143,7 +148,31 @@ function availableStaffFor(row) {
 // ── List mutations ──
 
 function addVehicleRow() {
-  vehicleRows.value.push({ rowId: newId(), id: null, vehicleId: '', driverId: null, withTrailer: false })
+  vehicleRows.value.push({
+    rowId: newId(), id: null, vehicleId: '', driverId: null, withTrailer: false,
+    requestedLabel: '', driverRequired: false, unavailable: false,
+  })
+}
+
+/**
+ * Hands the wheel to somebody at random among those who may drive this
+ * vehicle and are free. Picking a name off a list of thirty is a chore that
+ * carries no decision — any of them can drive it — so the form offers to
+ * make the pick.
+ */
+function pickRandomDriver(row) {
+  const candidates = availableDriversFor(row).filter(person => person.id !== row.driverId)
+  if (!candidates.length) return
+  row.driverId = candidates[Math.floor(Math.random() * candidates.length)].id
+}
+
+/** Every row that wants a driver and has none yet. */
+const rowsMissingDriver = computed(() =>
+  vehicleRows.value.filter(row => row.vehicleId && !row.driverId)
+)
+
+function fillMissingDrivers() {
+  for (const row of rowsMissingDriver.value) pickRandomDriver(row)
 }
 
 function removeVehicleRow(rowId) {
@@ -152,6 +181,9 @@ function removeVehicleRow(rowId) {
 
 function onVehicleChange(row) {
   row.withTrailer = false
+  // The row no longer waits for a vehicle; whatever the proposal said, a
+  // choice has been made.
+  row.unavailable = false
   dropDriverIfUnqualified(row)
 }
 
@@ -277,11 +309,16 @@ function submit() {
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
-              {{ $t('missions.capacity', capacity.seats, { seats: capacity.seats }) }}
+              {{ $t('missions.capacity', capacity.seats, { count: capacity.seats }) }}
               <span class="text-olive-400">+</span>
               {{ $t('missions.drivers', capacity.drivers, { count: capacity.drivers }) }}
             </span>
           </div>
+          <div class="flex items-center gap-3">
+          <button v-if="rowsMissingDriver.length > 1" type="button" @click="fillMissingDrivers"
+            class="text-xs text-olive-600 hover:text-olive-800 font-medium">
+            {{ $t('missions.fillDrivers') }}
+          </button>
           <button type="button" @click="addVehicleRow"
             class="text-xs text-olive-600 hover:text-olive-800 font-medium flex items-center gap-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -289,15 +326,28 @@ function submit() {
             </svg>
             {{ $t('actions.add') }}
           </button>
+          </div>
         </div>
         <div v-if="vehicleRows.length" class="divide-y divide-stone-100">
           <div v-for="row in vehicleRows" :key="row.rowId" class="p-3 space-y-2">
+            <p v-if="row.requestedLabel" class="flex flex-wrap items-center gap-1.5 text-xs">
+              <span class="text-stone-500">{{ $t('missions.requested', { type: row.requestedLabel }) }}</span>
+              <span v-if="row.driverRequired" class="badge-gray">{{ $t('requests.driverRequired') }}</span>
+              <span v-if="row.unavailable"
+                class="inline-flex items-center px-2 py-0.5 rounded bg-red-100 text-red-800 font-medium">
+                {{ $t('missions.noneOfThisType') }}
+              </span>
+              <span v-else-if="row.vehicleId"
+                class="inline-flex items-center px-2 py-0.5 rounded bg-green-100 text-green-800 font-medium">
+                {{ $t('missions.proposedAvailable') }}
+              </span>
+            </p>
             <div class="flex gap-2 items-start">
               <select v-model="row.vehicleId" @change="onVehicleChange(row)" class="input text-sm flex-1"
                 :aria-label="$t('missions.vehiclesSection')">
                 <option value="">{{ $t('common.selectVehicle') }}</option>
                 <option v-for="vehicle in availableVehiclesFor(row)" :key="vehicle.id" :value="vehicle.id">
-                  {{ vehicle.plate }} — {{ vehicle.name }}{{ vehicle.seats ? ` — ${$t('missions.capacity', vehicle.seats, { seats: vehicle.seats })}` : '' }}
+                  {{ vehicle.plate }} — {{ vehicle.name }}{{ vehicle.seats ? ` — ${$t('missions.capacity', vehicle.seats, { count: vehicle.seats })}` : '' }}
                 </option>
               </select>
               <button type="button" @click="removeVehicleRow(row.rowId)" :aria-label="$t('missions.removeVehicle')"
@@ -316,18 +366,26 @@ function submit() {
                   {{ $t('missions.trailerLicense') }}
                 </span>
               </label>
-              <select v-model="row.driverId" class="input text-sm" :aria-label="$t('fields.driverId')">
-                <option :value="null">{{ $t('missions.noDriverOption') }}</option>
-                <option v-for="person in availableDriversFor(row)" :key="person.id" :value="person.id">
-                  {{ personName(person) }} ({{ person.licenses.join(', ') }})
-                </option>
-              </select>
+              <div class="flex gap-2">
+                <select v-model="row.driverId" class="input text-sm flex-1" :aria-label="$t('fields.driverId')">
+                  <option :value="null">{{ $t('missions.noDriverOption') }}</option>
+                  <option v-for="person in availableDriversFor(row)" :key="person.id" :value="person.id">
+                    {{ personName(person) }} ({{ person.licenses.join(', ') }})
+                  </option>
+                </select>
+                <button type="button" @click="pickRandomDriver(row)"
+                  :disabled="availableDriversFor(row).length === 0"
+                  class="btn-action shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
+                  {{ $t('missions.randomDriver') }}
+                </button>
+              </div>
               <p v-if="requiredLicensesFor(row)" class="text-xs text-stone-400">
                 {{ $t('missions.requiredLicenses', { list: requiredLicensesFor(row).join(', ') }) }}
               </p>
               <p v-if="form.startDate && form.endDate && availableDriversFor(row).length === 0"
                 class="text-xs text-orange-600">{{ $t('missions.noQualifiedDriver') }}</p>
             </div>
+            <p v-else class="text-xs text-stone-400 italic">{{ $t('missions.pickVehicleFirst') }}</p>
           </div>
         </div>
         <p v-else class="px-3 py-4 text-sm text-stone-400 italic text-center">{{ $t('missions.noVehicleAdded') }}</p>

@@ -6,8 +6,10 @@
  * type can be taken right now. This groups the fleet that way and counts what
  * stands in the way of each one.
  */
-import { VEHICLE_CATEGORIES, VEHICLE_STATUS } from './constants.js'
-import { getVehicleStatus } from './availability.js'
+import {
+  CATEGORY_BY_REQUEST_TYPE, SEATS_BY_REQUEST_TYPE, VEHICLE_CATEGORIES, VEHICLE_STATUS,
+} from './constants.js'
+import { getVehicleStatus, isVehicleAvailable } from './availability.js'
 import { keyIsOut } from './keys.js'
 
 /** Why a vehicle cannot be taken, or null when it can. */
@@ -58,5 +60,44 @@ export function fleetByCategory(vehicles, missions, now) {
   return [...groups.values()].sort((a, b) => {
     const rank = order.indexOf(a.category) - order.indexOf(b.category)
     return rank !== 0 ? rank : a.category.localeCompare(b.category)
+  })
+}
+
+/**
+ * Picks actual vehicles for what a request asked for.
+ *
+ * The requester writes "a truck for people"; the fleet holds plates. Each
+ * requested line is matched to a vehicle of the serving category that is
+ * free over the whole period and not already taken by an earlier line. A
+ * line that finds nothing keeps an empty slot and says so — proposing a
+ * vehicle that is busy would be worse than proposing none.
+ *
+ * @returns {Array<{type: string, driverRequired: boolean, vehicleId: string,
+ *                  category: string, unavailable: boolean}>}
+ */
+export function suggestVehiclesForRequest(requested, { vehicles, missions, startDate, endDate }) {
+  const taken = new Set()
+
+  return (requested ?? []).map(line => {
+    const category = CATEGORY_BY_REQUEST_TYPE[line.type] ?? ''
+    const seats = SEATS_BY_REQUEST_TYPE[line.type] ?? 0
+
+    const match = vehicles.find(vehicle => {
+      if (taken.has(vehicle.id)) return false
+      if (category && vehicle.category !== category) return false
+      if (seats && (vehicle.seats ?? 0) < seats) return false
+      return isVehicleAvailable(vehicle, missions, startDate, endDate)
+    })
+
+    if (match) taken.add(match.id)
+    return {
+      type: line.type,
+      driverRequired: Boolean(line.driverRequired),
+      vehicleId: match?.id ?? '',
+      category,
+      // Nothing of that kind is free over the period; the row waits for a
+      // decision rather than pretending.
+      unavailable: !match,
+    }
   })
 }

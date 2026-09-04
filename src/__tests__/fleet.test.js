@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fleetByCategory, unavailableReason } from '../fleet.js'
+import { fleetByCategory, unavailableReason, suggestVehiclesForRequest } from '../fleet.js'
 
 const NOW = '2026-09-04T09:00'
 
@@ -81,5 +81,61 @@ describe('the fleet read by type', () => {
 
   it('has nothing to say about an empty fleet', () => {
     expect(fleetByCategory([], [], NOW)).toEqual([])
+  })
+})
+
+describe('serving a request with actual vehicles', () => {
+  const fleet = [
+    { id: 'car1', plate: 'M1', category: 'light-road', seats: 4, status: 'free' },
+    { id: 'van1', plate: 'M2', category: 'light-road', seats: 9, status: 'free' },
+    { id: 'g1', plate: 'M3', category: 'light-offroad', seats: 4, status: 'free' },
+    { id: 'duro1', plate: 'M4', category: 'medium', seats: 8, status: 'free' },
+    { id: 'truck1', plate: 'M5', category: 'heavy', seats: 38, status: 'free' },
+  ]
+  const period = { startDate: '2026-09-10T08:00', endDate: '2026-09-10T17:00' }
+  const serve = (lines, missions = []) =>
+    suggestVehiclesForRequest(lines, { vehicles: fleet, missions, ...period })
+
+  it('matches each requested type to a vehicle of the serving category', () => {
+    const served = serve([{ type: 'class-g' }, { type: 'truck-personnel' }])
+    expect(served.map(line => line.vehicleId)).toEqual(['g1', 'truck1'])
+    expect(served.every(line => !line.unavailable)).toBe(true)
+  })
+
+  it('respects a capacity the type names, rather than the first light vehicle', () => {
+    const [served] = serve([{ type: 'van-9' }])
+    expect(served.vehicleId).toBe('van1')
+  })
+
+  it('never proposes the same vehicle twice in one request', () => {
+    const served = serve([{ type: 'class-g' }, { type: 'class-g' }])
+    expect(served[0].vehicleId).toBe('g1')
+    expect(served[1]).toMatchObject({ vehicleId: '', unavailable: true })
+  })
+
+  it('leaves the slot empty when the fleet is busy over the period', () => {
+    const missions = [{
+      id: 'm1', title: 'T', startDate: '2026-09-10T07:00', endDate: '2026-09-10T18:00',
+      vehicles: [{ id: 'r1', vehicleId: 'truck1' }], staffIds: [],
+    }]
+    expect(serve([{ type: 'truck-cargo' }], missions)[0])
+      .toMatchObject({ vehicleId: '', unavailable: true })
+  })
+
+  it('does not guess for a type it knows nothing about', () => {
+    const [served] = serve([{ type: 'other' }])
+    expect(served.category).toBe('')
+    // Anything free will do, since the request itself says nothing more.
+    expect(served.vehicleId).toBe('car1')
+  })
+
+  it('carries the driver the requester asked for', () => {
+    const served = serve([{ type: 'car', driverRequired: true }, { type: 'car' }])
+    expect(served.map(line => line.driverRequired)).toEqual([true, false])
+  })
+
+  it('has nothing to propose for a request with no vehicle at all', () => {
+    expect(serve([])).toEqual([])
+    expect(suggestVehiclesForRequest(undefined, { vehicles: fleet, missions: [], ...period })).toEqual([])
   })
 })

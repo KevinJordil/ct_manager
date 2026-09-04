@@ -140,6 +140,29 @@ congés.
 - **Recherche** sur les listes personnes, véhicules, missions et demandes — accents et casse ignorés, plusieurs mots combinables
 - **Approuver crée la mission** : le formulaire de mission s'ouvre pré-rempli depuis la demande (titre, contact, dates, point de rendez-vous et véhicules en notes) ; la demande ne passe à *approuvée* qu'une fois la mission enregistrée
 
+### D'une demande à une mission
+
+Approuver une demande ouvre un formulaire de mission déjà rempli : le
+demandeur, ses dates, son lieu de rendez-vous — et **les véhicules**. Chaque
+ligne demandée est traduite en une plaque réelle : le type demandé désigne
+une catégorie de la flotte (`Camion — personnes` → lourd, `Class G` → léger
+tout-terrain, `Véhicule 9 places` → un léger d'au moins neuf places), et
+l'application propose un véhicule de cette catégorie **libre sur toute la
+période** et pas déjà pris par une autre ligne de la même demande.
+
+Chaque ligne rappelle ce qui a été demandé, si un chauffeur était souhaité, et
+porte son verdict : *Disponible*, ou *Aucun disponible de ce type* — auquel
+cas la ligne reste vide plutôt que de proposer un véhicule occupé.
+
+Le bouton **Au hasard** attribue un chauffeur tiré parmi ceux qui ont le
+permis exigé et sont libres ; **Compléter les chauffeurs** le fait pour toutes
+les lignes vides d'un coup. Choisir un nom dans une liste de trente n'est pas
+une décision quand n'importe lequel d'entre eux peut conduire.
+
+Le sélecteur de chauffeur n'apparaît qu'une fois le véhicule choisi — le
+permis exigé en dépend — et le formulaire le dit désormais au lieu de laisser
+la ligne muette.
+
 ### Impression et PDF
 Quatre documents, mis en page pour l'A4 et produits par l'impression du
 navigateur — aucune bibliothèque PDF n'est embarquée :
@@ -337,6 +360,29 @@ npm run server
 > relancer, sinon le serveur sert l'ancienne interface.
 
 Ouvrir **http://localhost:3000**.
+
+### D'une demande à une mission
+
+Approuver une demande ouvre un formulaire de mission déjà rempli : le
+demandeur, ses dates, son lieu de rendez-vous — et **les véhicules**. Chaque
+ligne demandée est traduite en une plaque réelle : le type demandé désigne
+une catégorie de la flotte (`Camion — personnes` → lourd, `Class G` → léger
+tout-terrain, `Véhicule 9 places` → un léger d'au moins neuf places), et
+l'application propose un véhicule de cette catégorie **libre sur toute la
+période** et pas déjà pris par une autre ligne de la même demande.
+
+Chaque ligne rappelle ce qui a été demandé, si un chauffeur était souhaité, et
+porte son verdict : *Disponible*, ou *Aucun disponible de ce type* — auquel
+cas la ligne reste vide plutôt que de proposer un véhicule occupé.
+
+Le bouton **Au hasard** attribue un chauffeur tiré parmi ceux qui ont le
+permis exigé et sont libres ; **Compléter les chauffeurs** le fait pour toutes
+les lignes vides d'un coup. Choisir un nom dans une liste de trente n'est pas
+une décision quand n'importe lequel d'entre eux peut conduire.
+
+Le sélecteur de chauffeur n'apparaît qu'une fois le véhicule choisi — le
+permis exigé en dépend — et le formulaire le dit désormais au lieu de laisser
+la ligne muette.
 
 ### Impression et PDF
 Quatre documents, mis en page pour l'A4 et produits par l'impression du

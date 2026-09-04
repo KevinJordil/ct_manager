@@ -34,6 +34,30 @@ export const VEHICLE_CATEGORY = {
 
 export const VEHICLE_CATEGORIES = Object.values(VEHICLE_CATEGORY)
 
+/**
+ * The fleet category that serves a requested type.
+ *
+ * A request is written in the requester's terms — "a car", "a truck for
+ * people" — while the fleet is held by category. This is the translation
+ * between the two, used to propose actual vehicles when a request becomes a
+ * mission. A type absent from this table proposes nothing rather than
+ * guessing.
+ */
+export const CATEGORY_BY_REQUEST_TYPE = {
+  car: 'light-road',
+  'van-9': 'light-road',
+  'class-g': 'light-offroad',
+  'duro-personnel': 'medium',
+  'duro-cargo': 'medium',
+  'truck-personnel': 'heavy',
+  'truck-cargo': 'heavy',
+}
+
+/** Seats a requested type asks for by its very name. */
+export const SEATS_BY_REQUEST_TYPE = {
+  'van-9': 9,
+}
+
 /** Swiss military driving licences, kept as their official codes. */
 export const LICENSES = ['920', '920E', '921', '921E', '930', '930E', '931', '931E']
 

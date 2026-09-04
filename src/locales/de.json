@@ -291,9 +291,15 @@
     "noDriver": "ohne Fahrer",
     "requiredLicenses": "Erforderliche Ausweise: {list}",
     "noQualifiedDriver": "Kein qualifizierter Fahrer an diesen Daten verfügbar",
-    "capacity": "{seats} Plätze | {seats} Platz | {seats} Plätze",
+    "capacity": "{count} Plätze | {count} Platz | {count} Plätze",
     "drivers": "{count} Fahrer | {count} Fahrer | {count} Fahrer",
-    "droppedAssignments": "Die neuen Daten passen nicht mehr zu {count} Zuteilungen, die entfernt wurden. | Die neuen Daten passen nicht mehr zu {count} Zuteilung, die entfernt wurde. | Die neuen Daten passen nicht mehr zu {count} Zuteilungen, die entfernt wurden."
+    "droppedAssignments": "Die neuen Daten passen nicht mehr zu {count} Zuteilungen, die entfernt wurden. | Die neuen Daten passen nicht mehr zu {count} Zuteilung, die entfernt wurde. | Die neuen Daten passen nicht mehr zu {count} Zuteilungen, die entfernt wurden.",
+    "requested": "Gewünscht: {type}",
+    "noneOfThisType": "Keines dieser Art verfügbar",
+    "proposedAvailable": "Verfügbar",
+    "randomDriver": "Zufällig",
+    "fillDrivers": "Fahrer ergänzen",
+    "pickVehicleFirst": "Zuerst ein Fahrzeug wählen: davon hängt der nötige Ausweis ab."
   },
   "calendar": {
     "title": "Kalender",

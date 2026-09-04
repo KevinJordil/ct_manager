@@ -15,6 +15,7 @@ import MissionForm from '../components/missions/MissionForm.vue'
 import BaseModal from '../components/common/BaseModal.vue'
 import SearchField from '../components/common/SearchField.vue'
 import { filterBySearch } from '../search.js'
+import { suggestVehiclesForRequest } from '../fleet.js'
 
 const store = useRequestsStore()
 const missionsStore = useMissionsStore()
@@ -126,7 +127,22 @@ function missionFromRequest(request) {
     startDate: request.startDate,
     endDate: request.endDate,
     notes: notes.join('\n'),
-    vehicles: request.vehicles.map(() => ({ vehicleId: '', driverId: null, withTrailer: false })),
+    // The requested types are matched to actual plates, so the manager
+    // starts from a proposal rather than an empty form.
+    vehicles: suggestVehiclesForRequest(request.vehicles, {
+      vehicles: vehiclesStore.vehicles,
+      missions: missionsStore.missions,
+      startDate: request.startDate,
+      endDate: request.endDate,
+    }).map(line => ({
+      vehicleId: line.vehicleId,
+      driverId: null,
+      withTrailer: false,
+      requestedType: line.type,
+      requestedLabel: typeLabel(line.type),
+      driverRequired: line.driverRequired,
+      unavailable: line.unavailable,
+    })),
     staffIds: [],
   }
 }
