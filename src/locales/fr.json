@@ -18,7 +18,8 @@
     "config": "Configuration",
     "users": "Comptes",
     "log": "Journal de combat",
-    "permissions": "Droits"
+    "permissions": "Droits",
+    "mine": "Mes missions"
   },
   "actions": {
     "add": "Ajouter",
@@ -300,6 +301,21 @@
     "randomDriver": "Au hasard",
     "fillDrivers": "Compléter les chauffeurs",
     "pickVehicleFirst": "Choisissez d'abord un véhicule : le permis exigé en dépend."
+  },
+  "mine": {
+    "title": "Mes missions",
+    "subtitle": "Ce à quoi {name} est affecté.",
+    "noRecord": "Ce compte n'est rattaché à aucune fiche de personne.",
+    "empty": "Aucune mission ne vous est assignée.",
+    "sections": {
+      "ongoing": "En cours",
+      "upcoming": "À venir",
+      "past": "Passées"
+    },
+    "asDriver": "Chauffeur",
+    "asStaff": "Personnel embarqué",
+    "withYou": "Avec vous",
+    "keysHeld": "Aucune clé | Vous avez 1 clé | Vous avez {count} clés"
   },
   "calendar": {
     "title": "Calendrier",

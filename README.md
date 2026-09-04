@@ -108,6 +108,20 @@ restent dans l'ordre où ils ont eu lieu. La recherche porte sur le véhicule
 comme sur les noms — la catégorie reste cherchable (« lourd » sort toutes les
 lignes des véhicules lourds) même si elle n'a plus sa colonne. La page est accessible à tous les comptes.
 
+### Mes missions
+Un compte rattaché à une fiche de personne voit **« Mes missions »** en tête
+du menu, avec le nombre de missions en cours ou à venir. La page les groupe
+en *en cours* / *à venir* / *passées*, dit pour chacune le rôle tenu —
+chauffeur de telle plaque, remorque comprise, ou personnel embarqué — et
+ouvre le détail au clic : description, consignes, les autres participants
+avec leur téléphone, et l'ordre de mission à imprimer. Une mission en cours
+est ouverte d'emblée : on la lit, on ne la parcourt pas.
+
+Les clés que la personne détient sont rappelées en tête, avant toute
+planification — une clé dans la poche prime sur ce qui était prévu.
+
+Un compte de service, rattaché à aucune fiche, n'a pas ce raccourci.
+
 ### Missions
 - Titre, description, dates de début et fin avec précision à l'heure
 - Affectation de **plusieurs véhicules** par mission, chacun avec ou sans chauffeur

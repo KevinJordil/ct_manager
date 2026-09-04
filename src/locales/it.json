@@ -18,7 +18,8 @@
     "config": "Configurazione",
     "users": "Account",
     "log": "Giornale di combattimento",
-    "permissions": "Diritti"
+    "permissions": "Diritti",
+    "mine": "Le mie missioni"
   },
   "actions": {
     "add": "Aggiungi",
@@ -300,6 +301,21 @@
     "randomDriver": "A caso",
     "fillDrivers": "Completare gli autisti",
     "pickVehicleFirst": "Scegliere prima un veicolo: la licenza richiesta dipende da questo."
+  },
+  "mine": {
+    "title": "Le mie missioni",
+    "subtitle": "A cosa è assegnato {name}.",
+    "noRecord": "Questo account non è collegato a nessuna scheda personale.",
+    "empty": "Nessuna missione le è assegnata.",
+    "sections": {
+      "ongoing": "In corso",
+      "upcoming": "In arrivo",
+      "past": "Passate"
+    },
+    "asDriver": "Autista",
+    "asStaff": "Personale a bordo",
+    "withYou": "Con lei",
+    "keysHeld": "Nessuna chiave | Ha 1 chiave | Ha {count} chiavi"
   },
   "calendar": {
     "title": "Calendario",

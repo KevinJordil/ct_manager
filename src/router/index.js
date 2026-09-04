@@ -12,6 +12,7 @@ import RequestsView from '../views/RequestsView.vue'
 import ParkView from '../views/ParkView.vue'
 import ChecksView from '../views/ChecksView.vue'
 import BattleLogView from '../views/BattleLogView.vue'
+import MyMissionsView from '../views/MyMissionsView.vue'
 import ConfigView from '../views/ConfigView.vue'
 import UsersView from '../views/UsersView.vue'
 import PermissionsView from '../views/PermissionsView.vue'
@@ -24,6 +25,7 @@ const routes = [
 
   // ── Behind the login ──
   { path: '/', name: 'dashboard', component: DashboardView },
+  { path: '/my-missions', name: 'my-missions', component: MyMissionsView },
   { path: '/persons', name: 'persons', component: PersonsView },
   { path: '/vehicles', name: 'vehicles', component: VehiclesView },
   { path: '/missions', name: 'missions', component: MissionsView },

@@ -6,6 +6,8 @@ import { useClock } from './stores/clock.js'
 import { useSync } from './stores/sync.js'
 import { useAuthStore } from './stores/auth.js'
 import { useRequestsStore } from './stores/requests.js'
+import { useMissionsStore } from './stores/missions.js'
+import { missionsOfPerson, pendingCount } from './assignments.js'
 import { localeTag } from './i18n/index.js'
 import { formatLongDate, formatClock } from './i18n/formats.js'
 import LanguageSwitcher from './components/common/LanguageSwitcher.vue'
@@ -15,11 +17,12 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const requestsStore = useRequestsStore()
+const missionsStore = useMissionsStore()
 const { t, te, locale } = useI18n()
 const sidebarOpen = ref(false)
 const changingPassword = ref(false)
 
-const { now } = useClock()
+const { now, nowString } = useClock()
 const { error: syncError, conflict, authRequired, saving, clearError } = useSync()
 
 /** Public pages (login, request form) are rendered without the app shell. */
@@ -41,12 +44,20 @@ watch(authRequired, required => {
 // the session exists would only produce a 401.
 const shellVisible = computed(() => !isPublicPage.value && auth.isAuthenticated)
 watch(shellVisible, visible => {
-  if (visible) requestsStore.init()
+  if (!visible) return
+  requestsStore.init()
+  // The sidebar counts the signed-in soldier's own missions.
+  if (auth.user?.personId) missionsStore.init()
 }, { immediate: true })
 
 /** Configuration and accounts are hidden from ordinary users. */
 const visibleNavItems = computed(() =>
-  NAV_ITEMS.filter(item => !item.admin || auth.isAdmin)
+  NAV_ITEMS.filter(item => (!item.admin || auth.isAdmin) && (!item.personOnly || Boolean(auth.user?.personId)))
+)
+
+/** What is running or still to come for the signed-in soldier. */
+const pendingOwnMissions = computed(() =>
+  pendingCount(missionsOfPerson(missionsStore.missions, auth.user?.personId ?? '', nowString.value))
 )
 
 async function signOut() {
@@ -88,6 +99,14 @@ const NAV_ITEMS = [
     to: '/',
     key: 'dashboard',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>`,
+  },
+  {
+    to: '/my-missions',
+    key: 'mine',
+    // Only an account tied to a soldier's record has missions of its own.
+    personOnly: true,
+    badge: () => pendingOwnMissions.value,
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>`,
   },
   {
     to: '/persons',

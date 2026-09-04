@@ -18,7 +18,8 @@
     "config": "Konfiguration",
     "users": "Konten",
     "log": "Gefechtsjournal",
-    "permissions": "Rechte"
+    "permissions": "Rechte",
+    "mine": "Meine Aufträge"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -300,6 +301,21 @@
     "randomDriver": "Zufällig",
     "fillDrivers": "Fahrer ergänzen",
     "pickVehicleFirst": "Zuerst ein Fahrzeug wählen: davon hängt der nötige Ausweis ab."
+  },
+  "mine": {
+    "title": "Meine Aufträge",
+    "subtitle": "Wozu {name} eingeteilt ist.",
+    "noRecord": "Dieses Konto ist keiner Personalkarte zugeordnet.",
+    "empty": "Ihnen ist kein Auftrag zugeteilt.",
+    "sections": {
+      "ongoing": "Laufend",
+      "upcoming": "Bevorstehend",
+      "past": "Vergangen"
+    },
+    "asDriver": "Fahrer",
+    "asStaff": "Mitfahrend",
+    "withYou": "Mit Ihnen",
+    "keysHeld": "Kein Schlüssel | Sie haben 1 Schlüssel | Sie haben {count} Schlüssel"
   },
   "calendar": {
     "title": "Kalender",
