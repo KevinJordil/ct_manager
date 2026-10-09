@@ -418,7 +418,7 @@
   "errors": {
     "loadFailed": "Laden nicht möglich ({entity}): {reason}",
     "saveFailed": "Speichern nicht möglich ({entity}): {reason}",
-    "conflict": "Jemand anders hat die Daten ({entity}) gleichzeitig geändert; die Anzeige wurde aktualisiert. Prüfen Sie die Änderung und wiederholen Sie sie bei Bedarf.",
+    "conflict": "Jemand anders hat diesen Eintrag ({entity}) inzwischen geändert; die Anzeige wurde aktualisiert. Prüfen Sie die Änderung und wiederholen Sie sie bei Bedarf.",
     "notLoaded": "Daten nicht geladen ({entity}): Speichern abgebrochen, um den Server nicht zu überschreiben.",
     "unsavedSuffix": "Ihre letzten Änderungen sind nicht gespeichert."
   },
@@ -489,7 +489,8 @@
       "alreadyIn": "Der Schlüssel von {plate} hängt bereits am Brett: Jemand hat ihn inzwischen zurückgebracht. Die Anzeige wurde aktualisiert.",
       "sameHolder": "Der Schlüssel von {plate} ist bereits bei dieser Person. Die Anzeige wurde aktualisiert.",
       "moved": "Der Schlüssel von {plate} wurde inzwischen an einem anderen Posten bewegt. Die Anzeige wurde aktualisiert: Prüfen Sie, wer ihn hat, bevor Sie es erneut versuchen."
-    }
+    },
+    "gone": "Dieser Eintrag ({entity}) wurde inzwischen an einem anderen Posten gelöscht; die Anzeige wurde aktualisiert."
   },
   "auth": {
     "title": "Anmeldung",

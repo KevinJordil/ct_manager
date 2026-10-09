@@ -675,26 +675,29 @@ et se marie mal avec les modules ES d'une application Vue.
 
 ### Modifications concurrentes
 
-Chaque lecture renvoie une version (`ETag`) et chaque écriture doit la
-présenter (`If-Match`). Si deux postes modifient la même collection, le
-second reçoit un `409` : l'interface relit alors les données du serveur au
-lieu d'écraser silencieusement le travail du premier.
+Plusieurs postes travaillent en même temps sur la même flotte. **Chaque
+enregistrement ne porte que sur la fiche concernée** — cette mission créée,
+cette personne modifiée, ce véhicule supprimé (`POST`, `PUT` et `DELETE` sur
+`/api/<collection>/<id>`) —, si bien que le travail d'un autre poste sur
+d'autres fiches ne gêne jamais le vôtre.
 
-- **Les clés et les SPH ne connaissent pas de conflit** : chaque geste est
-  envoyé seul, pour un véhicule, sans version. Le navigateur dit seulement
-  qui il voyait tenir la clé ; si elle a bougé depuis un autre poste, le
-  serveur refuse (*La clé a été déplacée depuis un autre poste*) et
-  l'affichage se met à jour, plutôt que de transformer la prise de l'autre en
+- **Une création ne connaît pas de conflit.**
+- **Une modification** emporte la fiche telle que vous l'aviez vue ; si
+  quelqu'un a changé **cette même fiche** entre-temps, le serveur refuse, la
+  liste est actualisée et un bandeau le dit — le seul cas où il faut regarder
+  à nouveau. Une fiche supprimée ailleurs entre-temps est signalée de même.
+- **Les clés et les SPH** passent par leurs propres routes : le navigateur dit
+  seulement qui il voyait tenir la clé ; si elle a bougé depuis un autre
+  poste, le serveur refuse plutôt que de transformer la prise de l'autre en
   transfert.
-- Une autre modification est **rejouée une fois** sur les données fraîches
-  quand l'autre personne n'a pas touché à la même fiche — et, pour une
-  mission, à aucune mission des mêmes dates, qui aurait pu prendre le même
-  véhicule ou le même chauffeur. Sinon la liste est actualisée, un bandeau le
-  signale et le formulaire reste ouvert avec la saisie.
+- Le serveur ne vérifie que ce que l'enregistrement **ajoute** : une ancienne
+  mission qui désigne une personne supprimée par une version antérieure
+  n'empêche personne de planifier.
 - Les listes se remettent à jour seules quand l'onglet revient au premier
-  plan, et chaque minute, sauf pendant un enregistrement.
+  plan, et chaque minute, sauf pendant un enregistrement. Un bandeau de
+  conflit disparaît quand on change de page.
 - Se déconnecter recharge l'application : la personne suivante au même poste
-  n'hérite ni des listes ni des versions de la précédente.
+  n'hérite ni des listes ni des droits de la précédente.
 
 Un formulaire ne se ferme qu'une fois l'enregistrement accepté par le
 serveur, et ce que le serveur refuse est retiré de l'écran. Une erreur reste

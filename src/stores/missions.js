@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { migrateMissions } from '../migrations.js'
 import { useCollection } from './collection.js'
-import { overlaps } from '../datetime.js'
 
 /** The status is always recomputed from the dates, so it is never persisted. */
 function withoutStatus(mission) {
@@ -10,13 +9,7 @@ function withoutStatus(mission) {
 }
 
 export const useMissionsStore = defineStore('missions', () => {
-  // Two people planning different missions do not get in each other's way.
-  // A mission saved while another one on overlapping dates changed is not
-  // replayed, though: that change may have taken the same vehicle or driver.
-  const collection = useCollection('missions', migrateMissions, {
-    replayIf: ({ attempted, changed }) => !attempted || !changed.some(other =>
-      overlaps(other.startDate, other.endDate, attempted.startDate, attempted.endDate)),
-  })
+  const collection = useCollection('missions', migrateMissions)
 
   /** Missions still referring to a person, as a driver or as unmounted staff */
   function missionsWithPerson(personId) {

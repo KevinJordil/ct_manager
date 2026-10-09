@@ -468,6 +468,77 @@ app.post('/api/journal/archives', requireAdmin, async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
+/**
+ * Writes a collection once its new state is decided — the whole fleet sent
+ * at once, or one record created, changed or deleted. Everything that goes
+ * with a write happens here: references checked, key history protected,
+ * deletions guarded, past missions keeping what they named, the key log and
+ * the accounts kept in step.
+ *
+ * @returns {Promise<string|null>} the new version, or null once a refusal
+ *          has been answered
+ */
+async function storeCollection(req, res, entity, stored, next) {
+  if (entity === 'missions') {
+    // Only what this write adds is checked: a mission written long ago may
+    // name somebody deleted by an older version, and that must not stop
+    // anybody from planning today.
+    const ghost = unknownReference(next, JSON.parse(await readRaw('persons')),
+      JSON.parse(await readRaw('vehicles')), JSON.parse(await readRaw('trailers')), stored)
+    if (ghost) { fail(res, 400, `validation.${ghost.code}`, ghost.params, 'Unknown reference'); return null }
+  }
+  if (entity === 'vehicles') {
+    stampVehicles(stored, next, {
+      recordedBy: recorderName(req.user, JSON.parse(await readRaw('persons'))),
+      recordedById: req.user.id,
+      at: localDateTime(),
+    })
+  }
+  const content = JSON.stringify(next, null, 2)
+  const removed = stored.filter(item => !next.some(candidate => candidate.id === item.id))
+  const cleanup = {}
+  if (['persons', 'vehicles', 'trailers'].includes(entity) && removed.length) {
+    const missions = JSON.parse(await readRaw('missions'))
+    const blocked = deletionBlocker(entity, removed, JSON.parse(await readRaw('vehicles')), missions, localDateTime())
+    if (blocked) { fail(res, 409, blocked.code, blocked.params); return null }
+    const remembered = rememberResources(entity, removed, missions)
+    if (JSON.stringify(remembered) !== JSON.stringify(missions)) cleanup.missions = JSON.stringify(remembered, null, 2)
+  }
+  if (entity === 'vehicles') {
+    const journal = mergeJournal(await readJournal(), next)
+    await commitResources({ ...cleanup, vehicles: content, journal: JSON.stringify(journal) })
+  } else if (entity === 'persons' && removed.length) {
+    const done = await withLock('users', async () => {
+      const users = await readUsers()
+      const removedIds = new Set(removed.map(person => person.id))
+      const remaining = users.filter(user => !removedIds.has(user.personId))
+      if (!remaining.some(user => user.role === ROLES.ADMIN)) {
+        fail(res, 409, 'users.lastAdmin'); return false
+      }
+      await commitResources({ ...cleanup, persons: content, users: JSON.stringify(remaining, null, 2) })
+      return true
+    })
+    if (!done) return null
+  } else if (Object.keys(cleanup).length) {
+    await commitResources({ ...cleanup, [entity]: content })
+  } else {
+    await write(entity, content)
+  }
+  return versionOf(content)
+}
+
+/**
+ * Two readings of a record are the same when they say the same thing,
+ * whatever order their fields came in.
+ */
+function sameRecord(a, b) {
+  const stable = value => Array.isArray(value) ? value.map(stable)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])]))
+      : value
+  return JSON.stringify(stable(a ?? null)) === JSON.stringify(stable(b ?? null))
+}
+
 // ── API routes ──
 
 for (const entity of ENTITIES) {
@@ -521,52 +592,91 @@ for (const entity of ENTITIES) {
         }
 
         const stored = JSON.parse(await readRaw(entity))
-        if (entity === 'missions') {
-          const ghost = unknownReference(req.body, JSON.parse(await readRaw('persons')),
-            JSON.parse(await readRaw('vehicles')), JSON.parse(await readRaw('trailers')))
-          if (ghost) return fail(res, 400, `validation.${ghost.code}`, ghost.params, 'Unknown reference')
-        }
-        if (entity === 'vehicles') {
-          stampVehicles(stored, req.body, {
-            recordedBy: recorderName(req.user, JSON.parse(await readRaw('persons'))),
-            recordedById: req.user.id,
-            at: localDateTime(),
-          })
-        }
-        const content = JSON.stringify(req.body, null, 2)
-        const removed = stored.filter(item => !req.body.some(next => next.id === item.id))
-        if (['persons', 'vehicles', 'trailers'].includes(entity) && removed.length) {
-          const blocked = deletionBlocker(entity, removed, JSON.parse(await readRaw('vehicles')),
-            JSON.parse(await readRaw('missions')), localDateTime())
-          if (blocked) return fail(res, 409, blocked.code, blocked.params)
-        }
-        const cleanup = {}
-        if (['persons', 'vehicles', 'trailers'].includes(entity) && removed.length) {
-          const missions = JSON.parse(await readRaw('missions'))
-          const detached = rememberResources(entity, removed, missions)
-          if (JSON.stringify(detached) !== JSON.stringify(missions)) cleanup.missions = JSON.stringify(detached, null, 2)
-        }
-        if (entity === 'vehicles') {
-          const journal = mergeJournal(await readJournal(), req.body)
-          await commitResources({ ...cleanup, vehicles: content, journal: JSON.stringify(journal) })
-        } else if (entity === 'persons' && removed.length) {
-          const done = await withLock('users', async () => {
-            const users = await readUsers()
-            const removedIds = new Set(removed.map(person => person.id))
-            const remaining = users.filter(user => !removedIds.has(user.personId))
-            if (!remaining.some(user => user.role === ROLES.ADMIN)) {
-              fail(res, 409, 'users.lastAdmin'); return false
-            }
-            await commitResources({ ...cleanup, persons: content, users: JSON.stringify(remaining, null, 2) })
-            return true
-          })
-          if (!done) return
-        } else {
-          await write(entity, content)
-        }
-        const version = versionOf(content)
+        const version = await storeCollection(req, res, entity, stored, req.body)
+        if (!version) return
         res.set('ETag', `"${version}"`)
         res.json({ ok: true, version })
+      })
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  // ── One record at a time ──
+  // Creating, changing or deleting one record never trips over somebody
+  // else's work on another record: only that record is compared with what
+  // the client last saw (`original`), and only a real clash — the same record
+  // changed meanwhile — is refused.
+
+  app.post(`/api/${entity}`, async (req, res, next) => {
+    if (!can(req.user, managePermission(entity))) {
+      return fail(res, 403, 'permissions.created', { entity }, 'Not allowed to create')
+    }
+    const item = req.body
+    const invalid = validateCollection(entity, [item])
+    if (invalid) return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid record')
+    try {
+      await withResources(async () => {
+        const raw = await readRaw(entity)
+        const stored = JSON.parse(raw)
+        if (stored.some(existing => existing.id === item.id)) {
+          return fail(res, 409, 'validation.duplicateId', { id: item.id }, 'Record already exists')
+        }
+        const updated = [...stored, item]
+        const version = await storeCollection(req, res, entity, stored, updated)
+        if (!version) return
+        res.status(201).json({ item: updated.at(-1), version, previous: versionOf(raw) })
+      })
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  app.put(`/api/${entity}/:id`, async (req, res, next) => {
+    const { item, original } = req.body ?? {}
+    if (!item || item.id !== req.params.id) return fail(res, 400, 'validation.missingId', {}, 'Record and route disagree')
+    const invalid = validateCollection(entity, [item])
+    if (invalid) return fail(res, 400, `validation.${invalid.code}`, invalid.params, 'Invalid record')
+    try {
+      await withResources(async () => {
+        const raw = await readRaw(entity)
+        const stored = JSON.parse(raw)
+        const index = stored.findIndex(existing => existing.id === item.id)
+        if (index === -1) return fail(res, 404, 'gone', { entity }, 'Record deleted meanwhile')
+        const migrate = MIGRATIONS[entity]
+        const [current] = migrate([stored[index]])
+        if (original !== undefined && !sameRecord(current, original)) {
+          return fail(res, 409, 'conflict', { entity }, 'Record changed meanwhile')
+        }
+        if (!can(req.user, managePermission(entity))) {
+          const forbidden = forbiddenChange(entity, [current], migrate([item]))
+          if (forbidden) return fail(res, 403, `permissions.${forbidden.code}`, forbidden.params, 'Not allowed')
+        }
+        const updated = stored.map(existing => existing.id === item.id ? item : existing)
+        const version = await storeCollection(req, res, entity, stored, updated)
+        if (!version) return
+        res.json({ item: updated[index], version, previous: versionOf(raw) })
+      })
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  app.delete(`/api/${entity}/:id`, async (req, res, next) => {
+    if (!can(req.user, managePermission(entity))) {
+      return fail(res, 403, 'permissions.deleted', { entity }, 'Not allowed to delete')
+    }
+    try {
+      await withResources(async () => {
+        const raw = await readRaw(entity)
+        const stored = JSON.parse(raw)
+        if (!stored.some(existing => existing.id === req.params.id)) {
+          return fail(res, 404, 'gone', { entity }, 'Record deleted meanwhile')
+        }
+        const updated = stored.filter(existing => existing.id !== req.params.id)
+        const version = await storeCollection(req, res, entity, stored, updated)
+        if (!version) return
+        res.json({ ok: true, version, previous: versionOf(raw) })
       })
     } catch (err) {
       next(err)

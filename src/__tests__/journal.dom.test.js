@@ -13,13 +13,13 @@ import PersonsView from '../views/PersonsView.vue'
 import MissionsView from '../views/MissionsView.vue'
 import ConfirmModal from '../components/common/ConfirmModal.vue'
 
-const mocks = vi.hoisted(() => ({ journal: vi.fn(), archiveJournal: vi.fn(), save: vi.fn(), push: vi.fn(), data: {} }))
+const mocks = vi.hoisted(() => ({ journal: vi.fn(), archiveJournal: vi.fn(), save: vi.fn(), updateItem: vi.fn(), push: vi.fn(), data: {} }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: mocks.push }) }))
 vi.mock('../api.js', () => ({
   ApiError: class ApiError extends Error {}, setSessionToken: () => {}, hasSessionToken: () => true,
   api: { journal: mocks.journal, archiveJournal: mocks.archiveJournal,
     load: async entity => ({ data: structuredClone(mocks.data[entity] ?? []), version: 'v1' }),
-    save: mocks.save, loadPersonAccounts: async () => [] },
+    save: mocks.save, updateItem: mocks.updateItem, deleteItem: mocks.save, loadPersonAccounts: async () => [] },
 }))
 const entry = { id: 'take1', at: '2026-10-09T08:00', action: 'taken', name: 'Favre', vehiclePlate: 'M1', vehicleName: 'Duro', closedBy: 'return1' }
 let wrappers = []
@@ -35,6 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.journal.mockResolvedValue({ data: { entries: [entry], archives: [{ id: 'a1', name: 'Ancien cours', archivedAt: '2026-10-08T18:00', archivedBy: 'chef', entries: [{ ...entry, id: 'old', vehiclePlate: 'M99' }] }] }, version: 'j1' })
   mocks.save.mockResolvedValue({ version: 'v2' })
+  mocks.updateItem.mockImplementation(async (_entity, _id, item) => ({ item, version: 'v2', previous: 'v1' }))
   mocks.archiveJournal.mockResolvedValue({ id: 'a2' })
   mocks.data = { persons: [{ id: 'p1', firstName: 'Jean', lastName: 'Favre', licenses: [], leaves: [] }], vehicles: [{ id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', keyHolder: null }], missions: [] }
 })
@@ -114,7 +115,7 @@ describe('resource deletion', () => {
     await button(wrapper, fr.missions.cancelMission).trigger('click')
     await wrapper.findComponent(ConfirmModal).find('button.btn-danger').trigger('click')
     await flushPromises()
-    expect(mocks.save).toHaveBeenCalledWith('missions', expect.arrayContaining([expect.objectContaining({ id: 'm1', cancelled: true })]), 'v1')
+    expect(mocks.updateItem).toHaveBeenCalledWith('missions', 'm1', expect.objectContaining({ id: 'm1', cancelled: true }), expect.objectContaining({ id: 'm1' }))
     expect(wrapper.text()).toContain('Transport vide')
     expect(wrapper.text()).toContain(fr.status.cancelled)
   })

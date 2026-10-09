@@ -7,34 +7,31 @@ import {
 
 /**
  * Shared skeleton for the persisted collections (persons, vehicles,
- * missions): single load, migration of historic shapes, CRUD and saving.
+ * missions, trailers): single load, migration of historic shapes, and
+ * changes saved one record at a time.
+ *
+ * Each change travels alone — this record created, this one changed, this
+ * one deleted — so somebody else's work on another record never gets in the
+ * way. A change is only refused when the same record was changed meanwhile:
+ * a real clash, which the person has to look at again.
  *
  * @param entity  collection name on the API side
  * @param migrate transformation applied to the loaded data
- * @param replayIf extra condition for replaying a change after somebody
- *                 else saved: receives the record as it was to be saved and
- *                 the records the other writer changed
  */
-export function useCollection(entity, migrate = data => data, { replayIf = null } = {}) {
+export function useCollection(entity, migrate = data => data) {
   const items = ref([])
   const loading = ref(false)
   const loaded = ref(false)
   const loadError = ref(null)
-  // Version returned by the server on the last successful exchange; guards
-  // against overwriting changes made from another tab.
+  // Version of the collection last read; only tells a refresh whether
+  // anything changed. Saves do not depend on it.
   let version = null
   let initPromise = null
 
-  function isVersionConflict(err) {
-    return err.status === 409 && (!err.code || err.code === 'conflict')
-  }
-
   function handleError(err, context) {
     if (err.status === 401) return reportAuthRequired()
-    // The data shown has already been refreshed from the server (see
-    // commit): the version is never adopted without the data that goes with
-    // it, or the next save would overwrite the other writer's work.
-    if (isVersionConflict(err)) {
+    // Same record changed elsewhere: the screen has been refreshed already.
+    if (err.status === 409 && err.code === 'conflict') {
       return reportError('errors.conflict', { entity }, { isConflict: true, context, source: entity })
     }
     // A coded server error is rendered directly; anything else falls back to
@@ -79,8 +76,8 @@ export function useCollection(entity, migrate = data => data, { replayIf = null 
     return init()
   }
 
-  // Changes are saved one after the other: each one starts from the version
-  // the previous one left, instead of racing it into a conflict.
+  // Changes are sent one after the other, so each starts from the record the
+  // previous one left.
   let queue = Promise.resolve()
   let pending = 0
 
@@ -93,110 +90,131 @@ export function useCollection(entity, migrate = data => data, { replayIf = null 
     return run
   }
 
-  const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+  const clone = value => JSON.parse(JSON.stringify(value))
 
-  /**
-   * After somebody else saved, may this change be replayed on their data?
-   * Only when they left its record alone — otherwise it is a real conflict,
-   * and the person has to look again — and when the collection's own rule
-   * agrees (a mission also asks that nothing near it in time moved).
-   */
-  function mayReplay({ id, base, fresh, attempted }) {
-    if (id == null) return true
-    if (!same(base.find(i => i.id === id), fresh.find(i => i.id === id))) return false
-    if (!replayIf) return true
-    const changed = fresh.filter(item => item.id !== id && !same(item, base.find(i => i.id === item.id)))
-      .concat(base.filter(item => item.id !== id && !fresh.some(i => i.id === item.id)))
-    return replayIf({ attempted, changed })
+  /** Puts the record the server answered in place of ours. */
+  function takeBack(item, answer) {
+    const [fresh] = migrate([item])
+    const index = items.value.findIndex(i => i.id === fresh.id)
+    if (index === -1) items.value.push(fresh)
+    else items.value[index] = fresh
+    if (version === answer.previous) version = answer.version
+    return fresh
   }
 
   /**
-   * Applies a change and saves the collection.
-   *
-   * `apply` changes `items` and returns false when its target is gone; `id`
-   * names the record it changes. If somebody else saved in between, the data
-   * is read again; the change is replayed once on top of it when that is
-   * safe (see mayReplay), and reported as a conflict otherwise. Whatever
-   * fails, the change is undone, so the screen never shows what the server
-   * refused.
-   *
-   * @returns {Promise<boolean>} true once the server has stored the change
+   * Shows a change at once, sends it, and undoes it if the server refuses.
+   * A refusal because the record changed or vanished elsewhere also brings
+   * the screen up to date, so the person sees what they are now facing.
    */
-  function commit(apply, id = null) {
-    return enqueue(() => commitNow(apply, id))
-  }
-
-  async function commitNow(apply, id) {
-    // Without a successful load the collection is empty in memory: saving it
-    // would replace the server's file with an empty array.
-    if (!version) {
-      reportError('errors.notLoaded', { entity }, { context: 'save', source: entity })
-      return false
-    }
-    startSaving()
-    try {
-      for (let attempt = 0; ; attempt++) {
-        const before = JSON.parse(JSON.stringify(items.value))
-        if (apply() === false) {
-          if (attempt > 0) reportError('errors.conflict', { entity }, { isConflict: true, context: 'save', source: entity })
-          return false
-        }
-        const attempted = id == null ? null : JSON.parse(JSON.stringify(items.value.find(i => i.id === id) ?? null))
-        try {
-          const { version: newVersion } = await api.save(entity, items.value, version)
-          version = newVersion
-          clearError(entity)
-          return true
-        } catch (err) {
-          items.value = before
-          if (isVersionConflict(err)) {
-            try {
-              await fetchCurrent()
-            } catch (loadErr) {
-              handleError(loadErr, 'load')
-              return false
-            }
-            if (attempt === 0 && mayReplay({ id, base: before, fresh: items.value, attempted })) continue
-          }
-          handleError(err, 'save')
-          return false
-        }
-      }
-    } finally {
-      endSaving()
-    }
-  }
-
-  /**
-   * Runs an action the server applies to one record itself — a key
-   * movement, a weekly check — and takes back the record it returns. No
-   * version travels with it, so nobody else's save can make it fail. Our
-   * copy keeps its version only if it was current just before.
-   *
-   * @param call resolves to {item, version, previous}
-   * @returns {Promise<boolean>}
-   */
-  function viaServer(call) {
+  function send({ show, undo, call, settle }) {
     return enqueue(async () => {
+      // Without a successful load nothing on screen reflects the server.
+      if (!version) {
+        reportError('errors.notLoaded', { entity }, { context: 'save', source: entity })
+        return null
+      }
+      show()
       startSaving()
       try {
-        const { item, version: next, previous } = await call()
-        const [fresh] = migrate([item])
-        const index = items.value.findIndex(i => i.id === fresh.id)
-        if (index === -1) items.value.push(fresh)
-        else items.value[index] = fresh
-        if (version === previous) version = next
+        const answer = await call()
+        const result = settle(answer)
         clearError(entity)
-        return true
+        return result
       } catch (err) {
-        // Refused because the record moved meanwhile: show what it is now.
+        undo()
         if (err.status === 409 || err.status === 404) await fetchCurrent().catch(() => {})
         handleError(err, 'save')
-        return false
+        return null
       } finally {
         endSaving()
       }
     })
+  }
+
+  /** @returns {Promise<object|null>} the stored item, or null if refused */
+  function add(data) {
+    const item = { ...data, id: newId() }
+    return send({
+      show: () => { items.value.push(clone(item)) },
+      undo: () => { items.value = items.value.filter(i => i.id !== item.id) },
+      call: () => api.createItem(entity, item),
+      settle: answer => takeBack(answer.item, answer),
+    })
+  }
+
+  /**
+   * Changes one record: `change` receives a copy to modify. What we saw
+   * before the change goes along, and the server refuses if the record has
+   * changed since.
+   *
+   * @returns {Promise<boolean>}
+   */
+  async function change(id, changeCopy) {
+    const index = items.value.findIndex(i => i.id === id)
+    if (index === -1) return false
+    let original
+    const saved = await send({
+      show: () => {
+        const at = items.value.findIndex(i => i.id === id)
+        original = clone(items.value[at])
+        const next = clone(original)
+        changeCopy(next)
+        items.value[at] = next
+      },
+      undo: () => {
+        const at = items.value.findIndex(i => i.id === id)
+        if (at !== -1) items.value[at] = original
+      },
+      call: () => api.updateItem(entity, id, items.value.find(i => i.id === id), original),
+      settle: answer => takeBack(answer.item, answer),
+    })
+    return Boolean(saved)
+  }
+
+  function update(id, data) {
+    const { id: _ignored, ...rest } = data
+    return change(id, copy => Object.assign(copy, rest))
+  }
+
+  /** Mutates one item then saves, if it exists */
+  function mutate(id, fn) {
+    return change(id, fn)
+  }
+
+  async function remove(id) {
+    if (!items.value.some(i => i.id === id)) return false
+    let before
+    const removed = await send({
+      show: () => {
+        before = items.value
+        items.value = items.value.filter(i => i.id !== id)
+      },
+      undo: () => { items.value = before },
+      call: () => api.deleteItem(entity, id),
+      settle: answer => {
+        if (version === answer.previous) version = answer.version
+        return true
+      },
+    })
+    return Boolean(removed)
+  }
+
+  /**
+   * Runs an action the server applies to one record itself — a key
+   * movement, a weekly check — and takes back the record it returns.
+   *
+   * @param call resolves to {item, version, previous}
+   * @returns {Promise<boolean>}
+   */
+  async function viaServer(call) {
+    const done = await send({
+      show: () => {},
+      undo: () => {},
+      call,
+      settle: answer => takeBack(answer.item, answer),
+    })
+    return Boolean(done)
   }
 
   /**
@@ -214,48 +232,11 @@ export function useCollection(entity, migrate = data => data, { replayIf = null 
     } catch { /* the next refresh, or the next save, will tell */ }
   }
 
-  /** Saves the collection as it stands. */
-  function persist() {
-    return commit(() => true)
-  }
-
-  /** @returns {Promise<object|null>} the stored item, or null if refused */
-  async function add(data) {
-    const item = { ...data, id: newId() }
-    const saved = await commit(() => { items.value.push({ ...item }) }, item.id)
-    return saved ? items.value.find(i => i.id === item.id) : null
-  }
-
-  function update(id, data) {
-    const { id: _ignored, ...rest } = data
-    return commit(() => {
-      const index = items.value.findIndex(i => i.id === id)
-      if (index === -1) return false
-      items.value[index] = { ...items.value[index], ...rest }
-    }, id)
-  }
-
-  function remove(id) {
-    return commit(() => {
-      if (!items.value.some(i => i.id === id)) return false
-      items.value = items.value.filter(i => i.id !== id)
-    }, id)
-  }
-
-  /** Mutates one item then saves, if it exists */
-  function mutate(id, fn) {
-    return commit(() => {
-      const item = items.value.find(i => i.id === id)
-      if (!item) return false
-      fn(item)
-    }, id)
-  }
-
   return {
     items,
     loading: readonly(loading),
     loaded: readonly(loaded),
     loadError: readonly(loadError),
-    init, reload, refresh, add, update, remove, mutate, persist, viaServer,
+    init, reload, refresh, add, update, remove, mutate, viaServer,
   }
 }

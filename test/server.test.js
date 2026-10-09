@@ -1008,6 +1008,62 @@ describe('missions that name nothing real', () => {
   })
 })
 
+describe('one record at a time', () => {
+  const as = (session = token) => ({ Authorization: `Bearer ${session}`, 'Content-Type': 'application/json' })
+  const create = (entity, item, session) => fetch(`${BASE}/api/${entity}`, { method: 'POST', headers: as(session), body: JSON.stringify(item) })
+  const change = (entity, item, original, session) => fetch(`${BASE}/api/${entity}/${item.id}`, {
+    method: 'PUT', headers: as(session), body: JSON.stringify({ item, original }),
+  })
+  const mission = over => ({ id: 'r1', title: 'Activité', description: '', notes: '', startDate: '2026-11-20T08:00', endDate: '2026-11-20T17:00', vehicles: [], staffIds: [], ...over })
+
+  it('creates a mission although an old one names somebody deleted long ago', async () => {
+    // Written by an older version, which deleted people outright.
+    await fs.writeFile(path.join(dataDir, 'missions.json'),
+      JSON.stringify([mission({ id: 'old', title: 'Ancienne', staffIds: ['gone-person'] })]))
+    const res = await create('missions', mission())
+    expect(res.status).toBe(201)
+    expect((await res.json()).item).toMatchObject({ id: 'r1', title: 'Activité' })
+  })
+
+  it('still refuses a new mission naming somebody who does not exist', async () => {
+    const res = await create('missions', mission({ id: 'r2', staffIds: ['nobody'] }))
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('validation.unknownReference')
+  })
+
+  it('changes one mission while another one changed meanwhile', async () => {
+    const res = await change('missions', mission({ title: 'Renommée' }), mission())
+    expect(res.status).toBe(200)
+  })
+
+  it('refuses a change to a mission somebody else changed first', async () => {
+    // The client still believes the title is "Activité".
+    const res = await change('missions', mission({ title: 'Mine' }), mission())
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('conflict')
+  })
+
+  it('says when the record is gone', async () => {
+    const res = await change('missions', mission({ id: 'never' }), mission({ id: 'never' }))
+    expect(res.status).toBe(404)
+    expect((await res.json()).code).toBe('gone')
+  })
+
+  it('deletes one mission and leaves the others', async () => {
+    const res = await fetch(`${BASE}/api/missions/r1`, { method: 'DELETE', headers: as() })
+    expect(res.status).toBe(200)
+    const left = await (await get('missions')).json()
+    expect(left.map(m => m.id)).toEqual(['old'])
+  })
+
+  it('keeps creating and deleting to those who manage the collection', async () => {
+    await createAccount({ username: 'reader2', password: 'r', role: 'user' })
+    const reader = (await (await signIn('r', 'reader2')).json()).token
+    expect((await create('missions', mission({ id: 'r3' }), reader)).status).toBe(403)
+    expect((await fetch(`${BASE}/api/missions/old`, { method: 'DELETE', headers: as(reader) })).status).toBe(403)
+  })
+})
+
 describe('security headers', () => {
   it('forbids framing and foreign scripts', async () => {
     const res = await fetch(`${BASE}/api/config`)

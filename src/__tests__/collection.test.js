@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-const calls = vi.hoisted(() => ({ load: null, save: null }))
+const calls = vi.hoisted(() => ({ load: null, create: null, update: null, remove: null, sent: [] }))
 
 vi.mock('../api.js', () => ({
   ApiError: class ApiError extends Error {
@@ -13,7 +13,9 @@ vi.mock('../api.js', () => ({
   },
   api: {
     load: (...args) => calls.load(...args),
-    save: (...args) => calls.save(...args),
+    createItem: (...args) => { calls.sent.push(['create', ...args]); return calls.create(...args) },
+    updateItem: (...args) => { calls.sent.push(['update', ...args]); return calls.update(...args) },
+    deleteItem: (...args) => { calls.sent.push(['delete', ...args]); return calls.remove(...args) },
   },
 }))
 
@@ -22,15 +24,16 @@ const { useSync } = await import('../stores/sync.js')
 const { ApiError } = await import('../api.js')
 
 const sync = useSync()
+const answer = item => ({ item, version: 'v2', previous: 'v1' })
 
 beforeEach(() => {
   sync.clearError()
+  calls.sent = []
   calls.load = async () => ({ data: [], version: 'v1' })
-  calls.save = async () => ({ version: 'v2' })
+  calls.create = async (_entity, item) => answer(item)
+  calls.update = async (_entity, _id, item) => answer(item)
+  calls.remove = async () => ({ ok: true, version: 'v2', previous: 'v1' })
 })
-
-/** Lets pending promises settle */
-const settle = () => new Promise(resolve => setTimeout(resolve, 0))
 
 describe('useCollection — loading', () => {
   it('loads the data and applies the migration', async () => {
@@ -73,83 +76,16 @@ describe('useCollection — loading', () => {
   })
 })
 
-describe('useCollection — saving', () => {
-  it('sends the version received on load', async () => {
-    const seen = []
-    calls.save = async (_entity, _data, version) => { seen.push(version); return { version: 'v2' } }
-    const collection = useCollection('persons')
+describe('useCollection — one record at a time', () => {
+  it('sends only the record created, with a unique identifier', async () => {
+    const collection = useCollection('missions')
     await collection.init()
-    await collection.add({ lastName: 'X' })
-    expect(seen).toEqual(['v1'])
-  })
-
-  it('uses the new version on the next save', async () => {
-    const seen = []
-    let counter = 1
-    calls.save = async (_entity, _data, version) => { seen.push(version); return { version: `v${++counter}` } }
-    const collection = useCollection('persons')
-    await collection.init()
-    collection.add({ lastName: 'X' }); await settle()
-    collection.add({ lastName: 'Y' }); await settle()
-    expect(seen).toEqual(['v1', 'v2'])
-  })
-
-  it('refuses to save when the load failed', async () => {
-    calls.load = async () => { throw new ApiError('Server unreachable') }
-    let saves = 0
-    calls.save = async () => { saves++; return { version: 'v2' } }
-
-    const collection = useCollection('persons')
-    await collection.init()
-    collection.add({ lastName: 'X' })
-    await settle()
-
-    // Without this guard the empty in-memory collection would wipe the server.
-    expect(saves).toBe(0)
-    expect(sync.error.value.key).toBe('errors.notLoaded')
-  })
-
-  it('reports a conflict with another tab', async () => {
-    calls.save = async () => { throw new ApiError('conflict', { status: 409, code: 'conflict', params: { version: 'v9' } }) }
-    const collection = useCollection('persons')
-    await collection.init()
-    collection.add({ lastName: 'X' })
-    await settle()
-    expect(sync.conflict.value).toBe(true)
-    expect(sync.error.value.key).toBe('errors.conflict')
-  })
-
-  it('reports an expired session', async () => {
-    calls.save = async () => { throw new ApiError('session', { status: 401, code: 'auth.required' }) }
-    const collection = useCollection('persons')
-    await collection.init()
-    collection.add({ lastName: 'X' })
-    await settle()
-    expect(sync.authRequired.value).toBe(true)
-    expect(sync.error.value.key).toBe('auth.sessionExpired')
-  })
-
-  it('clears the error after a successful save', async () => {
-    const collection = useCollection('persons')
-    await collection.init()
-    calls.save = async () => { throw new ApiError('Server unreachable') }
-    collection.add({ lastName: 'X' }); await settle()
-    expect(sync.error.value).not.toBeNull()
-
-    calls.save = async () => ({ version: 'v3' })
-    collection.add({ lastName: 'Y' }); await settle()
-    expect(sync.error.value).toBeNull()
-  })
-})
-
-describe('useCollection — CRUD', () => {
-  it('adds with a unique identifier', async () => {
-    const collection = useCollection('persons')
-    await collection.init()
-    const first = await collection.add({ lastName: 'A' })
-    const second = await collection.add({ lastName: 'B' })
+    const first = await collection.add({ title: 'A' })
+    const second = await collection.add({ title: 'B' })
     expect(first.id).not.toBe(second.id)
-    expect(collection.items.value).toHaveLength(2)
+    expect(calls.sent.map(([kind, entity, item]) => [kind, entity, item.title])).toEqual([
+      ['create', 'missions', 'A'], ['create', 'missions', 'B'],
+    ])
   })
 
   it('shows a change at once, before the server answers', async () => {
@@ -160,160 +96,127 @@ describe('useCollection — CRUD', () => {
     await pending
   })
 
-  it('updates without letting the identifier be rewritten', async () => {
+  it('sends a change with the record as it was seen, and never lets the identifier be rewritten', async () => {
+    calls.load = async () => ({ data: [{ id: 'a', lastName: 'A' }], version: 'v1' })
     const collection = useCollection('persons')
     await collection.init()
-    const item = await collection.add({ lastName: 'A' })
-    await collection.update(item.id, { lastName: 'B', id: 'spoofed' })
-    expect(collection.items.value[0]).toMatchObject({ id: item.id, lastName: 'B' })
+    expect(await collection.update('a', { lastName: 'B', id: 'spoofed' })).toBe(true)
+    expect(calls.sent[0]).toEqual(['update', 'persons', 'a', { id: 'a', lastName: 'B' }, { id: 'a', lastName: 'A' }])
+    expect(collection.items.value[0]).toEqual({ id: 'a', lastName: 'B' })
   })
 
   it('ignores an update to a missing item', async () => {
     const collection = useCollection('persons')
     await collection.init()
     expect(await collection.update('ghost', { lastName: 'X' })).toBe(false)
-    expect(collection.items.value).toEqual([])
+    expect(calls.sent).toEqual([])
   })
 
   it('removes an item', async () => {
+    calls.load = async () => ({ data: [{ id: 'a' }], version: 'v1' })
     const collection = useCollection('persons')
     await collection.init()
-    const item = await collection.add({ lastName: 'A' })
-    await collection.remove(item.id)
+    expect(await collection.remove('a')).toBe(true)
+    expect(calls.sent).toEqual([['delete', 'persons', 'a']])
     expect(collection.items.value).toEqual([])
   })
 
-  it('mutate applies the change to the target item', async () => {
+  it('mutate applies the change to a copy of the target item', async () => {
+    calls.load = async () => ({ data: [{ id: 'a', leaves: [] }], version: 'v1' })
     const collection = useCollection('persons')
     await collection.init()
-    const item = await collection.add({ lastName: 'A' })
-    await collection.mutate(item.id, person => { person.lastName = 'Changed' })
-    expect(collection.items.value[0].lastName).toBe('Changed')
+    await collection.mutate('a', person => { person.leaves.push({ id: 'l' }) })
+    expect(calls.sent[0][4]).toEqual({ id: 'a', leaves: [] })
+    expect(collection.items.value[0].leaves).toEqual([{ id: 'l' }])
   })
 
-  it('takes back an addition the server refused', async () => {
+  it('takes back the record the server stored', async () => {
+    calls.load = async () => ({ data: [{ id: 'a' }], version: 'v1' })
+    calls.update = async (_entity, _id, item) => answer({ ...item, stamped: true })
+    const collection = useCollection('vehicles')
+    await collection.init()
+    await collection.update('a', { name: 'Duro' })
+    expect(collection.items.value[0]).toEqual({ id: 'a', name: 'Duro', stamped: true })
+  })
+
+  it('refuses to save when the load failed', async () => {
+    calls.load = async () => { throw new ApiError('Server unreachable') }
     const collection = useCollection('persons')
     await collection.init()
-    calls.save = async () => { throw new ApiError('unreachable') }
-    expect(await collection.add({ lastName: 'A' })).toBeNull()
-    expect(collection.items.value).toEqual([])
+    expect(await collection.add({ lastName: 'X' })).toBeNull()
+    // Without this guard nothing on screen would reflect the server.
+    expect(calls.sent).toEqual([])
+    expect(sync.error.value.key).toBe('errors.notLoaded')
   })
 })
 
-describe('somebody else saved in between', () => {
-  const conflict = () => new ApiError('conflict', { status: 409, code: 'conflict', params: { version: 'v9' } })
-
-  it('never writes stale data under the newer version', async () => {
-    // Another counter recorded a key on v1 while this one was still on v0.
-    let server = { data: [{ id: 'v1', holder: null }, { id: 'v2', holder: null }], version: 'v0' }
-    calls.load = async () => structuredClone(server)
-    const collection = useCollection('vehicles')
+describe('somebody else working at the same time', () => {
+  it('never stops a creation, whatever happened to other records', async () => {
+    let loads = 0
+    calls.load = async () => ({ data: [{ id: 'old', title: loads++ ? 'changed elsewhere' : 'old' }], version: `v${loads}` })
+    const collection = useCollection('missions')
     await collection.init()
-    server = { data: [{ id: 'v1', holder: 'Favre' }, { id: 'v2', holder: null }], version: 'v1' }
-
-    const sent = []
-    calls.save = async (_entity, data, version) => {
-      sent.push({ data: JSON.parse(JSON.stringify(data)), version })
-      if (version !== server.version) throw conflict()
-      server = { data: JSON.parse(JSON.stringify(data)), version: `${version}+` }
-      return { version: server.version }
-    }
-
-    expect(await collection.mutate('v2', vehicle => { vehicle.holder = 'Rossier' })).toBe(true)
-    // Replayed once on what the server holds: both movements survive.
-    expect(sent.at(-1).version).toBe('v1')
-    expect(server.data).toEqual([{ id: 'v1', holder: 'Favre' }, { id: 'v2', holder: 'Rossier' }])
-    expect(collection.items.value).toEqual(server.data)
+    // Another counter changed "old" meanwhile; nobody asks the server about it.
+    expect(await collection.add({ title: 'new' })).not.toBeNull()
   })
 
-  it('does not replay a mission, which the other change may have invalidated', async () => {
+  it('refuses a change to a record somebody else changed, and shows theirs', async () => {
     let loads = 0
     calls.load = async () => ({ data: [{ id: 'm', title: loads++ ? 'Theirs' : 'Mine' }], version: `v${loads}` })
-    let saves = 0
-    calls.save = async () => { saves++; throw conflict() }
-    const collection = useCollection('missions', data => data, { replay: false })
+    calls.update = async () => { throw new ApiError('conflict', { status: 409, code: 'conflict', params: { entity: 'missions' } }) }
+    const collection = useCollection('missions')
     await collection.init()
-
     expect(await collection.update('m', { title: 'Edited' })).toBe(false)
-    expect(saves).toBe(1)
-    // What is shown is now the server's, and the user is told.
     expect(collection.items.value).toEqual([{ id: 'm', title: 'Theirs' }])
     expect(sync.error.value.key).toBe('errors.conflict')
+    expect(sync.conflict.value).toBe(true)
   })
 
-  it('keeps the conflict in view when the next save on the same data also fails', async () => {
-    calls.save = async () => { throw conflict() }
+  it('says a record deleted elsewhere is gone', async () => {
+    let loads = 0
+    calls.load = async () => ({ data: loads++ ? [] : [{ id: 'm' }], version: `v${loads}` })
+    calls.update = async () => { throw new ApiError('gone', { status: 404, code: 'gone', params: { entity: 'missions' } }) }
+    const collection = useCollection('missions')
+    await collection.init()
+    expect(await collection.update('m', { title: 'x' })).toBe(false)
+    expect(collection.items.value).toEqual([])
+    expect(sync.error.value.key).toBe('server.gone')
+  })
+})
+
+describe('refusals', () => {
+  it('takes back an addition the server refused', async () => {
+    calls.create = async () => { throw new ApiError('unreachable') }
     const collection = useCollection('persons')
     await collection.init()
     expect(await collection.add({ lastName: 'A' })).toBeNull()
-    expect(sync.conflict.value).toBe(true)
+    expect(collection.items.value).toEqual([])
+    expect(sync.error.value.key).toBe('errors.saveFailed')
   })
-})
 
-describe('replaying after somebody else saved', () => {
-  const conflict = () => new ApiError('conflict', { status: 409, code: 'conflict', params: {} })
-  const mission = (id, day, over = {}) => ({ id, title: id, startDate: `2026-10-${day}T08:00`, endDate: `2026-10-${day}T17:00`, ...over })
-  const replayIf = ({ attempted, changed }) => !changed.some(other =>
-    other.startDate < attempted.endDate && attempted.startDate < other.endDate)
-
-  /** The server holds `theirs` and answers a conflict to the first save. */
-  function serverWith(ours, theirs) {
-    let loads = 0
-    let saves = 0
-    calls.load = async () => ({ data: JSON.parse(JSON.stringify(loads++ ? theirs : ours)), version: `v${loads}` })
-    calls.save = async () => { if (saves++ === 0) throw conflict(); return { version: 'v9' } }
-    return { saves: () => saves }
-  }
-
-  it('replays a mission when the other change was on another day', async () => {
-    const server = serverWith([mission('a', '10'), mission('b', '20')], [mission('a', '10'), mission('b', '20', { title: 'moved' })])
-    const collection = useCollection('missions', data => data, { replayIf })
+  it('reports an expired session', async () => {
+    calls.create = async () => { throw new ApiError('session', { status: 401, code: 'auth.required' }) }
+    const collection = useCollection('persons')
     await collection.init()
-    expect(await collection.update('a', { title: 'mine' })).toBe(true)
-    expect(server.saves()).toBe(2)
-    expect(collection.items.value.find(m => m.id === 'b').title).toBe('moved')
+    await collection.add({ lastName: 'X' })
+    expect(sync.authRequired.value).toBe(true)
+    expect(sync.error.value.key).toBe('auth.sessionExpired')
   })
 
-  it('does not replay it when the other change shares its dates', async () => {
-    serverWith([mission('a', '10'), mission('b', '20')], [mission('a', '10'), mission('b', '10')])
-    const collection = useCollection('missions', data => data, { replayIf })
+  it('clears the error after a successful save', async () => {
+    const collection = useCollection('persons')
     await collection.init()
-    expect(await collection.update('a', { title: 'mine' })).toBe(false)
-    expect(sync.error.value.key).toBe('errors.conflict')
+    calls.create = async () => { throw new ApiError('Server unreachable') }
+    await collection.add({ lastName: 'X' })
+    expect(sync.error.value).not.toBeNull()
+    calls.create = async (_entity, item) => answer(item)
+    await collection.add({ lastName: 'Y' })
+    expect(sync.error.value).toBeNull()
   })
 
-  it('never writes over a record the other person changed too', async () => {
-    const server = serverWith([{ id: 'v', seats: 4 }], [{ id: 'v', seats: 9 }])
-    const collection = useCollection('vehicles')
-    await collection.init()
-    expect(await collection.update('v', { name: 'mine' })).toBe(false)
-    expect(server.saves()).toBe(1)
-    expect(collection.items.value[0]).toEqual({ id: 'v', seats: 9 })
-  })
-})
-
-describe('one failure is not hidden by another success', () => {
-  it('keeps a mission error in view when a key movement then saves', async () => {
-    const missions = useCollection('missions')
-    const vehicles = useCollection('vehicles')
-    calls.load = async () => ({ data: [{ id: 'x' }], version: 'v1' })
-    await missions.init()
-    await vehicles.init()
-
-    calls.save = async entity => {
-      if (entity === 'missions') throw new ApiError('unreachable')
-      return { version: 'v2' }
-    }
-    await missions.update('x', { title: 'Lost' })
-    await vehicles.mutate('x', vehicle => { vehicle.holder = 'Favre' })
-    expect(sync.error.value?.key).toBe('errors.saveFailed')
-  })
-})
-
-describe('rejected resource deletion', () => {
-  it('restores the record and reports the actual blocker rather than a version conflict', async () => {
+  it('restores a deleted record and reports the actual blocker', async () => {
     calls.load = async () => ({ data: [{ id: 'a', name: 'Duro' }], version: 'v1' })
-    calls.save = async () => { throw new ApiError('blocked', { status: 409, code: 'deletion.keys', params: { vehicles: 'M1' } }) }
+    calls.remove = async () => { throw new ApiError('blocked', { status: 409, code: 'deletion.keys', params: { vehicles: 'M1' } }) }
     const collection = useCollection('vehicles')
     await collection.init()
     expect(await collection.remove('a')).toBe(false)
@@ -321,13 +224,31 @@ describe('rejected resource deletion', () => {
     expect(sync.error.value.key).toBe('server.deletion.keys')
     expect(sync.conflict.value).toBe(false)
   })
+
   it('restores a mission if cancellation fails to save', async () => {
     calls.load = async () => ({ data: [{ id: 'a', title: 'Transport' }], version: 'v1' })
-    calls.save = async () => { throw new ApiError('unreachable') }
+    calls.update = async () => { throw new ApiError('unreachable') }
     const collection = useCollection('missions')
     await collection.init()
     expect(await collection.update('a', { cancelled: true })).toBe(false)
     expect(collection.items.value[0].cancelled).toBeUndefined()
+  })
+})
+
+describe('one failure is not hidden by another success', () => {
+  it('keeps a mission error in view when a key movement then saves', async () => {
+    calls.load = async () => ({ data: [{ id: 'x' }], version: 'v1' })
+    const missions = useCollection('missions')
+    const vehicles = useCollection('vehicles')
+    await missions.init()
+    await vehicles.init()
+    calls.update = async entity => {
+      if (entity === 'missions') throw new ApiError('unreachable')
+      return answer({ id: 'x', holder: 'Favre' })
+    }
+    await missions.update('x', { title: 'Lost' })
+    await vehicles.mutate('x', vehicle => { vehicle.holder = 'Favre' })
+    expect(sync.error.value?.key).toBe('errors.saveFailed')
   })
 })
 
@@ -345,7 +266,7 @@ describe('catching up with other counters', () => {
   it('leaves the list alone while a change is being saved', async () => {
     let release
     calls.load = async () => ({ data: [{ id: 'a', name: 'server' }], version: 'v1' })
-    calls.save = () => new Promise(resolve => { release = () => resolve({ version: 'v2' }) })
+    calls.update = (_entity, _id, item) => new Promise(resolve => { release = () => resolve(answer(item)) })
     const collection = useCollection('vehicles')
     await collection.init()
     calls.load = async () => ({ data: [{ id: 'a', name: 'elsewhere' }], version: 'v7' })

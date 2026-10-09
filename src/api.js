@@ -298,23 +298,25 @@ export const api = {
     return { data: await res.json(), version: versionOf(res) }
   },
 
-  /**
-   * Saves the whole collection.
-   *
-   * `version` is the one received at the last load: the server refuses the
-   * write (409) if the data changed meanwhile, which stops a second tab from
-   * silently overwriting the first one's work.
-   *
-   * Throws an ApiError on failure — a silent failure would let the user
-   * believe their changes were saved.
-   */
-  async save(entity, data, version) {
-    const res = await request(`${BASE}/${entity}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'If-Match': version ?? '' },
-      body: JSON.stringify(data),
-    })
-    const body = await res.json()
-    return { version: body.version ?? versionOf(res) }
+  // ── One record at a time ──
+  // Each answers {item, version, previous}: the record as the server stored
+  // it, and the collection's version after and before.
+
+  async createItem(entity, item) {
+    return (await request(`${BASE}/${entity}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item),
+    })).json()
   },
+
+  /** `original` is the record as last seen: the server refuses if it changed since. */
+  async updateItem(entity, id, item, original) {
+    return (await request(`${BASE}/${entity}/${encodeURIComponent(id)}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item, original }),
+    })).json()
+  },
+
+  async deleteItem(entity, id) {
+    return (await request(`${BASE}/${entity}/${encodeURIComponent(id)}`, { method: 'DELETE' })).json()
+  },
+
 }

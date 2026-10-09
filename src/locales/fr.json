@@ -418,7 +418,7 @@
   "errors": {
     "loadFailed": "Chargement impossible ({entity}) : {reason}",
     "saveFailed": "Enregistrement impossible ({entity}) : {reason}",
-    "conflict": "Quelqu'un d'autre a modifié les données ({entity}) au même moment ; l'affichage a été actualisé. Vérifiez et refaites la modification si besoin.",
+    "conflict": "Quelqu'un d'autre a modifié cette fiche ({entity}) entre-temps ; l'affichage a été actualisé. Vérifiez et refaites la modification si besoin.",
     "notLoaded": "Données non chargées ({entity}) : enregistrement annulé pour ne pas écraser le serveur.",
     "unsavedSuffix": "Vos dernières modifications ne sont pas enregistrées."
   },
@@ -489,7 +489,8 @@
       "alreadyIn": "La clé de {plate} est déjà au tableau : quelqu'un l'a rendue entre-temps. L'affichage a été actualisé.",
       "sameHolder": "La clé de {plate} est déjà chez cette personne. L'affichage a été actualisé.",
       "moved": "La clé de {plate} a été déplacée depuis un autre poste entre-temps. L'affichage a été actualisé : vérifiez qui la détient avant de recommencer."
-    }
+    },
+    "gone": "Cette fiche ({entity}) a été supprimée entre-temps depuis un autre poste ; l'affichage a été actualisé."
   },
   "auth": {
     "title": "Connexion",

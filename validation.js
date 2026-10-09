@@ -493,27 +493,48 @@ export function validateConfig(body) {
 }
 
 /**
- * Every vehicle and person a mission names must exist — or have existed:
- * a deleted one stays named through its frozen copy.
+ * Every vehicle, trailer and person a mission names must exist — or have
+ * existed: a deleted one stays named through its frozen copy.
  *
+ * Only what a write adds is checked. A reference the stored mission already
+ * held is left alone, so a mission written long ago, naming somebody an
+ * older version deleted outright, never stops anybody from planning today.
+ *
+ * @param previous the missions as stored before this write
  * @returns {{code: string, params: object}|null}
  */
-export function unknownReference(missions, persons, vehicles, trailers = []) {
+export function unknownReference(missions, persons, vehicles, trailers = [], previous = []) {
   const personIds = new Set(persons.map(person => person.id))
   const vehicleIds = new Set(vehicles.map(vehicle => vehicle.id))
   const trailerIds = new Set(trailers.map(trailer => trailer.id))
+  const before = new Map(previous.map(mission => [mission.id, mission]))
+
   for (const mission of missions) {
-    const knownPerson = id => personIds.has(id) || Boolean(mission.retiredPersons?.[id])
-    const knownVehicle = id => vehicleIds.has(id) || Boolean(mission.retiredVehicles?.[id])
-    const knownTrailer = id => trailerIds.has(id) || Boolean(mission.retiredTrailers?.[id])
-    for (const entry of mission.vehicles ?? []) {
-      if (!knownVehicle(entry.vehicleId)) return { code: 'unknownReference', params: { title: mission.title, field: 'vehicleId' } }
-      if (entry.trailerId && !knownTrailer(entry.trailerId)) return { code: 'unknownReference', params: { title: mission.title, field: 'trailerId' } }
-      if (entry.driverId && !knownPerson(entry.driverId)) return { code: 'unknownReference', params: { title: mission.title, field: 'driverId' } }
+    const old = before.get(mission.id)
+    const held = field => new Set(old ? referencesOf(old)[field] : [])
+    const known = {
+      vehicleId: id => vehicleIds.has(id) || Boolean(mission.retiredVehicles?.[id]),
+      trailerId: id => trailerIds.has(id) || Boolean(mission.retiredTrailers?.[id]),
+      driverId: id => personIds.has(id) || Boolean(mission.retiredPersons?.[id]),
+      staffIds: id => personIds.has(id) || Boolean(mission.retiredPersons?.[id]),
     }
-    for (const id of mission.staffIds ?? []) {
-      if (!knownPerson(id)) return { code: 'unknownReference', params: { title: mission.title, field: 'staffIds' } }
+    const references = referencesOf(mission)
+    for (const field of Object.keys(known)) {
+      const already = held(field)
+      if (references[field].some(id => !already.has(id) && !known[field](id))) {
+        return { code: 'unknownReference', params: { title: mission.title, field } }
+      }
     }
   }
   return null
+}
+
+function referencesOf(mission) {
+  const entries = mission.vehicles ?? []
+  return {
+    vehicleId: entries.map(entry => entry.vehicleId).filter(Boolean),
+    trailerId: entries.map(entry => entry.trailerId).filter(Boolean),
+    driverId: entries.map(entry => entry.driverId).filter(Boolean),
+    staffIds: (mission.staffIds ?? []).filter(Boolean),
+  }
 }

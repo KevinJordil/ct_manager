@@ -15,11 +15,11 @@ vi.mock('../api.js', () => ({
   hasSessionToken: () => true,
   api: {
     load: async entity => ({ data: JSON.parse(JSON.stringify(server.data[entity] ?? [])), version: 'v1' }),
-    save: async (entity, data) => {
-      if (server.refuse === entity) throw Object.assign(new Error('refused'), { status: 403, code: 'permissions.denied' })
-      server.saves.push({ entity, data: JSON.parse(JSON.stringify(data)) })
-      return { version: `v${server.saves.length + 1}` }
-    },
+    // The server keeps each collection and applies one record at a time;
+    // `saves` records the collection after each accepted write.
+    createItem: async (entity, item) => write(entity, list => [...list, item], item),
+    updateItem: async (entity, id, item) => write(entity, list => list.map(i => i.id === id ? item : i), item),
+    deleteItem: async (entity, id) => write(entity, list => list.filter(i => i.id !== id), null),
     loadConfig: async () => ({}),
     loadRequests: async () => JSON.parse(JSON.stringify(server.data.requests ?? [])),
     setRequestStatus: async (id, status) => {
@@ -33,6 +33,13 @@ vi.mock('../api.js', () => ({
     },
   },
 }))
+
+function write(entity, change, item) {
+  if (server.refuse === entity) throw Object.assign(new Error('refused'), { status: 403, code: 'permissions.denied' })
+  server.data[entity] = change(server.data[entity] ?? [])
+  server.saves.push({ entity, data: JSON.parse(JSON.stringify(server.data[entity])) })
+  return { item, version: `v${server.saves.length + 1}`, previous: `v${server.saves.length}` }
+}
 
 const MissionsView = (await import('../views/MissionsView.vue')).default
 const PersonsView = (await import('../views/PersonsView.vue')).default

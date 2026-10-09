@@ -43,6 +43,11 @@ watch(authRequired, required => {
   }
 })
 
+// A clash with somebody else's change is told once: the screen was brought
+// up to date at that moment. Moving on to another page leaves it behind, so
+// the banner is not read as a failure of whatever is done next.
+watch(() => route.fullPath, () => { if (conflict.value) clearError() })
+
 // The pending count is shown as a badge in the sidebar. Loading it before
 // the session exists would only produce a 401.
 const shellVisible = computed(() => !isPublicPage.value && auth.isAuthenticated)

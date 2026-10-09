@@ -418,7 +418,7 @@
   "errors": {
     "loadFailed": "Caricamento impossibile ({entity}): {reason}",
     "saveFailed": "Salvataggio impossibile ({entity}): {reason}",
-    "conflict": "Qualcun altro ha modificato i dati ({entity}) nello stesso momento; la visualizzazione è stata aggiornata. Verifica e ripeti la modifica se necessario.",
+    "conflict": "Qualcun altro ha modificato questa scheda ({entity}) nel frattempo; la visualizzazione è stata aggiornata. Verifica e ripeti la modifica se necessario.",
     "notLoaded": "Dati non caricati ({entity}): salvataggio annullato per non sovrascrivere il server.",
     "unsavedSuffix": "Le tue ultime modifiche non sono state salvate."
   },
@@ -489,7 +489,8 @@
       "alreadyIn": "La chiave di {plate} è già al quadro: qualcuno l'ha restituita nel frattempo. La visualizzazione è stata aggiornata.",
       "sameHolder": "La chiave di {plate} è già presso questa persona. La visualizzazione è stata aggiornata.",
       "moved": "La chiave di {plate} è stata spostata nel frattempo da un'altra postazione. La visualizzazione è stata aggiornata: verifica chi la detiene prima di riprovare."
-    }
+    },
+    "gone": "Questa scheda ({entity}) è stata eliminata nel frattempo da un'altra postazione; la visualizzazione è stata aggiornata."
   },
   "auth": {
     "title": "Accesso",
