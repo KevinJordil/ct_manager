@@ -353,7 +353,8 @@
     "reopenConfirm": "Den Einsatz «{title}» wieder öffnen? Seine Fahrzeuge und sein Personal gelten wieder als eingeteilt.",
     "trailer": "Anhänger",
     "trailerUnspecified": "Anhänger nicht angegeben",
-    "trailerUnverified": "Hinter welchen Fahrzeugen dieser Anhänger geht, ist nicht erfasst: Prüfen Sie die Kupplung, oder ergänzen Sie seinen Eintrag unter Anhänger."
+    "trailerUnverified": "Hinter welchen Fahrzeugen dieser Anhänger geht, ist nicht erfasst: Prüfen Sie die Kupplung, oder ergänzen Sie seinen Eintrag unter Anhänger.",
+    "trailerNotDescribed": "Kupplung nicht erfasst"
   },
   "mine": {
     "title": "Meine Aufträge",

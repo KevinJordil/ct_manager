@@ -543,7 +543,8 @@ function submit() {
                 <select v-model="row.trailerId" class="input text-sm w-full" :aria-label="$t('missions.trailer')">
                   <option value="">{{ $t('missions.trailerUnspecified') }}</option>
                   <option v-for="trailer in availableTrailersFor(row)" :key="trailer.id" :value="trailer.id">
-                    {{ trailer.plate }}{{ trailer.name ? ` — ${trailer.name}` : '' }}
+                    {{ trailer.plate }}{{ trailer.name ? ` — ${trailer.name}` : '' }}{{
+                      trailerFit(trailer, rowVehicle(row)) === 'unknown' ? ` (${$t('missions.trailerNotDescribed')})` : '' }}
                   </option>
                   <optgroup v-if="unavailableTrailersFor(row).length" :label="$t('missions.unavailableGroup')">
                     <option v-for="trailer in unavailableTrailersFor(row)" :key="trailer.id" :value="trailer.id">

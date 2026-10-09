@@ -80,7 +80,8 @@ mois du calendrier.
   sont ceux de la flotte, tels que les véhicules sont nommés : rien à
   déclarer deux fois, et la casse ou les espaces ne comptent pas
 - Une remorque dont rien n'est coché n'est pas « incompatible » : elle est
-  proposée partout, avec un rappel de vérifier l'attelage
+  proposée partout, marquée *attelage non renseigné* dans la liste, avec un
+  rappel de vérifier l'attelage
 - Elle se gère comme un véhicule — prêt, maintenance, panne, calendrier,
   conflits de planning — mais sans clé ni SPH. Elle relève du droit
   `vehicles.manage`

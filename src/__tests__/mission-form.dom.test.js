@@ -172,6 +172,8 @@ describe('MissionForm — trailers', () => {
     expect(wrapper.vm.availableTrailersFor(row).map(t => t.id)).toEqual(['t1', 't3'])
     expect(wrapper.vm.unavailableTrailersFor(row).map(t => t.id)).toEqual(['t2'])
     expect(wrapper.text()).toContain(fr.missions.problems.incompatible)
+    // Offered, but never passed off as checked.
+    expect(wrapper.text()).toContain(`M70405 — Pas encore décrite (${fr.missions.trailerNotDescribed})`)
   })
 
   it('saves the trailer with the vehicle it is hitched to', async () => {

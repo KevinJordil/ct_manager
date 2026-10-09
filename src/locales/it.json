@@ -353,7 +353,8 @@
     "reopenConfirm": "Riaprire la missione «{title}»? I suoi veicoli e il suo personale saranno di nuovo considerati impegnati.",
     "trailer": "Rimorchio",
     "trailerUnspecified": "Rimorchio non precisato",
-    "trailerUnverified": "I veicoli dietro cui va questo rimorchio non sono indicati: verifica l'aggancio, o completa la sua scheda in Rimorchi."
+    "trailerUnverified": "I veicoli dietro cui va questo rimorchio non sono indicati: verifica l'aggancio, o completa la sua scheda in Rimorchi.",
+    "trailerNotDescribed": "aggancio non indicato"
   },
   "mine": {
     "title": "Le mie missioni",

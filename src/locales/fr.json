@@ -353,7 +353,8 @@
     "reopenConfirm": "Rouvrir la mission « {title} » ? Ses véhicules et son personnel compteront à nouveau comme engagés.",
     "trailer": "Remorque",
     "trailerUnspecified": "Remorque non précisée",
-    "trailerUnverified": "Les véhicules derrière lesquels va cette remorque ne sont pas renseignés : vérifiez l'attelage, ou complétez sa fiche dans Remorques."
+    "trailerUnverified": "Les véhicules derrière lesquels va cette remorque ne sont pas renseignés : vérifiez l'attelage, ou complétez sa fiche dans Remorques.",
+    "trailerNotDescribed": "attelage non renseigné"
   },
   "mine": {
     "title": "Mes missions",
