@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
+import DateField from '../common/DateField.vue'
 import { usePersonsStore } from '../../stores/persons.js'
 import { useClock } from '../../stores/clock.js'
 import { personName } from '../../labels.js'
@@ -46,7 +47,7 @@ function submit() {
       <div>
         <label class="label" for="check-date">{{ $t('checks.date') }} *</label>
         <!-- A check cannot be recorded in the future. -->
-        <input id="check-date" type="date" v-model="date" class="input" :max="todayString" required />
+        <DateField id="check-date" v-model="date" :max="todayString" required />
       </div>
 
       <div>

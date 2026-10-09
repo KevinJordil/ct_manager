@@ -835,5 +835,12 @@
       "keys": "Journal des clés",
       "requests": "Demandes de véhicules"
     }
+  },
+  "dates": {
+    "placeholder": "jj/mm/aaaa",
+    "invalid": "Date à saisir sous la forme jj/mm/aaaa, par exemple 09/10/2026.",
+    "tooEarly": "La date ne peut pas être avant le {date}.",
+    "tooLate": "La date ne peut pas être après le {date}.",
+    "openCalendar": "Ouvrir le calendrier"
   }
 }

@@ -7,7 +7,7 @@ import { useAuthStore } from '../stores/auth.js'
 import { useRouter } from 'vue-router'
 import { journalCsv } from '../journal-export.js'
 import BaseModal from '../components/common/BaseModal.vue'
-import { parseLocal, addDays, elapsedSince } from '../datetime.js'
+import { parseLocal, addDays, elapsedSince, formatDateTime } from '../datetime.js'
 import { formatLongDate, formatClock } from '../i18n/formats.js'
 import { localeTag } from '../i18n/index.js'
 import { filterBySearch } from '../search.js'
@@ -182,7 +182,7 @@ const ACTION_COLOR = {
       <label class="text-sm">{{ $t('log.journalLabel') }}
         <select v-model="selectedArchive" class="ml-2 border rounded px-3 py-2">
           <option value="">{{ $t('log.current') }}</option>
-          <option v-for="item in [...journal.archives].reverse()" :key="item.id" :value="item.id">{{ item.name }} · {{ item.archivedAt.replace('T', ' ') }}</option>
+          <option v-for="item in [...journal.archives].reverse()" :key="item.id" :value="item.id">{{ item.name }} · {{ formatDateTime(item.archivedAt) }}</option>
         </select>
       </label>
       <button class="btn-secondary" :disabled="loading || archiving" @click="loadJournal">{{ $t('log.refresh') }}</button>
@@ -190,7 +190,7 @@ const ACTION_COLOR = {
       <button class="btn-secondary" :disabled="loading || Boolean(error) || !movements.length" @click="printJournal">{{ $t('printing.print') }}</button>
       <button v-if="auth.isAdmin && !selectedArchive" class="btn-primary" :disabled="loading || Boolean(error) || !movements.length" @click="archiveOpen = true">{{ $t('log.archive') }}</button>
     </div>
-    <p v-if="archive" class="mb-4 text-sm text-stone-500">{{ $t('log.archivedBy', { name: archive.archivedBy, date: archive.archivedAt.replace('T', ' ') }) }}</p>
+    <p v-if="archive" class="mb-4 text-sm text-stone-500">{{ $t('log.archivedBy', { name: archive.archivedBy, date: formatDateTime(archive.archivedAt) }) }}</p>
     <div class="mb-4 flex flex-wrap items-center gap-3">
       <SearchField v-model="search" class="max-w-md flex-1 min-w-[12rem]" :placeholder="$t('log.searchPlaceholder')" />
       <button type="button" @click="outstandingOnly = !outstandingOnly"

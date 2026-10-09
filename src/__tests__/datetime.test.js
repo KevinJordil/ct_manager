@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   toDateString, toDateTimeString, parseLocal, todayString, nowString,
   addDays, addMonths, mondayOf, overlaps, formatDateTime, withDefaultTime,
-  elapsedSince,
+  elapsedSince, formatDate, parseSwissDate,
 } from '../datetime.js'
 
 afterEach(() => vi.useRealTimers())
@@ -154,11 +154,11 @@ describe('nowString / todayString', () => {
 
 describe('formatDateTime', () => {
   it('formats a date and time', () => {
-    expect(formatDateTime('2026-04-28T09:00')).toBe('28.04.2026 09:00')
+    expect(formatDateTime('2026-04-28T09:00')).toBe('28/04/2026 09:00')
   })
 
   it('formats a bare date', () => {
-    expect(formatDateTime('2026-04-28')).toBe('28.04.2026')
+    expect(formatDateTime('2026-04-28')).toBe('28/04/2026')
   })
 
   it('renders a dash for an empty value', () => {
@@ -202,5 +202,23 @@ describe('elapsedSince', () => {
 
   it('never reports a negative age for a date in the future', () => {
     expect(elapsedSince('2026-09-05T08:00', '2026-09-04T08:00')).toEqual({ unit: 'minutes', value: 0 })
+  })
+})
+
+describe('Swiss dates', () => {
+  it('writes a day as dd/mm/yyyy', () => {
+    expect(formatDate('2026-10-09')).toBe('09/10/2026')
+  })
+
+  it('reads a day the way people type it', () => {
+    for (const typed of ['09/10/2026', '9/10/2026', '09.10.2026', '9-10-2026', '09102026', '2026-10-09', ' 09/10/2026 ']) {
+      expect(parseSwissDate(typed)).toBe('2026-10-09')
+    }
+  })
+
+  it('refuses what is not a day', () => {
+    for (const typed of ['31/02/2026', '13/13/2026', '09/10/26', '10/2026', 'demain', '']) {
+      expect(parseSwissDate(typed)).toBeNull()
+    }
   })
 })

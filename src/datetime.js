@@ -81,16 +81,41 @@ export function overlaps(aStart, aEnd, bStart, bEnd) {
 }
 
 /**
- * "2026-04-28T09:00" → "28.04.2026 09:00"
+ * "2026-04-28T09:00" → "28/04/2026 09:00"
  *
- * Day-first with dots is the common written form in all three supported
- * languages, so it needs no locale switch.
+ * The Swiss reading, day first, on the 24-hour clock, the same in all three
+ * languages so it needs no locale switch.
  */
 export function formatDateTime(dt) {
   if (!dt) return '—'
   const [date, time] = dt.split('T')
-  const [y, m, d] = date.split('-')
-  return time ? `${d}.${m}.${y} ${time}` : `${d}.${m}.${y}`
+  return time ? `${formatDate(date)} ${time}` : formatDate(date)
+}
+
+/** "2026-04-28" → "28/04/2026" */
+export function formatDate(date) {
+  if (!date) return ''
+  const [y, m, d] = date.slice(0, 10).split('-')
+  return `${d}/${m}/${y}`
+}
+
+/**
+ * Reads a day as people type it: 28/04/2026, 28.04.2026, 28-4-2026 or
+ * 28042026 — and 2026-04-28, which is what a paste from elsewhere brings.
+ *
+ * @returns {string|null} "YYYY-MM-DD", or null when it is not a real day
+ */
+export function parseSwissDate(text) {
+  const value = String(text ?? '').trim()
+  let day, month, year
+  let match = value.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/) ?? value.match(/^(\d{2})(\d{2})(\d{4})$/)
+  if (match) [, day, month, year] = match
+  else if ((match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/))) [, year, month, day] = match
+  else return null
+  const [y, m, d] = [Number(year), Number(month), Number(day)]
+  const check = new Date(y, m - 1, d)
+  if (check.getFullYear() !== y || check.getMonth() !== m - 1 || check.getDate() !== d) return null
+  return `${year}-${pad(m)}-${pad(d)}`
 }
 
 /** Appends "T<defaultTime>" when the time part is missing */

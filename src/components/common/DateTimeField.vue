@@ -4,17 +4,17 @@ import { formatLongDate } from '../../i18n/formats.js'
 import { localeTag } from '../../i18n/index.js'
 import { useI18n } from 'vue-i18n'
 import { parseLocal } from '../../datetime.js'
+import DateField from './DateField.vue'
 
 /**
  * A date and a time, in one value of the form YYYY-MM-DDTHH:mm.
  *
  * The native datetime-local field is rendered in the *browser's* locale, not
- * the page's: an English browser shows "09/10/2026, 02:30 PM" whatever the
- * document says. The hour therefore comes from a list of our own, always on
- * the 24-hour clock. The day keeps the native picker — it is worth far too
- * much on a phone to give up — and the chosen date is spelt out underneath,
- * so a reader can see whether the browser meant the ninth of October or the
- * tenth of September.
+ * the page's: an English browser shows "10/09/2026, 02:30 PM" whatever the
+ * document says. The day is therefore typed as dd/mm/yyyy in a field of our
+ * own (DateField, which still opens the browser's calendar), and the hour
+ * comes from a list of our own, always on the 24-hour clock. The chosen day
+ * is also spelt out underneath.
  */
 const props = defineProps({
   id: { type: String, required: true },
@@ -58,8 +58,7 @@ const beforeMin = computed(() =>
   Boolean(props.min && props.modelValue && props.modelValue < props.min)
 )
 
-function onDate(event) {
-  const day = event.target.value
+function onDate(day) {
   if (!day) return emit('update:modelValue', '')
   emit('update:modelValue', `${day}T${time.value || props.defaultTime}`)
 }
@@ -74,11 +73,11 @@ function onTime(event) {
 
 <template>
   <div>
-    <div class="flex gap-2">
-      <input :id="id" type="date" class="input flex-1 min-w-0"
-        :value="date" :min="minDate || undefined" :required="required"
-        @change="onDate" @input="onDate" />
-      <select :id="`${id}-time`" class="input w-28 shrink-0"
+    <!-- The hour goes under the day when the column is too narrow for both. -->
+    <div class="flex flex-wrap gap-2">
+      <DateField :id="id" :model-value="date" :min="minDate" :required="required"
+        @update:model-value="onDate" />
+      <select :id="`${id}-time`" class="input w-24 shrink-0"
         :value="time" :disabled="!date" :required="required"
         :aria-label="t('common.time')" @change="onTime">
         <option value="" disabled>{{ t('common.time') }}</option>

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
+import DateField from '../common/DateField.vue'
 import { useClock } from '../../stores/clock.js'
 
 /**
@@ -48,7 +49,7 @@ function submit() {
       </div>
       <div>
         <label class="label" for="loan-until">{{ $t(kind === 'on-loan' ? 'vehicles.loanUntilOptional' : 'vehicles.outOfService.untilOptional') }}</label>
-        <input id="loan-until" v-model="until" type="date" class="input" :min="todayString" />
+        <DateField id="loan-until" v-model="until" :min="todayString" />
       </div>
 
       <div class="flex justify-end gap-3 pt-2">

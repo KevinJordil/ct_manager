@@ -1,3 +1,5 @@
+import { formatDateTime } from './datetime.js'
+
 /** Quote spreadsheet cells and prevent names from being evaluated as formulas. */
 export function csvCell(value) {
   let text = String(value ?? '')
@@ -11,7 +13,7 @@ export function journalCsv(entries, t) {
   for (const entry of entries) {
     const holder = entry.action === 'transferred' && entry.from
       ? t('log.fromTo', { from: entry.from, to: entry.name }) : entry.name
-    rows.push([entry.at?.replace('T', ' '), entry.vehiclePlate, entry.vehicleName,
+    rows.push([formatDateTime(entry.at), entry.vehiclePlate, entry.vehicleName,
       t(`log.actions.${entry.action}`), holder, entry.recordedBy])
   }
   return '\uFEFF' + rows.map(row => row.map(csvCell).join(';')).join('\r\n')

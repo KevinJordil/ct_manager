@@ -88,7 +88,7 @@ const sortedLeaves = computed(() =>
 
       <div class="border-t border-stone-100 pt-4">
         <p class="text-sm font-medium text-stone-700 mb-3">{{ $t('persons.leaves.addPeriod') }}</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3">
           <div>
             <label class="label" for="leave-start">{{ $t('missions.start') }}</label>
             <DateTimeField id="leave-start" v-model="form.startDate" default-time="00:00" />

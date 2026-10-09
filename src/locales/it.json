@@ -835,5 +835,12 @@
       "keys": "Giornale delle chiavi",
       "requests": "Richieste di veicoli"
     }
+  },
+  "dates": {
+    "placeholder": "gg/mm/aaaa",
+    "invalid": "Data da inserire nel formato gg/mm/aaaa, per esempio 09/10/2026.",
+    "tooEarly": "La data non può essere prima del {date}.",
+    "tooLate": "La data non può essere dopo il {date}.",
+    "openCalendar": "Aprire il calendario"
   }
 }

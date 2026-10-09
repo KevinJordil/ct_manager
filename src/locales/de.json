@@ -835,5 +835,12 @@
       "keys": "Schlüsseljournal",
       "requests": "Fahrzeuganfragen"
     }
+  },
+  "dates": {
+    "placeholder": "tt/mm/jjjj",
+    "invalid": "Datum im Format tt/mm/jjjj eingeben, zum Beispiel 09/10/2026.",
+    "tooEarly": "Das Datum darf nicht vor dem {date} liegen.",
+    "tooLate": "Das Datum darf nicht nach dem {date} liegen.",
+    "openCalendar": "Kalender öffnen"
   }
 }

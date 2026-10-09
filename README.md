@@ -194,19 +194,24 @@ Un compte de service, rattaché à aucune fiche, n'a pas ce raccourci.
 
 ### Dates et heures
 
-Le champ `datetime-local` natif est rendu dans la locale du **navigateur**, pas
-dans celle de la page : un navigateur en anglais affiche `09/10/2026, 02:30 PM`
-quoi qu'en dise le document, et `lang="fr"` n'y change rien.
+Toute l'application écrit et lit les dates **à la suisse, jour d'abord** —
+`09/10/2026` — et les heures **sur 24 h** — `14:30` —, quelle que soit la
+langue du navigateur : listes, fiches, calendrier imprimé, ordres de mission,
+exports.
 
-Les saisies de date et d'heure se font donc en deux contrôles : le jour garde
-le sélecteur natif — il vaut bien trop cher sur un téléphone pour qu'on s'en
-prive — et **l'heure vient d'une liste à nous, toujours sur 24 h**, par quart
-d'heure. Le jour choisi est écrit en toutes lettres sous le champ (*« Jeudi,
-10 septembre 2026 · 14:30 »*), de sorte qu'un lecteur voie tout de suite si
-son navigateur voulait dire le 9 octobre ou le 10 septembre.
+Le champ de date natif est rendu dans la locale du **navigateur**, pas dans
+celle de la page : un navigateur en anglais affiche `10/09/2026, 02:30 PM`
+pour le 9 octobre, et la page n'y peut rien. Le jour se saisit donc dans un
+champ à nous, au format `jj/mm/aaaa` — `09/10/2026`, `09.10.2026` ou
+`09102026` se lisent pareil —, à côté d'un bouton qui ouvre le calendrier du
+navigateur, bien trop pratique sur un téléphone pour s'en priver. Une date
+qui n'existe pas (`31/02/2026`) ou hors des bornes permises est signalée sous
+le champ. **L'heure vient d'une liste à nous, toujours sur 24 h**, par quart
+d'heure, et le jour choisi est écrit en toutes lettres sous le champ
+(*« Jeudi, 10 septembre 2026 · 14:30 »*).
 
-Cela vaut pour la demande publique, le formulaire de mission et la saisie des
-congés.
+Cela vaut pour la demande publique, les missions, les congés, les SPH et les
+dates de retour des prêts et des mises hors service.
 
 ### Demandes de véhicules
 - **Page publique** `/#/request`, accessible sans compte : formulaire de contact, dates, point de rendez-vous et liste des véhicules souhaités, chacun avec ou sans chauffeur

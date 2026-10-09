@@ -451,7 +451,7 @@ function submit() {
           <textarea id="mission-description" v-model="form.description" class="input" rows="2"
             :placeholder="$t('missions.descriptionPlaceholder')" />
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3">
           <div>
             <label class="label" for="mission-start">{{ $t('missions.start') }} *</label>
             <DateTimeField id="mission-start" v-model="form.startDate" required />
