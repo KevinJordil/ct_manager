@@ -82,6 +82,7 @@ export const usePersonsStore = defineStore('persons', () => {
     loaded: collection.loaded,
     init: collection.init,
     reload: collection.reload,
+    refresh: collection.refresh,
     update: collection.update,
     remove: collection.remove,
     add, addLeave, removeLeave, markUnavailable, clearUnavailable,

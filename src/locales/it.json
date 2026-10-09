@@ -485,6 +485,11 @@
       "nameRequired": "Inserire un nome per l’archivio (massimo 120 caratteri).",
       "keysOut": "Alcune chiavi sono ancora fuori. Registrarene la restituzione prima di archiviare.",
       "empty": "Il giornale corrente è vuoto."
+    },
+    "keys": {
+      "alreadyIn": "La chiave di {plate} è già al quadro: qualcuno l'ha restituita nel frattempo. La visualizzazione è stata aggiornata.",
+      "sameHolder": "La chiave di {plate} è già presso questa persona. La visualizzazione è stata aggiornata.",
+      "moved": "La chiave di {plate} è stata spostata nel frattempo da un'altra postazione. La visualizzazione è stata aggiornata: verifica chi la detiene prima di riprovare."
     }
   },
   "auth": {

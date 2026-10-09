@@ -11,11 +11,11 @@ import {
  *
  * @param entity  collection name on the API side
  * @param migrate transformation applied to the loaded data
- * @param replay  replay a change on fresh data after a conflict; off where
- *                the other writer's change may invalidate this one (two
- *                missions booking the same vehicle must be looked at again)
+ * @param replayIf extra condition for replaying a change after somebody
+ *                 else saved: receives the record as it was to be saved and
+ *                 the records the other writer changed
  */
-export function useCollection(entity, migrate = data => data, { replay = true } = {}) {
+export function useCollection(entity, migrate = data => data, { replayIf = null } = {}) {
   const items = ref([])
   const loading = ref(false)
   const loaded = ref(false)
@@ -84,27 +84,49 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
   let queue = Promise.resolve()
   let pending = 0
 
-  /**
-   * Applies a change and saves the collection.
-   *
-   * `apply` changes `items` and returns false when its target is gone. If
-   * somebody else saved in between, the data is read again and the change
-   * replayed once on top of it: two key movements at the counter both land,
-   * rather than the second one writing over the first. Whatever fails, the
-   * change is undone, so the screen never shows what the server refused.
-   *
-   * @returns {Promise<boolean>} true once the server has stored the change
-   */
-  function commit(apply) {
+  function enqueue(task) {
     // With nothing in flight the change shows at once; otherwise it waits
     // its turn.
-    const run = pending === 0 ? commitNow(apply) : queue.then(() => commitNow(apply))
+    const run = pending === 0 ? task() : queue.then(task)
     pending++
     queue = run.catch(() => {}).finally(() => { pending-- })
     return run
   }
 
-  async function commitNow(apply) {
+  const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+
+  /**
+   * After somebody else saved, may this change be replayed on their data?
+   * Only when they left its record alone — otherwise it is a real conflict,
+   * and the person has to look again — and when the collection's own rule
+   * agrees (a mission also asks that nothing near it in time moved).
+   */
+  function mayReplay({ id, base, fresh, attempted }) {
+    if (id == null) return true
+    if (!same(base.find(i => i.id === id), fresh.find(i => i.id === id))) return false
+    if (!replayIf) return true
+    const changed = fresh.filter(item => item.id !== id && !same(item, base.find(i => i.id === item.id)))
+      .concat(base.filter(item => item.id !== id && !fresh.some(i => i.id === item.id)))
+    return replayIf({ attempted, changed })
+  }
+
+  /**
+   * Applies a change and saves the collection.
+   *
+   * `apply` changes `items` and returns false when its target is gone; `id`
+   * names the record it changes. If somebody else saved in between, the data
+   * is read again; the change is replayed once on top of it when that is
+   * safe (see mayReplay), and reported as a conflict otherwise. Whatever
+   * fails, the change is undone, so the screen never shows what the server
+   * refused.
+   *
+   * @returns {Promise<boolean>} true once the server has stored the change
+   */
+  function commit(apply, id = null) {
+    return enqueue(() => commitNow(apply, id))
+  }
+
+  async function commitNow(apply, id) {
     // Without a successful load the collection is empty in memory: saving it
     // would replace the server's file with an empty array.
     if (!version) {
@@ -119,6 +141,7 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
           if (attempt > 0) reportError('errors.conflict', { entity }, { isConflict: true, context: 'save', source: entity })
           return false
         }
+        const attempted = id == null ? null : JSON.parse(JSON.stringify(items.value.find(i => i.id === id) ?? null))
         try {
           const { version: newVersion } = await api.save(entity, items.value, version)
           version = newVersion
@@ -133,7 +156,7 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
               handleError(loadErr, 'load')
               return false
             }
-            if (attempt === 0 && replay) continue
+            if (attempt === 0 && mayReplay({ id, base: before, fresh: items.value, attempted })) continue
           }
           handleError(err, 'save')
           return false
@@ -144,6 +167,53 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
     }
   }
 
+  /**
+   * Runs an action the server applies to one record itself — a key
+   * movement, a weekly check — and takes back the record it returns. No
+   * version travels with it, so nobody else's save can make it fail. Our
+   * copy keeps its version only if it was current just before.
+   *
+   * @param call resolves to {item, version, previous}
+   * @returns {Promise<boolean>}
+   */
+  function viaServer(call) {
+    return enqueue(async () => {
+      startSaving()
+      try {
+        const { item, version: next, previous } = await call()
+        const [fresh] = migrate([item])
+        const index = items.value.findIndex(i => i.id === fresh.id)
+        if (index === -1) items.value.push(fresh)
+        else items.value[index] = fresh
+        if (version === previous) version = next
+        clearError(entity)
+        return true
+      } catch (err) {
+        // Refused because the record moved meanwhile: show what it is now.
+        if (err.status === 409 || err.status === 404) await fetchCurrent().catch(() => {})
+        handleError(err, 'save')
+        return false
+      } finally {
+        endSaving()
+      }
+    })
+  }
+
+  /**
+   * Reads the server's data again when nothing is being saved: the counter
+   * at the other end of the room may have moved a key since this screen
+   * loaded. Skipped while a change is in flight, and silent on failure.
+   */
+  async function refresh() {
+    if (!version || pending > 0) return
+    try {
+      const { data, version: loadedVersion } = await api.load(entity)
+      if (pending > 0 || loadedVersion === version) return
+      items.value = migrate(data)
+      version = loadedVersion
+    } catch { /* the next refresh, or the next save, will tell */ }
+  }
+
   /** Saves the collection as it stands. */
   function persist() {
     return commit(() => true)
@@ -152,7 +222,7 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
   /** @returns {Promise<object|null>} the stored item, or null if refused */
   async function add(data) {
     const item = { ...data, id: newId() }
-    const saved = await commit(() => { items.value.push({ ...item }) })
+    const saved = await commit(() => { items.value.push({ ...item }) }, item.id)
     return saved ? items.value.find(i => i.id === item.id) : null
   }
 
@@ -162,14 +232,14 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
       const index = items.value.findIndex(i => i.id === id)
       if (index === -1) return false
       items.value[index] = { ...items.value[index], ...rest }
-    })
+    }, id)
   }
 
   function remove(id) {
     return commit(() => {
       if (!items.value.some(i => i.id === id)) return false
       items.value = items.value.filter(i => i.id !== id)
-    })
+    }, id)
   }
 
   /** Mutates one item then saves, if it exists */
@@ -178,7 +248,7 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
       const item = items.value.find(i => i.id === id)
       if (!item) return false
       fn(item)
-    })
+    }, id)
   }
 
   return {
@@ -186,6 +256,6 @@ export function useCollection(entity, migrate = data => data, { replay = true } 
     loading: readonly(loading),
     loaded: readonly(loaded),
     loadError: readonly(loadError),
-    init, reload, add, update, remove, mutate, persist,
+    init, reload, refresh, add, update, remove, mutate, persist, viaServer,
   }
 }

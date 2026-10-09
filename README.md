@@ -543,9 +543,14 @@ réécrire le registre.
 Comme l'API enregistre des collections entières, un refus pur et simple
 bloquerait aussi les mouvements de clé et les SPH que tout le monde peut
 saisir : la requête est donc comparée champ par champ à ce qui est stocké.
-Sans le droit de gestion, seuls passent `keyHolder`, `keyHistory` et `checks`
-sur un véhicule — où est sa clé, et ses contrôles hebdomadaires — et ni
-création ni suppression. Ni le prêt (`status`, `loanNote`, `loanUntil`), qui
+Les gestes du guichet — prendre, transférer ou rendre une clé, enregistrer
+ou retirer un SPH — ne passent pas par la collection : ils ont leurs propres
+routes (`POST /api/vehicles/:id/key`, `POST` et `DELETE
+/api/vehicles/:id/checks`), que tout compte connecté peut appeler, et le
+serveur les applique au véhicule tel qu'il est stocké. Sans le droit de
+gestion, la collection elle-même ne se modifie plus du tout ; un champ que
+l'interface complète par défaut (une fiche écrite par une version antérieure)
+n'est pas pris pour une modification. Ni le prêt (`status`, `loanNote`, `loanUntil`), qui
 est une décision et non un mouvement, ni aucun champ d'une personne : dire
 que quelqu'un est absent est une affirmation sur le service d'un autre. Une
 mission n'a aucun champ de ce genre non plus : elle est de la planification
@@ -668,13 +673,21 @@ présenter (`If-Match`). Si deux postes modifient la même collection, le
 second reçoit un `409` : l'interface relit alors les données du serveur au
 lieu d'écraser silencieusement le travail du premier.
 
-- Un mouvement de clé, un SPH, un congé ou une indisponibilité est **rejoué
-  une fois** sur les données fraîches : deux guichets qui sortent deux clés au
-  même moment voient tous deux leur mouvement enregistré.
-- Une mission n'est **pas** rejouée, car l'autre modification a pu prendre
-  le même véhicule ou le même chauffeur : la liste est actualisée, un bandeau
-  le signale et le formulaire reste ouvert avec la saisie, pour vérifier et
-  enregistrer à nouveau.
+- **Les clés et les SPH ne connaissent pas de conflit** : chaque geste est
+  envoyé seul, pour un véhicule, sans version. Le navigateur dit seulement
+  qui il voyait tenir la clé ; si elle a bougé depuis un autre poste, le
+  serveur refuse (*La clé a été déplacée depuis un autre poste*) et
+  l'affichage se met à jour, plutôt que de transformer la prise de l'autre en
+  transfert.
+- Une autre modification est **rejouée une fois** sur les données fraîches
+  quand l'autre personne n'a pas touché à la même fiche — et, pour une
+  mission, à aucune mission des mêmes dates, qui aurait pu prendre le même
+  véhicule ou le même chauffeur. Sinon la liste est actualisée, un bandeau le
+  signale et le formulaire reste ouvert avec la saisie.
+- Les listes se remettent à jour seules quand l'onglet revient au premier
+  plan, et chaque minute, sauf pendant un enregistrement.
+- Se déconnecter recharge l'application : la personne suivante au même poste
+  n'hérite ni des listes ni des versions de la précédente.
 
 Un formulaire ne se ferme qu'une fois l'enregistrement accepté par le
 serveur, et ce que le serveur refuse est retiré de l'écran. Une erreur reste

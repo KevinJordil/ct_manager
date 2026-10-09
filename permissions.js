@@ -49,9 +49,11 @@ export function can(user, permission) {
 /**
  * Fields an account may change on a record it does not manage.
  *
- * On a vehicle: where its key is, and its weekly checks. Not its loan —
- * lending a vehicle out is a decision, not a movement — and not its
- * identity.
+ * On a vehicle: none through the collection. Where its key is and its weekly
+ * checks are recorded through routes of their own (POST
+ * /api/vehicles/:id/key and /checks), applied by the server to the stored
+ * vehicle. Its loan is a decision, not a movement, and its identity is not
+ * anybody's to change.
  *
  * On a person: nothing. Declaring somebody away is a statement about
  * somebody else's service, so it belongs with managing people.
@@ -60,7 +62,7 @@ export function can(user, permission) {
  * is managing it.
  */
 export const INTERACTION_FIELDS = {
-  vehicles: ['keyHolder', 'keyHistory', 'checks'],
+  vehicles: [],
   persons: [],
   missions: [],
   trailers: [],

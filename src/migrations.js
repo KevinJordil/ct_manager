@@ -85,11 +85,12 @@ export function migratePersons(data) {
 /** Weekly checks were stored as "sph", with a French comment field. */
 function migrateChecks(raw) {
   const source = raw.checks ?? raw.sph ?? []
-  return source.map(check => ({
-    id: check.id,
-    date: check.date,
+  // Whatever the server added — who recorded the check — is kept: dropping
+  // it would hide the author's own "delete" button after a reload.
+  return source.map(({ commentaire, ...check }) => ({
+    ...check,
     personId: check.personId ?? null,
-    note: check.note ?? check.commentaire ?? '',
+    note: check.note ?? commentaire ?? '',
   }))
 }
 

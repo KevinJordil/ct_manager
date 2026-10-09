@@ -68,9 +68,7 @@ function toggleExpanded(id) {
 }
 
 function onSave(data) {
-  // The server stamps the author itself; this only lets the author withdraw
-  // the check before the next reload.
-  vehiclesStore.addCheck(recordingVehicle.value.id, { ...data, recordedById: auth.user?.id })
+  vehiclesStore.addCheck(recordingVehicle.value.id, data)
   recordingVehicle.value = null
 }
 

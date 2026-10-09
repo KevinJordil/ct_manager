@@ -485,6 +485,11 @@
       "nameRequired": "Archivnamen eingeben (maximal 120 Zeichen).",
       "keysOut": "Es sind noch Schlüssel ausgegeben. Vor dem Archivieren die Rückgabe erfassen.",
       "empty": "Das aktuelle Journal ist leer."
+    },
+    "keys": {
+      "alreadyIn": "Der Schlüssel von {plate} hängt bereits am Brett: Jemand hat ihn inzwischen zurückgebracht. Die Anzeige wurde aktualisiert.",
+      "sameHolder": "Der Schlüssel von {plate} ist bereits bei dieser Person. Die Anzeige wurde aktualisiert.",
+      "moved": "Der Schlüssel von {plate} wurde inzwischen an einem anderen Posten bewegt. Die Anzeige wurde aktualisiert: Prüfen Sie, wer ihn hat, bevor Sie es erneut versuchen."
     }
   },
   "auth": {

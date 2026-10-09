@@ -703,18 +703,29 @@ describe('rights', () => {
     await put('vehicles', fleet)
   })
 
-  it('lets it record a key movement on a vehicle it does not manage', async () => {
-    const { data, version } = await currentFleet()
-    data[0].keyHolder = { personId: null, name: 'Sdt Worker', since: '2026-09-04T07:00', recordedBy: 'sdtworker' }
-    data[0].keyHistory = [{ id: 'e1', at: '2026-09-04T07:00', action: 'taken', name: 'Sdt Worker' }]
-    const res = await put('vehicles', data, { version, headers: asWorker() })
+  it('lets it take a key on a vehicle it does not manage', async () => {
+    const res = await fetch(`${BASE}/api/vehicles/v1/key`, {
+      method: 'POST', headers: { ...asWorker(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ holder: { personId: null, name: 'Sdt Worker' } }),
+    })
     expect(res.status).toBe(200)
+    expect((await res.json()).vehicle.keyHolder).toMatchObject({ name: 'Sdt Worker', recordedBy: 'sdtworker' })
   })
 
   it('lets it record a weekly check', async () => {
+    const res = await fetch(`${BASE}/api/vehicles/v1/checks`, {
+      method: 'POST', headers: { ...asWorker(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: '2026-09-04', note: 'Atelier' }),
+    })
+    expect(res.status).toBe(200)
+  })
+
+  it('refuses the same key movement sent as part of the whole fleet', async () => {
     const { data, version } = await currentFleet()
-    data[0].checks = [{ id: 'c1', date: '2026-09-04', performedBy: 'sdtworker' }]
-    expect((await put('vehicles', data, { version, headers: asWorker() })).status).toBe(200)
+    data[0].keyHolder = null
+    const res = await put('vehicles', data, { version, headers: asWorker() })
+    expect(res.status).toBe(403)
+    expect((await res.json()).params.field).toBe('keyHolder')
   })
 
   it('refuses to lend the vehicle out, which commits the company', async () => {
@@ -884,75 +895,108 @@ describe('accounts holding rights', () => {
   })
 })
 
-describe('key movements and checks are stamped by the server', () => {
+describe('counter actions on one vehicle', () => {
   let clerkToken
   let clerkId
   let otherToken
   const as = session => ({ Authorization: `Bearer ${session}` })
-  const vehicle = {
-    id: 'vs1', name: 'Puch', plate: 'M77', category: 'light-offroad', seats: 4,
-    status: 'free', loanNote: '', loanUntil: '', checks: [], keyHolder: null, keyHistory: [],
-  }
+  const post = (path, body, session = clerkToken) => fetch(`${BASE}/api${path}`, {
+    method: 'POST', headers: { ...as(session), 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  })
+  // Written by an older version: no key, no checks, no return date.
+  const legacy = { id: 'vs1', name: 'VW', plate: 'M77', seats: 9, category: 'light-road', status: 'free', loanNote: '' }
 
   async function fleet() {
     const res = await get('vehicles')
     return { data: await res.json(), version: versionFrom(res) }
   }
-  const mine = data => data.find(item => item.id === vehicle.id)
+  const mine = data => data.find(item => item.id === legacy.id)
 
-  it('sets up two accounts without any right', async () => {
+  it('sets up two accounts without any right, and a vehicle from an older version', async () => {
     const created = await createAccount({ username: 'clerk', password: 'c', role: 'user' })
     clerkId = (await created.json()).id
     await createAccount({ username: 'other', password: 'o', role: 'user' })
     clerkToken = (await (await signIn('c', 'clerk')).json()).token
     otherToken = (await (await signIn('o', 'other')).json()).token
-
     const { data, version } = await fleet()
-    expect((await put('vehicles', [...data, vehicle], { version })).status).toBe(200)
+    expect((await put('vehicles', [...data, legacy], { version })).status).toBe(200)
   })
 
-  it('ignores a backdated movement signed with somebody else\'s name', async () => {
-    const { data, version } = await fleet()
-    mine(data).keyHolder = { personId: null, name: 'Sdt Clerk', since: '2020-01-01T03:00', recordedBy: 'Cdt X' }
-    mine(data).keyHistory = [{ id: 'forged', at: '2020-01-01T03:00', action: 'taken', name: 'Sdt Clerk', recordedBy: 'Cdt X' }]
-    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
+  it('lets a plain account take a key on it, whatever its copy filled in', async () => {
+    const res = await post(`/vehicles/${legacy.id}/key`, { holder: { personId: null, name: 'Sdt Clerk' } })
+    expect(res.status).toBe(200)
+  })
 
+  it('needs no version: somebody else saving meanwhile changes nothing', async () => {
+    const { data, version } = await fleet()
+    expect((await put('vehicles', data.map(v => v.id === legacy.id ? v : { ...v, seats: (v.seats ?? 0) + 1 }), { version })).status).toBe(200)
+    expect((await post(`/vehicles/${legacy.id}/key`, { holder: null })).status).toBe(200)
+  })
+
+  it('says who recorded a movement and when, ignoring what the client claims', async () => {
+    await post(`/vehicles/${legacy.id}/key`, { holder: { personId: null, name: 'Sdt Clerk' }, recordedBy: 'Cdt X', at: '2020-01-01T03:00' })
     const stored = mine((await fleet()).data)
-    expect(stored.keyHistory[0]).toMatchObject({ recordedBy: 'clerk' })
-    expect(stored.keyHistory[0].at).not.toBe('2020-01-01T03:00')
-    expect(stored.keyHolder).toMatchObject({ recordedBy: 'clerk', since: stored.keyHistory[0].at })
+    const last = stored.keyHistory.at(-1)
+    expect(last).toMatchObject({ recordedBy: 'clerk', action: 'taken' })
+    expect(last.at).not.toBe('2020-01-01T03:00')
+    expect(stored.keyHolder).toMatchObject({ recordedBy: 'clerk', since: last.at })
 
     const journal = await (await fetch(`${BASE}/api/journal`, { headers: auth() })).json()
-    expect(journal.entries.find(entry => entry.id === 'forged')).toMatchObject({ recordedBy: 'clerk' })
+    expect(journal.entries.find(entry => entry.id === last.id)).toMatchObject({ recordedBy: 'clerk' })
   })
 
-  it('keeps a stored movement from being rewritten', async () => {
-    const { data, version } = await fleet()
-    mine(data).keyHistory[0] = { ...mine(data).keyHistory[0], name: 'Somebody else', recordedBy: 'Cdt X' }
-    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
-    expect(mine((await fleet()).data).keyHistory[0]).toMatchObject({ name: 'Sdt Clerk', recordedBy: 'clerk' })
+  it('names a declared person by their record', async () => {
+    await put('persons', [person({ id: 'pk', lastName: 'Favre', firstName: 'Caroline', rank: 'Sgt' })], { version: '*' })
+    const res = await post(`/vehicles/${legacy.id}/key`, { holder: { personId: 'pk', name: 'Somebody else' } })
+    expect((await res.json()).vehicle.keyHolder).toMatchObject({ personId: 'pk', name: 'Sgt Caroline Favre' })
+  })
+
+  it('refuses a movement that makes no sense, and says why', async () => {
+    const same = await post(`/vehicles/${legacy.id}/key`, { holder: { personId: 'pk', name: '' } })
+    expect(same.status).toBe(409)
+    expect((await same.json()).code).toBe('keys.sameHolder')
+    await post(`/vehicles/${legacy.id}/key`, { holder: null })
+    const again = await post(`/vehicles/${legacy.id}/key`, { holder: null })
+    expect(again.status).toBe(409)
+    expect((await again.json()).code).toBe('keys.alreadyIn')
+  })
+
+  it('refuses to move a key the screen saw somewhere it no longer is', async () => {
+    // Counter B took it; counter A still shows it on the board.
+    await post(`/vehicles/${legacy.id}/key`, { holder: { personId: null, name: 'Counter B' }, expected: null })
+    const stale = await post(`/vehicles/${legacy.id}/key`, { holder: { personId: null, name: 'Counter A' }, expected: null })
+    expect(stale.status).toBe(409)
+    expect((await stale.json()).code).toBe('keys.moved')
+    const current = await post(`/vehicles/${legacy.id}/key`, { holder: null, expected: { personId: null, name: 'Counter B' } })
+    expect(current.status).toBe(200)
   })
 
   it('stamps the author of a check', async () => {
-    const { data, version } = await fleet()
-    mine(data).checks = [{ id: 'chk1', date: '2026-10-09', personId: null, note: 'Atelier' }]
-    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
-    expect(mine((await fleet()).data).checks[0]).toMatchObject({ recordedBy: 'clerk', recordedById: clerkId })
+    const res = await post(`/vehicles/${legacy.id}/checks`, { date: '2026-10-09', note: 'Atelier', recordedBy: 'Cdt X' })
+    expect((await res.json()).vehicle.checks.at(-1)).toMatchObject({ recordedBy: 'clerk', recordedById: clerkId })
   })
 
-  it('refuses to let another plain account wipe that check', async () => {
-    const { data, version } = await fleet()
-    mine(data).checks = []
-    const res = await put('vehicles', data, { version, headers: as(otherToken) })
+  it('refuses to let another plain account withdraw that check', async () => {
+    const check = mine((await fleet()).data).checks.at(-1)
+    const res = await fetch(`${BASE}/api/vehicles/${legacy.id}/checks/${check.id}`, { method: 'DELETE', headers: as(otherToken) })
     expect(res.status).toBe(403)
     expect(await res.json()).toMatchObject({ code: 'permissions.checkRemoval', params: { plate: 'M77' } })
   })
 
   it('lets its author withdraw it', async () => {
-    const { data, version } = await fleet()
-    mine(data).checks = []
-    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
+    const check = mine((await fleet()).data).checks.at(-1)
+    const res = await fetch(`${BASE}/api/vehicles/${legacy.id}/checks/${check.id}`, { method: 'DELETE', headers: as(clerkToken) })
+    expect(res.status).toBe(200)
     expect(mine((await fleet()).data).checks).toEqual([])
+  })
+
+  it('does not mistake defaults filled in by the interface for a change', async () => {
+    const res = await get('vehicles')
+    const version = versionFrom(res)
+    // What the interface holds after reading the fleet: every field present.
+    const { migrateVehicles } = await import('../src/migrations.js')
+    const asShown = migrateVehicles(await res.json())
+    expect((await put('vehicles', asShown, { version, headers: as(clerkToken) })).status).toBe(200)
   })
 })
 

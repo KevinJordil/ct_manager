@@ -8,7 +8,7 @@ import {
   ENTITIES, validateCollection,
   validateRequestSubmission, sanitizeRequestSubmission, isValidRequestStatus,
   validateParkLayout, sanitizeParkLayout, decodeImageDataUrl, IMAGE_EXTENSIONS,
-  validateConfig, unknownReference,
+  validateConfig, unknownReference, isRealDate,
 } from './validation.js'
 import { withDefaults } from './src/config.js'
 import { reanchor } from './seed.js'
@@ -19,8 +19,10 @@ import {
 } from './users.js'
 import { createRateLimiter } from './rate-limit.js'
 import { PERMISSIONS, can, sanitisePermissions, forbiddenChange, managePermission } from './permissions.js'
-import { stampVehicles, forbiddenCheckRemoval } from './stamps.js'
-import { recorderName } from './src/keys.js'
+import { stampVehicles } from './stamps.js'
+import { recorderName, moveKey } from './src/keys.js'
+import { personName } from './src/labels.js'
+import { MIGRATIONS } from './src/migrations.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, 'data')
@@ -505,13 +507,13 @@ for (const entity of ENTITIES) {
             'Data was modified elsewhere since your load')
         }
 
-        // Without the right to manage this collection, an account may still
-        // record what it does with it — a key movement, a check, an absence.
-        // The write is therefore weighed field by field rather than refused.
+        // Without the right to manage this collection, a write is weighed
+        // field by field. The stored records are read the way the interface
+        // reads them, defaults included: a field an older version never wrote
+        // is not a change. Key movements and checks have routes of their own.
         if (!can(req.user, managePermission(entity))) {
-          const stored = JSON.parse(await readRaw(entity))
-          const forbidden = forbiddenChange(entity, stored, req.body) ??
-            (entity === 'vehicles' ? forbiddenCheckRemoval(stored, req.body, req.user.id) : null)
+          const migrate = MIGRATIONS[entity]
+          const forbidden = forbiddenChange(entity, migrate(JSON.parse(await readRaw(entity))), migrate(req.body))
           if (forbidden) {
             return fail(res, 403, `permissions.${forbidden.code}`, forbidden.params,
               'Not allowed to change this collection')
@@ -571,6 +573,107 @@ for (const entity of ENTITIES) {
     }
   })
 }
+
+// ── Counter actions on one vehicle ──
+// Taking a key or recording a check changes one vehicle, and any account may
+// do it. It is applied by the server to the vehicle as stored, rather than
+// sent as the whole fleet: a counter must not trip over somebody else's
+// unrelated save, nor over a field its own copy filled in. Who did it and
+// when are the server's to say.
+
+/**
+ * Applies `change` to the stored vehicle and answers it back, with the
+ * fleet's version before and after: a client whose copy was current can
+ * keep using it.
+ */
+function changeVehicle(change) {
+  return async (req, res, next) => {
+    try {
+      await withResources(async () => {
+        const raw = await readRaw('vehicles')
+        const vehicles = JSON.parse(raw)
+        const vehicle = vehicles.find(candidate => candidate.id === req.params.id)
+        if (!vehicle) return fail(res, 404, 'notFound', {}, 'Unknown vehicle')
+
+        const persons = JSON.parse(await readRaw('persons'))
+        const refused = change(vehicle, {
+          persons,
+          at: localDateTime(),
+          recordedBy: recorderName(req.user, persons),
+          user: req.user,
+          body: req.body ?? {},
+          params: req.params,
+        })
+        if (refused) return fail(res, refused.status ?? 400, refused.code, refused.params ?? {})
+
+        const content = JSON.stringify(vehicles, null, 2)
+        await commitResources({ vehicles: content, journal: JSON.stringify(mergeJournal(await readJournal(), vehicles)) })
+        const version = versionOf(content)
+        res.set('ETag', `"${version}"`).json({ vehicle, version, previous: versionOf(raw) })
+      })
+    } catch (err) {
+      next(err)
+    }
+  }
+}
+
+/** Takes, passes on or returns a key: `holder` is who gets it, null to hang it up. */
+app.post('/api/vehicles/:id/key', changeVehicle((vehicle, { persons, at, recordedBy, body }) => {
+  const { holder = null, expected } = body
+  // The screen showed the key with somebody — or on the board. If that is no
+  // longer true, somebody at another counter moved it: taking it now would
+  // silently turn their holding into a transfer.
+  if (expected !== undefined) {
+    const now = vehicle.keyHolder ?? null
+    const same = (now?.personId ?? null) === (expected?.personId ?? null) && (now?.name ?? null) === (expected?.name ?? null)
+    if (!same) return { status: 409, code: 'keys.moved', params: { plate: vehicle.plate || vehicle.name } }
+  }
+  let next = null
+  if (holder !== null) {
+    if (typeof holder !== 'object' || Array.isArray(holder)) return { code: 'validation.invalidField', params: { field: 'keyHolder' } }
+    if (holder.personId) {
+      const person = persons.find(candidate => candidate.id === holder.personId)
+      if (!person) return { code: 'validation.unknownReference', params: { field: 'personId' } }
+      // A declared person is named by their record, whatever the client says.
+      next = { personId: person.id, name: personName(person) }
+    } else {
+      const name = typeof holder.name === 'string' ? holder.name.trim() : ''
+      if (!name || name.length > 200) return { code: 'validation.invalidField', params: { field: 'name' } }
+      next = { personId: null, name }
+    }
+  }
+  const refused = moveKey(vehicle, { holder: next, recordedBy, at, id: crypto.randomUUID() })
+  return refused ? { status: 409, code: `keys.${refused}`, params: { plate: vehicle.plate || vehicle.name } } : null
+}))
+
+/** Records a weekly check, done by a person or described by a note. */
+app.post('/api/vehicles/:id/checks', changeVehicle((vehicle, { persons, recordedBy, user, body }) => {
+  const { date, personId = null, note = '' } = body
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !isRealDate(date)) {
+    return { code: 'validation.invalidField', params: { field: 'date' } }
+  }
+  if (personId && !persons.some(person => person.id === personId)) {
+    return { code: 'validation.unknownReference', params: { field: 'personId' } }
+  }
+  const text = typeof note === 'string' ? note.trim() : ''
+  if (!personId && (!text || text.length > 500)) return { code: 'validation.invalidField', params: { field: 'note' } }
+  vehicle.checks = [...(vehicle.checks ?? []), {
+    id: crypto.randomUUID(), date, personId: personId || null, note: personId ? '' : text,
+    recordedBy, recordedById: user.id,
+  }]
+  return null
+}))
+
+/** Withdraws a check: its author may, and so may whoever manages vehicles. */
+app.delete('/api/vehicles/:id/checks/:checkId', changeVehicle((vehicle, { user, params }) => {
+  const check = (vehicle.checks ?? []).find(candidate => candidate.id === params.checkId)
+  if (!check) return { status: 404, code: 'notFound' }
+  if (!can(user, 'vehicles.manage') && check.recordedById !== user.id) {
+    return { status: 403, code: 'permissions.checkRemoval', params: { plate: vehicle.plate || vehicle.name } }
+  }
+  vehicle.checks = vehicle.checks.filter(candidate => candidate !== check)
+  return null
+}))
 
 // ── Person accounts ──
 // A person signs in with their family name. Setting the password is part of

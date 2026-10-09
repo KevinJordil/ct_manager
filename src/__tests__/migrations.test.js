@@ -244,3 +244,11 @@ describe('vehicles out of service', () => {
     expect(vehicle).toMatchObject({ status: 'maintenance', loanNote: 'Atelier' })
   })
 })
+
+describe('weekly checks read back', () => {
+  it('keep who recorded them', async () => {
+    const { migrateVehicles } = await import('../migrations.js')
+    const [vehicle] = migrateVehicles([{ id: 'v', plate: 'M1', checks: [{ id: 'c', date: '2026-10-09', note: 'x', recordedBy: 'clerk', recordedById: 'u1' }] }])
+    expect(vehicle.checks[0]).toMatchObject({ recordedBy: 'clerk', recordedById: 'u1', note: 'x' })
+  })
+})

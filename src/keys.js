@@ -57,6 +57,51 @@ export function pushHistory(vehicle, entry) {
 }
 
 /**
+ * Moves a key: hands it to `holder`, or hangs it back on the board when
+ * `holder` is null. Taking it off the board and passing it on are the same
+ * act; the history keeps the difference, and the two ends of each holding
+ * point at each other so the log reads from either end.
+ *
+ * The server applies this to the stored vehicle, so who recorded the
+ * movement and when come from it, never from the browser.
+ *
+ * @returns {string|null} why nothing moved, or null once the key has moved
+ */
+export function moveKey(vehicle, { holder = null, recordedBy = '', at, id }) {
+  const previous = vehicle.keyHolder ?? null
+  if (!holder && !previous) return 'alreadyIn'
+  if (holder && previous && holder.personId && holder.personId === previous.personId) return 'sameHolder'
+
+  const opened = previous ? openHolding(vehicle) : null
+  if (opened) opened.closedBy = id
+
+  if (holder) {
+    vehicle.keyHolder = makeHolder({ personId: holder.personId, name: holder.name, recordedBy }, at)
+    pushHistory(vehicle, {
+      id, at,
+      action: previous ? KEY_ACTION.TRANSFERRED : KEY_ACTION.TAKEN,
+      personId: vehicle.keyHolder.personId,
+      name: vehicle.keyHolder.name,
+      from: previous ? previous.name : '',
+      closes: opened ? opened.id : '',
+      recordedBy,
+    })
+  } else {
+    vehicle.keyHolder = null
+    pushHistory(vehicle, {
+      id, at,
+      action: KEY_ACTION.RETURNED,
+      personId: previous.personId,
+      name: previous.name,
+      from: '',
+      closes: opened ? opened.id : '',
+      recordedBy,
+    })
+  }
+  return null
+}
+
+/**
  * How to name the account recording a movement. An account tied to a person
  * is shown under that person's name, which is what a reader of the log is
  * looking for; a service account keeps its username.

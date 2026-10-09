@@ -15,7 +15,7 @@ import ConfirmModal from '../components/common/ConfirmModal.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 import SearchField from '../components/common/SearchField.vue'
 import { filterBySearch } from '../search.js'
-import { holderName, recorderName } from '../keys.js'
+import { holderName } from '../keys.js'
 import { fleetByCategory } from '../fleet.js'
 import { useClock } from '../stores/clock.js'
 
@@ -113,12 +113,8 @@ async function onDelete() {
   finally { deleting.value = false }
 }
 
-// Who did it, as a reader of the log would name them — anybody may move
-// anybody else's key, so the two names are not the same question.
-const recordedBy = computed(() => recorderName(auth.user, personsStore.persons))
-
 function confirmKey(holder) {
-  store.takeKey(keyVehicle.value.id, { ...holder, recordedBy: recordedBy.value })
+  store.takeKey(keyVehicle.value.id, holder)
   keyVehicle.value = null
 }
 
@@ -140,7 +136,7 @@ const returnMessage = computed(() => {
 })
 
 function returnKey() {
-  store.returnKey(returningVehicle.value.id, { recordedBy: recordedBy.value })
+  store.returnKey(returningVehicle.value.id)
   returningVehicle.value = null
 }
 

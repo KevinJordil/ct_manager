@@ -34,6 +34,7 @@ export const useTrailersStore = defineStore('trailers', () => {
     loaded: collection.loaded,
     init: collection.init,
     reload: collection.reload,
+    refresh: collection.refresh,
     add: collection.add,
     update: collection.update,
     remove: collection.remove,

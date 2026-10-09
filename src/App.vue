@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useClock } from './stores/clock.js'
@@ -7,6 +7,9 @@ import { useSync } from './stores/sync.js'
 import { useAuthStore } from './stores/auth.js'
 import { useRequestsStore } from './stores/requests.js'
 import { useMissionsStore } from './stores/missions.js'
+import { useVehiclesStore } from './stores/vehicles.js'
+import { usePersonsStore } from './stores/persons.js'
+import { useTrailersStore } from './stores/trailers.js'
 import { missionsOfPerson, pendingCount } from './assignments.js'
 import { localeTag } from './i18n/index.js'
 import { formatLongDate, formatClock } from './i18n/formats.js'
@@ -60,10 +63,39 @@ const pendingOwnMissions = computed(() =>
   pendingCount(missionsOfPerson(missionsStore.missions, auth.user?.personId ?? '', nowString.value))
 )
 
+/**
+ * Several counters work on the same fleet: what this screen shows has to
+ * catch up with what the others recorded. Each loaded list is read again
+ * when the tab comes back into view, and every minute while it is shown.
+ * A list being saved is left alone (see refresh in the collection).
+ */
+const shared = [useVehiclesStore(), usePersonsStore(), missionsStore, useTrailersStore()]
+function catchUp() {
+  if (!shellVisible.value || document.visibilityState !== 'visible') return
+  for (const store of shared) if (store.loaded) store.refresh()
+  if (requestsStore.loaded) requestsStore.refresh()
+}
+let catchUpTimer = null
+onMounted(() => {
+  document.addEventListener('visibilitychange', catchUp)
+  window.addEventListener('focus', catchUp)
+  catchUpTimer = setInterval(catchUp, 60_000)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', catchUp)
+  window.removeEventListener('focus', catchUp)
+  clearInterval(catchUpTimer)
+})
+
+/**
+ * Signing out starts the application afresh: the next person at this screen
+ * must not inherit the lists, versions and rights of the previous one.
+ */
 async function signOut() {
   await auth.logout()
   clearError()
-  router.replace('/login')
+  await router.replace('/login')
+  window.location.reload()
 }
 
 const tag = computed(() => localeTag(locale.value))
@@ -337,7 +369,7 @@ const NAV_ITEMS = [
 .stat-green { @apply bg-green-50 border-green-200; }
 .stat-orange { @apply bg-amber-50 border-amber-200; }
 .stat-red { @apply bg-red-50 border-red-200; }
-.stat-value { @apply text-3xl font-bold tabular; }
+.stat-value { @apply text-3xl font-bold tabular-nums; }
 .stat-label { @apply text-sm font-medium mt-1; }
 .stat-green .stat-value { @apply text-green-800; }
 .stat-green .stat-label { @apply text-green-700; }

@@ -48,24 +48,3 @@ export function stampVehicles(stored, submitted, { recordedBy, recordedById, at 
   }
   return submitted
 }
-
-/**
- * A weekly check may be withdrawn by the account that recorded it — a typing
- * mistake must stay fixable — but not by anybody else without the right to
- * manage vehicles.
- *
- * @returns {{code: string, params: object}|null}
- */
-export function forbiddenCheckRemoval(stored, submitted, userId) {
-  const kept = new Map(submitted.map(vehicle => [vehicle.id, new Set((vehicle.checks ?? []).map(c => c.id))]))
-  for (const vehicle of stored) {
-    const remaining = kept.get(vehicle.id)
-    if (!remaining) continue
-    for (const check of vehicle.checks ?? []) {
-      if (!remaining.has(check.id) && check.recordedById !== userId) {
-        return { code: 'checkRemoval', params: { plate: vehicle.plate || vehicle.name } }
-      }
-    }
-  }
-  return null
-}

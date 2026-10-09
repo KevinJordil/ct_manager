@@ -64,15 +64,13 @@ describe('what may be changed without the right to manage', () => {
     status: 'free', keyHolder: null, keyHistory: [], checks: [], ...over,
   })
 
-  it('lets a key be taken, passed on and hung up', () => {
+  it('leaves keys and checks to their own routes, not to the collection', () => {
+    // A key movement or a check goes through POST /api/vehicles/:id/key and
+    // /checks; sent as part of the fleet it is a change like any other.
+    expect(INTERACTION_FIELDS.vehicles).toEqual([])
     const holder = { personId: 'p1', name: 'Sgt Favre', since: '2026-09-04T07:00', recordedBy: 'favre' }
-    const after = [vehicle({ keyHolder: holder, keyHistory: [{ id: 'e1', action: 'taken' }] })]
-    expect(forbiddenChange('vehicles', [vehicle()], after)).toBeNull()
-  })
-
-  it('lets a check be recorded', () => {
-    const after = [vehicle({ checks: [{ id: 'c1', date: '2026-09-04' }] })]
-    expect(forbiddenChange('vehicles', [vehicle()], after)).toBeNull()
+    expect(forbiddenChange('vehicles', [vehicle()], [vehicle({ keyHolder: holder })]))
+      .toMatchObject({ code: 'edited', params: { field: 'keyHolder' } })
   })
 
   it('refuses to lend a vehicle out: that is a decision, not a movement', () => {

@@ -250,6 +250,48 @@ describe('somebody else saved in between', () => {
   })
 })
 
+describe('replaying after somebody else saved', () => {
+  const conflict = () => new ApiError('conflict', { status: 409, code: 'conflict', params: {} })
+  const mission = (id, day, over = {}) => ({ id, title: id, startDate: `2026-10-${day}T08:00`, endDate: `2026-10-${day}T17:00`, ...over })
+  const replayIf = ({ attempted, changed }) => !changed.some(other =>
+    other.startDate < attempted.endDate && attempted.startDate < other.endDate)
+
+  /** The server holds `theirs` and answers a conflict to the first save. */
+  function serverWith(ours, theirs) {
+    let loads = 0
+    let saves = 0
+    calls.load = async () => ({ data: JSON.parse(JSON.stringify(loads++ ? theirs : ours)), version: `v${loads}` })
+    calls.save = async () => { if (saves++ === 0) throw conflict(); return { version: 'v9' } }
+    return { saves: () => saves }
+  }
+
+  it('replays a mission when the other change was on another day', async () => {
+    const server = serverWith([mission('a', '10'), mission('b', '20')], [mission('a', '10'), mission('b', '20', { title: 'moved' })])
+    const collection = useCollection('missions', data => data, { replayIf })
+    await collection.init()
+    expect(await collection.update('a', { title: 'mine' })).toBe(true)
+    expect(server.saves()).toBe(2)
+    expect(collection.items.value.find(m => m.id === 'b').title).toBe('moved')
+  })
+
+  it('does not replay it when the other change shares its dates', async () => {
+    serverWith([mission('a', '10'), mission('b', '20')], [mission('a', '10'), mission('b', '10')])
+    const collection = useCollection('missions', data => data, { replayIf })
+    await collection.init()
+    expect(await collection.update('a', { title: 'mine' })).toBe(false)
+    expect(sync.error.value.key).toBe('errors.conflict')
+  })
+
+  it('never writes over a record the other person changed too', async () => {
+    const server = serverWith([{ id: 'v', seats: 4 }], [{ id: 'v', seats: 9 }])
+    const collection = useCollection('vehicles')
+    await collection.init()
+    expect(await collection.update('v', { name: 'mine' })).toBe(false)
+    expect(server.saves()).toBe(1)
+    expect(collection.items.value[0]).toEqual({ id: 'v', seats: 9 })
+  })
+})
+
 describe('one failure is not hidden by another success', () => {
   it('keeps a mission error in view when a key movement then saves', async () => {
     const missions = useCollection('missions')
@@ -286,5 +328,31 @@ describe('rejected resource deletion', () => {
     await collection.init()
     expect(await collection.update('a', { cancelled: true })).toBe(false)
     expect(collection.items.value[0].cancelled).toBeUndefined()
+  })
+})
+
+describe('catching up with other counters', () => {
+  it('takes in what the server holds now', async () => {
+    let version = 'v1'
+    calls.load = async () => ({ data: [{ id: 'a', holder: version === 'v1' ? null : 'Favre' }], version })
+    const collection = useCollection('vehicles')
+    await collection.init()
+    version = 'v2'
+    await collection.refresh()
+    expect(collection.items.value[0].holder).toBe('Favre')
+  })
+
+  it('leaves the list alone while a change is being saved', async () => {
+    let release
+    calls.load = async () => ({ data: [{ id: 'a', name: 'server' }], version: 'v1' })
+    calls.save = () => new Promise(resolve => { release = () => resolve({ version: 'v2' }) })
+    const collection = useCollection('vehicles')
+    await collection.init()
+    calls.load = async () => ({ data: [{ id: 'a', name: 'elsewhere' }], version: 'v7' })
+    const saving = collection.update('a', { name: 'mine' })
+    await collection.refresh()
+    expect(collection.items.value[0].name).toBe('mine')
+    release()
+    expect(await saving).toBe(true)
   })
 })

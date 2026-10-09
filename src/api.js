@@ -266,6 +266,32 @@ export const api = {
     await request(`${BASE}/requests/${encodeURIComponent(id)}`, { method: 'DELETE' })
   },
 
+  // ── Counter actions on one vehicle ──
+  // Applied by the server to the stored vehicle; no version travels with
+  // them. Each answers {vehicle, version, previous}.
+
+  /**
+   * `holder` {personId, name} takes or receives the key; null hangs it up.
+   * `expected` is who the screen showed holding it, null for the board.
+   */
+  async moveKey(vehicleId, holder, expected) {
+    return (await request(`${BASE}/vehicles/${encodeURIComponent(vehicleId)}/key`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ holder, expected }),
+    })).json()
+  },
+
+  async addCheck(vehicleId, check) {
+    return (await request(`${BASE}/vehicles/${encodeURIComponent(vehicleId)}/checks`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(check),
+    })).json()
+  },
+
+  async removeCheck(vehicleId, checkId) {
+    return (await request(`${BASE}/vehicles/${encodeURIComponent(vehicleId)}/checks/${encodeURIComponent(checkId)}`, {
+      method: 'DELETE',
+    })).json()
+  },
+
   /** @returns {{ data: Array, version: string }} */
   async load(entity) {
     const res = await request(`${BASE}/${entity}`)
