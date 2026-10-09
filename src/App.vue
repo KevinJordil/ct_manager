@@ -191,7 +191,7 @@ const NAV_ITEMS = [
 
     <!-- Sidebar -->
     <aside :class="['fixed inset-y-0 left-0 z-30 w-64 h-full shrink-0 bg-olive-900 text-white flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
-      <div class="px-6 py-5 border-b border-olive-800">
+      <div class="px-6 py-3 border-b border-olive-800">
         <div class="flex items-center gap-2">
           <svg class="w-7 h-7 text-olive-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path fill-rule="evenodd" d="M12 1.4C7.4 1.4 3.7 3.4 3.7 5.9S7.4 10.4 12 10.4s8.3-2 8.3-4.5S16.6 1.4 12 1.4zm0 2.3c3.1 0 5.6 1 5.6 2.2S15.1 8.1 12 8.1 6.4 7.1 6.4 5.9 8.9 3.7 12 3.7z"/><path d="M4.2 5h15.6v1.8H4.2z"/><path d="M11 6h2v15.2h-2z"/><path d="M3.2 10.4l7.3 3.1v2.7l-7.3-3.1zM20.8 10.4l-7.3 3.1v2.7l7.3-3.1z"/><path d="M5 15.2l5.5 2.3v2.6L5 17.8zM19 15.2l-5.5 2.3v2.6l5.5-2.3z"/>
@@ -200,13 +200,13 @@ const NAV_ITEMS = [
         </div>
       </div>
 
-      <nav class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
+      <nav class="relative flex-1 min-h-0 overflow-y-auto px-3 py-2 space-y-0.5">
         <RouterLink
           v-for="item in visibleNavItems"
           :key="item.to"
           :to="item.to"
           @click="sidebarOpen = false"
-          :class="['flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium border-l-2 transition-colors', (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'border-olive-300 bg-olive-800 text-white' : 'border-transparent text-olive-100/70 hover:bg-olive-800/70 hover:text-white']">
+          :class="['flex items-center gap-3 px-3 py-2 min-h-[36px] rounded-md text-sm font-medium border-l-2 transition-colors', (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'border-olive-300 bg-olive-800 text-white' : 'border-transparent text-olive-100/70 hover:bg-olive-800/70 hover:text-white']">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" v-html="item.icon" aria-hidden="true" />
           <span class="flex-1">{{ $t(`nav.${item.key}`) }}</span>
           <span v-if="item.badge && item.badge() > 0"
@@ -214,11 +214,14 @@ const NAV_ITEMS = [
             {{ item.badge() }}
           </span>
         </RouterLink>
+        <!-- On a short screen the list scrolls: the fade says there is more below. -->
+        <div class="sticky -bottom-2 h-6 -mb-2 bg-gradient-to-t from-olive-900 to-transparent pointer-events-none" aria-hidden="true" />
       </nav>
 
-      <div class="px-3 pb-2 space-y-1">
-        <button @click="changingPassword = true"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-olive-100/60 hover:bg-olive-800/70 hover:text-white transition-colors">
+      <!-- The account and signing out share one line. -->
+      <div class="px-3 py-2 flex items-center gap-1 border-t border-olive-800">
+        <button @click="changingPassword = true" :title="$t('auth.changePassword')"
+          class="flex-1 min-w-0 flex items-center gap-3 px-3 py-2 min-h-[40px] rounded-md text-sm font-medium text-olive-100/60 hover:bg-olive-800/70 hover:text-white transition-colors">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M5 8a8 8 0 001.921 5.191"/>
@@ -226,18 +229,16 @@ const NAV_ITEMS = [
           <span class="flex-1 text-left truncate">{{ auth.username || $t('auth.account') }}</span>
         </button>
 
-        <button @click="signOut"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-olive-100/60 hover:bg-olive-800/70 hover:text-white transition-colors">
+        <button @click="signOut" :title="$t('auth.logout')" :aria-label="$t('auth.logout')"
+          class="shrink-0 inline-flex items-center justify-center min-w-[40px] min-h-[40px] rounded-md text-olive-100/60 hover:bg-olive-800/70 hover:text-white transition-colors">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
-          {{ $t('auth.logout') }}
         </button>
       </div>
 
-      <div class="px-4 py-3 border-t border-stone-700 space-y-2">
-        <p class="text-xs text-stone-500 px-2">{{ $t('app.tagline') }}</p>
+      <div class="px-4 py-3 border-t border-olive-800">
         <LanguageSwitcher />
       </div>
     </aside>

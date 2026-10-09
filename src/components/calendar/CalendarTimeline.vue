@@ -272,7 +272,7 @@ function displayMode(event) {
         <div class="resource-column shrink-0 sticky left-0 z-10 bg-white border-r border-stone-200 px-3 flex items-center">
           <div class="min-w-0">
             <p class="font-medium text-stone-800 text-sm truncate leading-tight">{{ row.label }}</p>
-            <p v-if="row.sublabel" class="text-[11px] text-stone-400 truncate leading-tight mt-0.5">{{ row.sublabel }}</p>
+            <p v-if="row.sublabel" class="text-[11px] text-stone-400 truncate leading-tight mt-0.5" :title="row.sublabel">{{ row.sublabel }}</p>
           </div>
         </div>
 

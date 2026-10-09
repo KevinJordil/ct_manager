@@ -24,7 +24,7 @@ const styles = computed(() => props.variant === 'light'
 </script>
 
 <template>
-  <div :class="['flex shrink-0 rounded-lg overflow-hidden border', styles.frame]"
+  <div :class="['inline-flex w-fit shrink-0 rounded-lg overflow-hidden border', styles.frame]"
     role="group" :aria-label="$t('app.language')">
     <button
       v-for="option in SUPPORTED_LOCALES"

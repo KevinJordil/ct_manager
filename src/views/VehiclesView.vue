@@ -196,7 +196,7 @@ async function confirmLoan(absence) {
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
         <h2 class="section-title mb-0">{{ $t(`vehicles.categories.${group.category}`) }}</h2>
         <p :class="['text-sm font-medium', group.available ? 'text-green-800' : 'text-red-800']">
-          {{ $t('vehicles.availableOf', group.available, { available: group.available, total: group.total }) }}
+          {{ $t('vehicles.availableOf', { available: group.available, total: group.total }, group.available) }}
         </p>
         <p v-if="summaryOf(group)" class="text-xs text-stone-500">{{ summaryOf(group) }}</p>
       </div>

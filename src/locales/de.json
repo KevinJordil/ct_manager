@@ -80,7 +80,7 @@
       "onMission": "Im Einsatz",
       "unavailable": "Nicht verfügbar",
       "free": "Frei",
-      "onLoan": "Ausgeliehen"
+      "onLoan": "Ausgeliehen / ausser Betrieb"
     },
     "alerts": {
       "driverOnLeave": "Einsatz «{mission}»: {person} (Fahrer) ist während des Einsatzes im Urlaub",
@@ -335,9 +335,9 @@
     "randomDriver": "Zufällig",
     "fillDrivers": "Fahrer ergänzen",
     "pickVehicleFirst": "Zuerst ein Fahrzeug wählen: davon hängt der nötige Ausweis ab.",
-    "cancelMission": "Auftrag absagen",
+    "cancelMission": "Einsatz absagen",
     "cancelConfirm": "Den Einsatz «{title}» absagen? Er bleibt einsehbar und seine Ressourcen werden freigegeben.",
-    "emptyWarning": "Dieser Auftrag enthält keine vorhandenen Ressourcen mehr. Bitte prüfen oder absagen.",
+    "emptyWarning": "Dieser Einsatz enthält keine vorhandenen Ressourcen mehr. Bitte prüfen oder absagen.",
     "problems": {
       "away": "ausgeliehen oder ausser Betrieb",
       "busy": "bereits für einen anderen Einsatz eingeteilt",
@@ -361,7 +361,7 @@
     "title": "Meine Aufträge",
     "subtitle": "Wozu {name} eingeteilt ist.",
     "noRecord": "Dieses Konto ist keiner Personalkarte zugeordnet.",
-    "empty": "Ihnen ist kein Auftrag zugeteilt.",
+    "empty": "Ihnen ist kein Einsatz zugeteilt.",
     "sections": {
       "ongoing": "Laufend",
       "upcoming": "Bevorstehend",
@@ -635,7 +635,7 @@
   },
   "config": {
     "title": "Konfiguration",
-    "intro": "Diese Einstellungen gelten sofort für die ganze Anwendung.",
+    "intro": "Diese Einstellungen gelten für die ganze Anwendung, sobald sie gespeichert sind.",
     "requestTypes": "Fahrzeugtypen im Anfrageformular",
     "requestTypesHint": "Mitgelieferte Typen werden automatisch übersetzt. Ein hier hinzugefügter Typ behält die eingegebene Bezeichnung in allen Sprachen.",
     "builtIn": "mitgeliefert",

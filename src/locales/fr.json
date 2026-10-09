@@ -80,7 +80,7 @@
       "onMission": "En mission",
       "unavailable": "Indisponibles",
       "free": "Libres",
-      "onLoan": "En prêt"
+      "onLoan": "Prêt / hors service"
     },
     "alerts": {
       "driverOnLeave": "Mission « {mission} » : {person} (chauffeur) est en congé pendant la mission",
@@ -635,7 +635,7 @@
   },
   "config": {
     "title": "Configuration",
-    "intro": "Ces réglages s'appliquent immédiatement à toute l'application.",
+    "intro": "Ces réglages s'appliquent à toute l'application dès qu'ils sont enregistrés.",
     "requestTypes": "Types de véhicules du formulaire de demande",
     "requestTypesHint": "Les types fournis avec l'application sont traduits automatiquement. Un type ajouté ici garde l'étiquette saisie, dans toutes les langues.",
     "builtIn": "fourni",

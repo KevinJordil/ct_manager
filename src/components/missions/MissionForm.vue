@@ -484,11 +484,11 @@ function submit() {
           </div>
           <div class="flex items-center gap-3">
           <button v-if="rowsMissingDriver.length > 1" type="button" @click="fillMissingDrivers"
-            class="text-xs text-olive-600 hover:text-olive-800 font-medium">
+            class="text-xs text-olive-600 hover:text-olive-800 font-medium min-h-[36px] px-2">
             {{ $t('missions.fillDrivers') }}
           </button>
           <button type="button" @click="addVehicleRow"
-            class="text-xs text-olive-600 hover:text-olive-800 font-medium flex items-center gap-1">
+            class="text-xs text-olive-600 hover:text-olive-800 font-medium flex items-center gap-1 min-h-[36px] px-2 -mr-2">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -587,7 +587,7 @@ function submit() {
         <div class="flex items-center justify-between px-3 py-2 bg-stone-50 border-b border-stone-200">
           <h3 class="text-sm font-semibold text-stone-700">{{ $t('missions.staffSection') }}</h3>
           <button type="button" @click="addStaffRow"
-            class="text-xs text-olive-600 hover:text-olive-800 font-medium flex items-center gap-1">
+            class="text-xs text-olive-600 hover:text-olive-800 font-medium flex items-center gap-1 min-h-[36px] px-2 -mr-2">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>

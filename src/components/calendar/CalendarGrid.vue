@@ -128,7 +128,7 @@ const rowSegments = computed(() =>
           class="border-b border-stone-100 hover:bg-stone-50/50 transition-colors">
           <td class="sticky left-0 z-10 bg-white border-r border-stone-200 px-3 py-2">
             <p class="font-medium text-stone-800 text-sm leading-tight truncate">{{ row.label }}</p>
-            <p v-if="row.sublabel" class="text-[11px] text-stone-400 leading-tight mt-0.5">{{ row.sublabel }}</p>
+            <p v-if="row.sublabel" class="text-[11px] text-stone-400 leading-tight mt-0.5" :title="row.sublabel">{{ row.sublabel }}</p>
           </td>
           <td v-for="segment in segments" :key="segment.day"
             :colspan="segment.span"

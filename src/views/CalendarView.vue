@@ -254,6 +254,7 @@ const activeEvents = computed(() => EVENTS[activeTab.value].value)
         </button>
       </div>
 
+      <div class="flex items-center gap-2">
       <button @click="previousPeriod" class="icon-btn" :aria-label="$t('calendar.previousPeriod')">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -269,6 +270,7 @@ const activeEvents = computed(() => EVENTS[activeTab.value].value)
         class="text-xs px-3 min-h-[36px] rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-50 transition-colors">
         {{ $t('calendar.today') }}
       </button>
+      </div>
     </div>
 
     <!-- Legend -->
