@@ -64,10 +64,16 @@ describe('demonstration data seeding', () => {
 
   it('produces data the server validation accepts', async () => {
     const { validateCollection } = await import('../validation.js')
-    for (const entity of ['persons', 'vehicles', 'missions']) {
-      const data = await (await authorized(`/api/${entity}`)).json()
-      expect(validateCollection(entity, data)).toBeNull()
+    const collections = {}
+    for (const entity of ['persons', 'vehicles', 'missions', 'trailers']) {
+      collections[entity] = await (await authorized(`/api/${entity}`)).json()
+      expect(validateCollection(entity, collections[entity])).toBeNull()
     }
+    // Every vehicle, driver and trailer a mission names exists.
+    const { unknownReference } = await import('../validation.js')
+    expect(unknownReference(collections.missions, collections.persons,
+      collections.vehicles, collections.trailers)).toBeNull()
+    expect(collections.trailers.length).toBeGreaterThan(0)
   })
 
   it('protects the collections behind the login', async () => {

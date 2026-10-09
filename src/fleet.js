@@ -7,7 +7,7 @@
  * stands in the way of each one.
  */
 import {
-  CATEGORY_BY_REQUEST_TYPE, SEATS_BY_REQUEST_TYPE, VEHICLE_CATEGORIES, VEHICLE_STATUS,
+  CATEGORY_BY_REQUEST_TYPE, SEATS_BY_REQUEST_TYPE, VEHICLE_CATEGORIES, VEHICLE_STATUS, OUT_OF_SERVICE_STATUSES,
 } from './constants.js'
 import { getVehicleStatus, isVehicleAvailable } from './availability.js'
 import { keyIsOut } from './keys.js'
@@ -17,6 +17,7 @@ export function unavailableReason(vehicle, missions, now) {
   const status = getVehicleStatus(vehicle, missions, now)
   if (status === VEHICLE_STATUS.ON_MISSION) return VEHICLE_STATUS.ON_MISSION
   if (status === VEHICLE_STATUS.ON_LOAN) return VEHICLE_STATUS.ON_LOAN
+  if (OUT_OF_SERVICE_STATUSES.includes(status)) return 'out-of-service'
   // Nothing is planned for it, but its key is in somebody's pocket.
   if (keyIsOut(vehicle)) return 'key-out'
   return null
@@ -41,6 +42,7 @@ export function fleetByCategory(vehicles, missions, now) {
         available: 0,
         onMission: 0,
         onLoan: 0,
+        outOfService: 0,
         keyOut: 0,
       })
     }
@@ -51,6 +53,7 @@ export function fleetByCategory(vehicles, missions, now) {
     switch (unavailableReason(vehicle, missions, now)) {
       case VEHICLE_STATUS.ON_MISSION: group.onMission++; break
       case VEHICLE_STATUS.ON_LOAN: group.onLoan++; break
+      case 'out-of-service': group.outOfService++; break
       case 'key-out': group.keyOut++; break
       default: group.available++
     }

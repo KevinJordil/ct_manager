@@ -119,6 +119,11 @@ const NAV_ITEMS = [
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a5 5 0 01-.916-9.916 5.002 5.002 0 019.832 0A5.002 5.002 0 0116 17m-7 0h6m-3-3v6"/>`,
   },
   {
+    to: '/trailers',
+    key: 'trailers',
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h13v9H3zM16 12h3l2 2v2h-5M7 19a2 2 0 100-4 2 2 0 000 4zm9 0a2 2 0 100-4 2 2 0 000 4z"/>`,
+  },
+  {
     to: '/missions',
     key: 'missions',
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>`,
@@ -160,6 +165,12 @@ const NAV_ITEMS = [
     key: 'permissions',
     admin: true,
     icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>`,
+  },
+  {
+    to: '/export',
+    key: 'export',
+    admin: true,
+    icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>`,
   },
   {
     to: '/config',
@@ -274,7 +285,7 @@ const NAV_ITEMS = [
           class="shrink-0 underline underline-offset-2 hover:no-underline">
           {{ $t('actions.reload') }}
         </button>
-        <button @click="clearError" class="shrink-0 underline underline-offset-2 hover:no-underline">
+        <button @click="clearError()" class="shrink-0 underline underline-offset-2 hover:no-underline">
           {{ $t('actions.hide') }}
         </button>
       </div>
@@ -304,9 +315,9 @@ const NAV_ITEMS = [
 .card { @apply bg-white rounded-md border border-stone-200 p-4 shadow-sm; }
 .input { @apply w-full border border-stone-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-olive-600 focus:border-olive-600 transition-colors; }
 .label { @apply block text-sm font-medium text-stone-700 mb-1; }
-.btn-primary { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-olive-700 text-white text-sm font-medium rounded-md hover:bg-olive-800 transition-colors; }
-.btn-secondary { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-white border border-stone-300 text-stone-700 text-sm font-medium rounded-md hover:bg-stone-50 transition-colors; }
-.btn-danger { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-red-700 text-white text-sm font-medium rounded-md hover:bg-red-800 transition-colors; }
+.btn-primary { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-olive-700 text-white text-sm font-medium rounded-md hover:bg-olive-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+.btn-secondary { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-white border border-stone-300 text-stone-700 text-sm font-medium rounded-md hover:bg-stone-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+.btn-danger { @apply inline-flex items-center justify-center min-h-[36px] px-4 py-2 bg-red-700 text-white text-sm font-medium rounded-md hover:bg-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
 
 /* Actions on a list item are written out. An icon alone is a guess; the word
    is read once and never mistaken, and the target is comfortable either way. */

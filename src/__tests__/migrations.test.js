@@ -236,3 +236,11 @@ describe('shipped demonstration data', () => {
     expect(migrateMissions(missions)).toEqual(missions)
   })
 })
+
+describe('vehicles out of service', () => {
+  it('keep their status when read back', async () => {
+    const { migrateVehicles } = await import('../migrations.js')
+    const [vehicle] = migrateVehicles([{ id: 'v', plate: 'M1', category: 'heavy', status: 'maintenance', loanNote: 'Atelier' }])
+    expect(vehicle).toMatchObject({ status: 'maintenance', loanNote: 'Atelier' })
+  })
+})

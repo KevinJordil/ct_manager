@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { api } from '../api.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePersonsStore } from '../stores/persons.js'
@@ -12,6 +13,11 @@ import { formatDateTime, parseLocal, mondayOf, addDays, toDateString } from '../
 import { localeTag } from '../i18n/index.js'
 import { weekdayNames, monthNames } from '../i18n/formats.js'
 import { personName } from '../labels.js'
+import { vehicleInMission, personInMission, trailerInMission } from '../retired.js'
+import { useTrailersStore } from '../stores/trailers.js'
+import { useRequestsStore } from '../stores/requests.js'
+import { useConfigStore } from '../stores/config.js'
+import { buildTables } from '../export.js'
 
 /**
  * Printable documents.
@@ -28,14 +34,41 @@ const { t, te, locale } = useI18n()
 const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
 const missionsStore = useMissionsStore()
+const trailersStore = useTrailersStore()
+const requestsStore = useRequestsStore()
+const configStore = useConfigStore()
+
+const reportTables = computed(() => document_.value === 'report' ? buildTables({
+  persons: personsStore.persons, vehicles: vehiclesStore.vehicles, trailers: trailersStore.trailers,
+  missions: missionsStore.missions, requests: requestsStore.requests, journal: journal.value,
+  now: nowString.value, t,
+  vehicleTypeLabel: configStore.vehicleTypeLabel,
+  requestTypeLabel: type => configStore.requestTypeLabel(type, t),
+}) : [])
 const { nowString, todayString } = useClock()
 
 const ready = ref(false)
+const journal = ref(null)
+const journalError = ref('')
+const journalArchive = computed(() => journal.value?.archives.find(a => a.id === route.query.archive))
+const journalEntries = computed(() => [...(route.query.archive ? journalArchive.value?.entries ?? [] : journal.value?.entries ?? [])].sort((a, b) => (b.at ?? '').localeCompare(a.at ?? '') || (b.sequence ?? 0) - (a.sequence ?? 0)))
 const document_ = computed(() => route.query.doc ?? '')
 const tag = computed(() => localeTag(locale.value))
 
 onMounted(async () => {
-  await Promise.all([personsStore.init(), vehiclesStore.init(), missionsStore.init()])
+  await Promise.all([personsStore.init(), vehiclesStore.init(), missionsStore.init(), trailersStore.init()])
+  if (document_.value === 'report') {
+    await Promise.all([requestsStore.init(), configStore.init()])
+    try {
+      journal.value = (await api.journal()).data
+    } catch { /* the report still prints, without the key log */ }
+  }
+  if (document_.value === 'journal') {
+    try {
+      journal.value = (await api.journal()).data
+      if (route.query.archive && !journalArchive.value) journalError.value = t('log.archiveMissing')
+    } catch (err) { journalError.value = err.code ? t(`server.${err.code}`, err.params) : err.message }
+  }
   ready.value = true
   await nextTick()
   // Left to the user: opening the dialog automatically would fire before the
@@ -57,11 +90,11 @@ const mission = computed(() =>
 )
 
 function vehicleOf(entry) {
-  return vehiclesStore.vehicles.find(vehicle => vehicle.id === entry.vehicleId)
+  return vehicleInMission(mission.value, entry.vehicleId, vehiclesStore.vehicles)
 }
 
 function personOf(id) {
-  return personsStore.persons.find(person => person.id === id)
+  return personInMission(mission.value, id, personsStore.persons)
 }
 
 const missionCrew = computed(() =>
@@ -69,6 +102,7 @@ const missionCrew = computed(() =>
     ...entry,
     vehicle: vehicleOf(entry),
     driver: entry.driverId ? personOf(entry.driverId) : null,
+    trailer: trailerInMission(mission.value, entry.trailerId, trailersStore.trailers),
   }))
 )
 
@@ -128,31 +162,44 @@ const calendarDays = computed(() => {
 })
 
 const calendarRows = computed(() => {
-  const source = calendarTab.value === 'persons' ? personsStore.persons : vehiclesStore.vehicles
-  return source.map(item => ({
-    id: item.id,
-    label: calendarTab.value === 'persons' ? personName(item) : item.plate,
-    sublabel: calendarTab.value === 'persons' ? (item.licenses ?? []).join(', ') : item.name,
-  }))
+  if (calendarTab.value === 'persons') {
+    return personsStore.persons.map(item => ({
+      id: item.id, label: personName(item), sublabel: (item.licenses ?? []).join(', '),
+    }))
+  }
+  const source = calendarTab.value === 'trailers' ? trailersStore.trailers : vehiclesStore.vehicles
+  return source.map(item => ({ id: item.id, label: item.plate, sublabel: item.name }))
 })
 
-/** Missions covering a resource on a given day, as short labels. */
+/** Does the mission engage this row's resource? */
+function engages(candidate, rowId) {
+  if (calendarTab.value === 'persons') {
+    return candidate.vehicles?.some(entry => entry.driverId === rowId) || candidate.staffIds?.includes(rowId)
+  }
+  const field = calendarTab.value === 'trailers' ? 'trailerId' : 'vehicleId'
+  return candidate.vehicles?.some(entry => entry[field] === rowId)
+}
+
+/**
+ * Missions covering a resource on a given day, as short labels. A leave is
+ * listed alongside them rather than instead: a driver planned while on leave
+ * is exactly what the paper must show.
+ */
 function cellLabel(rowId, date) {
   const involved = missionsStore.missions.filter(candidate => {
+    if (candidate.cancelled) return false
     const covers = candidate.startDate.slice(0, 10) <= date && candidate.endDate.slice(0, 10) >= date
-    if (!covers) return false
-    return calendarTab.value === 'persons'
-      ? candidate.vehicles?.some(entry => entry.driverId === rowId) || candidate.staffIds?.includes(rowId)
-      : candidate.vehicles?.some(entry => entry.vehicleId === rowId)
+    return covers && engages(candidate, rowId)
   })
+  const labels = involved.map(candidate => ({ text: candidate.title, leave: false }))
 
   if (calendarTab.value === 'persons') {
     const person = personsStore.persons.find(candidate => candidate.id === rowId)
     const onLeave = person?.leaves?.some(leave =>
       leave.startDate.slice(0, 10) <= date && leave.endDate.slice(0, 10) >= date)
-    if (onLeave) return [{ text: t('status.leave'), leave: true }]
+    if (onLeave) labels.unshift({ text: t('status.leave'), leave: true })
   }
-  return involved.map(candidate => ({ text: candidate.title, leave: false }))
+  return labels
 }
 
 const calendarTitle = computed(() => {
@@ -165,6 +212,7 @@ const calendarTitle = computed(() => {
 })
 
 const documentTitle = computed(() => {
+  if (document_.value === 'journal') return t('log.title')
   const key = document_.value
   return te(`printing.documents.${key}`) ? t(`printing.documents.${key}`) : t('printing.unknownDocument')
 })
@@ -190,8 +238,22 @@ const documentTitle = computed(() => {
         <p class="doc-date">{{ $t('printing.generatedOn', { date: formatDateTime(nowString) }) }}</p>
       </header>
 
+      <section v-if="document_ === 'journal'">
+        <h2 class="doc-subject">{{ journalArchive?.name ?? $t('log.current') }}</h2>
+        <p v-if="journalArchive">{{ $t('log.archivedBy', { name: journalArchive.archivedBy, date: formatDateTime(journalArchive.archivedAt) }) }}</p>
+        <p v-if="journalError" role="alert">{{ journalError }}</p>
+        <table v-else class="doc-table">
+          <thead><tr><th v-for="key in ['when', 'plate', 'model', 'movement', 'holder', 'recordedBy']" :key="key">{{ $t(`log.columns.${key}`) }}</th></tr></thead>
+          <tbody><tr v-for="entry in journalEntries" :key="entry.id">
+            <td>{{ formatDateTime(entry.at) }}</td><td>{{ entry.vehiclePlate }}</td><td>{{ entry.vehicleName }}</td>
+            <td>{{ $t(`log.actions.${entry.action}`) }}</td>
+            <td>{{ entry.action === 'transferred' && entry.from ? $t('log.fromTo', { from: entry.from, to: entry.name }) : entry.name }}</td>
+            <td>{{ entry.recordedBy }}</td>
+          </tr></tbody>
+        </table>
+      </section>
       <!-- ── Mission order ── -->
-      <section v-if="document_ === 'mission' && mission">
+      <section v-else-if="document_ === 'mission' && mission">
         <h2 class="doc-subject">{{ mission.title }}</h2>
         <p v-if="mission.description" class="doc-description">{{ mission.description }}</p>
 
@@ -221,7 +283,7 @@ const documentTitle = computed(() => {
               <td>{{ entry.vehicle?.plate ?? '—' }}</td>
               <td>
                 {{ entry.vehicle?.name ?? '—' }}
-                <span v-if="entry.withTrailer"> ({{ $t('missions.trailerBadge') }})</span>
+                <span v-if="entry.withTrailer"> ({{ entry.trailer ? `+ ${entry.trailer.plate}` : $t('missions.trailerBadge') }})</span>
               </td>
               <td>{{ entry.driver ? personName(entry.driver) : $t('missions.noDriver') }}</td>
               <td>{{ entry.driver?.phone || '—' }}</td>
@@ -319,6 +381,20 @@ const documentTitle = computed(() => {
         </table>
       </section>
 
+      <!-- ── End-of-course report: every table of the export ── -->
+      <section v-else-if="document_ === 'report'">
+        <template v-for="table in reportTables" :key="table.key">
+          <h2 class="doc-subject">{{ table.title }} ({{ table.rows.length }})</h2>
+          <p v-if="!table.rows.length" class="doc-empty">{{ $t('export.noRows') }}</p>
+          <table v-else class="doc-table report">
+            <thead><tr><th v-for="header in table.headers" :key="header">{{ header }}</th></tr></thead>
+            <tbody><tr v-for="(row, index) in table.rows" :key="index">
+              <td v-for="(cell, column) in row" :key="column">{{ cell }}</td>
+            </tr></tbody>
+          </table>
+        </template>
+      </section>
+
       <section v-else>
         <p class="doc-empty">{{ $t('printing.unknownDocument') }}</p>
       </section>
@@ -365,6 +441,7 @@ h3 { font-size: 11pt; font-weight: 600; margin: 16px 0 6px; }
 .doc-table thead th { background: #f3f4f6; font-weight: 600; }
 .row-warn td { background: #fef2f2; }
 
+.report { font-size: 8pt; margin-bottom: 14pt; }
 .calendar { font-size: 8pt; }
 .calendar td, .calendar th { padding: 2px 3px; overflow: hidden; }
 .calendar .resource { width: 22%; font-size: 9pt; }

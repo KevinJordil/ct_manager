@@ -39,7 +39,8 @@
         "id": "r4001002a",
         "vehicleId": "3001002",
         "driverId": "2001002",
-        "withTrailer": true
+        "withTrailer": true,
+        "trailerId": "3101003"
       },
       {
         "id": "r4001002b",
@@ -242,7 +243,8 @@
         "id": "r4001009b",
         "vehicleId": "3001008",
         "driverId": "2001002",
-        "withTrailer": true
+        "withTrailer": true,
+        "trailerId": "3101004"
       },
       {
         "id": "r4001009c",

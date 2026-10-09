@@ -7,15 +7,19 @@ import { formatDateTime } from '../../datetime.js'
 import { getMissionStatus } from '../../availability.js'
 import { personName, vehiclePlate, vehicleModel } from '../../labels.js'
 import StatusBadge from '../common/StatusBadge.vue'
+import { vehicleInMission, personInMission, trailerInMission } from '../../retired.js'
+import { useTrailersStore } from '../../stores/trailers.js'
 
 const props = defineProps({
   mission: { type: Object, required: true },
   canManage: { type: Boolean, default: false },
 })
-defineEmits(['edit', 'delete', 'print'])
+defineEmits(['edit', 'delete', 'print', 'cancel', 'reopen'])
 
 const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
+const trailersStore = useTrailersStore()
+trailersStore.init()
 const { nowString } = useClock()
 
 const status = computed(() => getMissionStatus(props.mission, nowString.value))
@@ -23,14 +27,15 @@ const status = computed(() => getMissionStatus(props.mission, nowString.value))
 const assignedVehicles = computed(() =>
   (props.mission.vehicles ?? []).filter(entry => entry.vehicleId).map(entry => ({
     ...entry,
-    vehicle: vehiclesStore.vehicles.find(v => v.id === entry.vehicleId),
-    driver: entry.driverId ? personsStore.persons.find(p => p.id === entry.driverId) : null,
+    vehicle: vehicleInMission(props.mission, entry.vehicleId, vehiclesStore.vehicles),
+    driver: entry.driverId ? personInMission(props.mission, entry.driverId, personsStore.persons) : null,
+    trailer: trailerInMission(props.mission, entry.trailerId, trailersStore.trailers),
   }))
 )
 
 const unmountedStaff = computed(() =>
   (props.mission.staffIds ?? [])
-    .map(id => personsStore.persons.find(p => p.id === id))
+    .map(id => personInMission(props.mission, id, personsStore.persons))
     .filter(Boolean)
 )
 </script>
@@ -68,7 +73,7 @@ const unmountedStaff = computed(() =>
             </template>
             <span v-else class="text-xs text-stone-400 italic">{{ $t('missions.noDriver') }}</span>
             <span v-if="entry.withTrailer" class="text-xs bg-amber-100 text-amber-700 rounded px-1 py-0.5 font-medium">
-              {{ $t('missions.trailerBadge') }}
+              {{ entry.trailer ? `+ ${entry.trailer.plate}` : $t('missions.trailerBadge') }}
             </span>
           </div>
         </div>
@@ -83,12 +88,15 @@ const unmountedStaff = computed(() =>
           </span>
         </div>
 
+        <p v-if="!mission.cancelled && !assignedVehicles.some(entry => entry.vehicle) && !unmountedStaff.length" class="mt-2 text-sm text-amber-700">{{ $t('missions.emptyWarning') }}</p>
         <p v-if="mission.notes" class="mt-1.5 text-sm text-stone-400 italic">{{ mission.notes }}</p>
       </div>
 
       <div class="flex flex-wrap gap-1.5 shrink-0">
         <button @click="$emit('print')" class="btn-action">{{ $t('printing.short') }}</button>
         <button v-if="canManage" @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
+        <button v-if="canManage && !mission.cancelled && status !== 'completed'" @click="$emit('cancel')" class="btn-action btn-action-danger">{{ $t('missions.cancelMission') }}</button>
+        <button v-if="canManage && mission.cancelled" @click="$emit('reopen')" class="btn-action">{{ $t('missions.reopen') }}</button>
         <button v-if="canManage" @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>
     </div>

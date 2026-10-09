@@ -26,7 +26,8 @@ const hasAccount = computed(() => Boolean(props.person && personsStore.hasAccoun
 /** The login the person will use, shown live as the family name is typed. */
 const futureUsername = computed(() => usernameFromLastName(form.lastName))
 
-const passwordRequired = computed(() => !props.person)
+/** A person may exist long before signing in: the password can come later. */
+const passwordRequired = computed(() => false)
 
 watch(() => props.person, person => {
   form.rank = person?.rank ?? ''
@@ -53,7 +54,7 @@ function submit() {
 </script>
 
 <template>
-  <BaseModal :title="person ? $t('persons.edit') : $t('persons.new')" @close="$emit('close')">
+  <BaseModal persistent :title="person ? $t('persons.edit') : $t('persons.new')" @close="$emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
       <div class="grid grid-cols-3 gap-3">
         <div>

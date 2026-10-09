@@ -24,7 +24,10 @@ const self = computed(() =>
 // The signed-in person first, so the pre-selected entry is visible without
 // scrolling the list; everybody else alphabetically.
 const persons = computed(() => {
-  const sorted = [...personsStore.persons].sort((a, b) => personName(a).localeCompare(personName(b)))
+  // Passing the key on goes to somebody else than its holder.
+  const sorted = personsStore.persons
+    .filter(person => !holder.value?.personId || person.id !== holder.value.personId)
+    .sort((a, b) => personName(a).localeCompare(personName(b)))
   const mine = sorted.findIndex(person => person.id === self.value?.id)
   if (mine <= 0) return sorted
   return [sorted[mine], ...sorted.slice(0, mine), ...sorted.slice(mine + 1)]
@@ -34,7 +37,8 @@ const persons = computed(() => {
 const mode = ref('person')
 // Taking a key for oneself is the common case, so start there; anybody else
 // is one click away in the list.
-const personId = ref(self.value?.id ?? '')
+// Never the current holder: a transfer goes to somebody else.
+const personId = ref(self.value && self.value.id !== holder.value?.personId ? self.value.id : '')
 const outsideName = ref('')
 const search = ref('')
 

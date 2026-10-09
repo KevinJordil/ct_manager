@@ -17,8 +17,23 @@ import {
   REQUEST_VEHICLE_TYPES, VEHICLE_CATEGORIES,
 } from './constants.js'
 
+/**
+ * Vehicle models, as the unit names them. A trailer lists the models it can
+ * be hitched to — "Class G and Duro", not "light vehicles" — since two trucks
+ * of one category may take different trailers. Plain labels, the same in
+ * every language: they are model names.
+ */
+export const DEFAULT_VEHICLE_TYPES = [
+  { id: 'class-g', label: 'Class G' },
+  { id: 'duro', label: 'Duro' },
+  { id: 'truck-4x4', label: 'Camion 4x4' },
+  { id: 'truck-6x6', label: 'Camion 6x6' },
+  { id: 'car', label: 'Voiture' },
+]
+
 export const DEFAULT_CONFIG = {
   requestVehicleTypes: REQUEST_VEHICLE_TYPES.map(id => ({ id })),
+  vehicleTypes: DEFAULT_VEHICLE_TYPES.map(type => ({ ...type })),
   licenses: [...LICENSES],
   licensesByCategory: { ...LICENSES_BY_CATEGORY },
   trailerLicensesByCategory: { ...TRAILER_LICENSES_BY_CATEGORY },
@@ -36,6 +51,11 @@ export function isBuiltInRequestType(id) {
 export function withDefaults(stored = {}) {
   return {
     requestVehicleTypes: normaliseTypes(stored.requestVehicleTypes),
+    vehicleTypes: Array.isArray(stored.vehicleTypes)
+      ? stored.vehicleTypes
+        .filter(type => type && typeof type.id === 'string' && type.id && typeof type.label === 'string')
+        .map(type => ({ id: type.id, label: type.label }))
+      : DEFAULT_CONFIG.vehicleTypes.map(type => ({ ...type })),
     licenses: Array.isArray(stored.licenses) && stored.licenses.length
       ? [...stored.licenses]
       : [...DEFAULT_CONFIG.licenses],

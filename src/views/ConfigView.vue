@@ -17,6 +17,7 @@ onMounted(() => store.init())
  */
 const draft = reactive({
   requestVehicleTypes: [],
+  vehicleTypes: [],
   licenses: [],
   licensesByCategory: {},
   trailerLicensesByCategory: {},
@@ -24,6 +25,7 @@ const draft = reactive({
 
 watch(() => store.config, config => {
   draft.requestVehicleTypes = config.requestVehicleTypes.map(type => ({ ...type }))
+  draft.vehicleTypes = config.vehicleTypes.map(type => ({ ...type }))
   draft.licenses = [...config.licenses]
   draft.licensesByCategory = Object.fromEntries(
     Object.entries(config.licensesByCategory).map(([key, value]) => [key, [...value]]))
@@ -61,6 +63,26 @@ function moveType(index, direction) {
 
 function typeLabel(type) {
   return store.requestTypeLabel(type, t)
+}
+
+// ── Vehicle models ──
+
+const newVehicleType = ref('')
+
+/** The id is derived once from the label; renaming later keeps it, and every link. */
+function addVehicleType() {
+  const label = newVehicleType.value.trim()
+  if (!label) return
+  const base = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'type'
+  let id = base
+  for (let n = 2; draft.vehicleTypes.some(type => type.id === id); n++) id = `${base}-${n}`
+  draft.vehicleTypes.push({ id, label })
+  newVehicleType.value = ''
+}
+
+function removeVehicleType(index) {
+  draft.vehicleTypes.splice(index, 1)
 }
 
 // ── Licences ──
@@ -104,6 +126,7 @@ async function save() {
   try {
     saved.value = await store.save({
       requestVehicleTypes: draft.requestVehicleTypes,
+      vehicleTypes: draft.vehicleTypes.filter(type => type.label.trim()),
       licenses: draft.licenses,
       licensesByCategory: draft.licensesByCategory,
       trailerLicensesByCategory: draft.trailerLicensesByCategory,
@@ -155,15 +178,37 @@ async function reset() {
             {{ $t('config.identifier') }}
             <span class="font-normal text-stone-400">({{ $t('config.identifierHint') }})</span>
           </label>
-          <input id="new-type-id" v-model="newType.id" class="input" placeholder="minibus" />
+          <input id="new-type-id" v-model="newType.id" class="input" :placeholder="$t('config.typeIdPlaceholder')" />
         </div>
         <div>
           <label class="label" for="new-type-label">{{ $t('config.labelOptional') }}</label>
-          <input id="new-type-label" v-model="newType.label" class="input" placeholder="Minibus 20 places" />
+          <input id="new-type-label" v-model="newType.label" class="input" :placeholder="$t('config.typeLabelPlaceholder')" />
         </div>
         <button type="button" @click="addType" class="btn-secondary justify-center">
           {{ $t('config.addType') }}
         </button>
+      </div>
+    </section>
+
+    <!-- Vehicle models, which trailers refer to -->
+    <section class="card mb-6">
+      <h2 class="section-title mb-1">{{ $t('config.vehicleTypes') }}</h2>
+      <p class="text-xs text-stone-500 mb-4">{{ $t('config.vehicleTypesHint') }}</p>
+
+      <ul class="space-y-2 mb-4">
+        <li v-for="(type, index) in draft.vehicleTypes" :key="type.id" class="flex items-center gap-2">
+          <input v-model="type.label" class="input flex-1" :aria-label="$t('config.vehicleTypes')" />
+          <button type="button" @click="removeVehicleType(index)" :aria-label="`${$t('actions.delete')} ${type.label}`"
+            class="icon-btn min-w-[36px] text-red-400 hover:text-red-600">✕</button>
+        </li>
+      </ul>
+
+      <div class="flex gap-3 items-end max-w-md">
+        <div class="flex-1">
+          <label class="label" for="new-vehicle-type">{{ $t('config.vehicleTypeLabel') }}</label>
+          <input id="new-vehicle-type" v-model="newVehicleType" class="input" @keydown.enter.prevent="addVehicleType" />
+        </div>
+        <button type="button" @click="addVehicleType" class="btn-secondary">{{ $t('config.addVehicleType') }}</button>
       </div>
     </section>
 
@@ -185,7 +230,7 @@ async function reset() {
       <div class="flex gap-3 items-end max-w-md">
         <div class="flex-1">
           <label class="label" for="new-license">{{ $t('config.addLicense') }}</label>
-          <input id="new-license" v-model="newLicense" class="input" placeholder="940" />
+          <input id="new-license" v-model="newLicense" class="input" :placeholder="$t('config.licensePlaceholder')" />
         </div>
         <button type="button" @click="addLicense" class="btn-secondary">{{ $t('actions.add') }}</button>
       </div>

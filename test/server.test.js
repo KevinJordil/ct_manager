@@ -822,6 +822,158 @@ describe('rights', () => {
   })
 })
 
+describe('accounts holding rights', () => {
+  let plannerToken
+  let adminId
+  const asPlanner = () => ({ Authorization: `Bearer ${plannerToken}` })
+  const setPersonPassword = (personId, body) => fetch(`${BASE}/api/persons/${personId}/account`, {
+    method: 'PUT',
+    headers: { ...asPlanner(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  it('sets up an account that may only manage persons', async () => {
+    const created = await createAccount({
+      username: 'planner', password: 'p', role: 'user', permissions: { 'persons.manage': true },
+    })
+    expect(created.status).toBe(201)
+    plannerToken = (await (await signIn('p', 'planner')).json()).token
+
+    const users = await (await fetch(`${BASE}/api/users`, { headers: auth() })).json()
+    adminId = users.find(user => user.username === 'admin').id
+    // The administrator is also a person of the company, with their own missions.
+    await fetch(`${BASE}/api/users/${adminId}`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personId: 'p-admin' }),
+    })
+  })
+
+  it('cannot take over an administrator through the person form', async () => {
+    const res = await setPersonPassword('p-admin', { password: 'stolen', lastName: 'Pirate' })
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('users.privilegedAccount')
+
+    expect((await signIn('stolen', 'pirate')).status).toBe(401)
+    expect((await fetch(`${BASE}/api/auth/me`, { headers: auth() })).status).toBe(200)
+  })
+
+  it('cannot remove the account of an administrator either', async () => {
+    const res = await fetch(`${BASE}/api/persons/p-admin/account`, { method: 'DELETE', headers: asPlanner() })
+    expect(res.status).toBe(403)
+  })
+
+  it('still gives a plain soldier a password', async () => {
+    expect((await setPersonPassword('p-soldier', { password: 's', lastName: 'Rossier' })).status).toBe(201)
+    expect((await setPersonPassword('p-soldier', { password: 's2', lastName: 'Rossier' })).status).toBe(200)
+  })
+
+  it('leaves the administrator free to do it', async () => {
+    const res = await fetch(`${BASE}/api/persons/p-soldier/account`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: 's3', lastName: 'Rossier' }),
+    })
+    expect(res.status).toBe(200)
+
+    await fetch(`${BASE}/api/users/${adminId}`, {
+      method: 'PUT',
+      headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personId: null }),
+    })
+  })
+})
+
+describe('key movements and checks are stamped by the server', () => {
+  let clerkToken
+  let clerkId
+  let otherToken
+  const as = session => ({ Authorization: `Bearer ${session}` })
+  const vehicle = {
+    id: 'vs1', name: 'Puch', plate: 'M77', category: 'light-offroad', seats: 4,
+    status: 'free', loanNote: '', loanUntil: '', checks: [], keyHolder: null, keyHistory: [],
+  }
+
+  async function fleet() {
+    const res = await get('vehicles')
+    return { data: await res.json(), version: versionFrom(res) }
+  }
+  const mine = data => data.find(item => item.id === vehicle.id)
+
+  it('sets up two accounts without any right', async () => {
+    const created = await createAccount({ username: 'clerk', password: 'c', role: 'user' })
+    clerkId = (await created.json()).id
+    await createAccount({ username: 'other', password: 'o', role: 'user' })
+    clerkToken = (await (await signIn('c', 'clerk')).json()).token
+    otherToken = (await (await signIn('o', 'other')).json()).token
+
+    const { data, version } = await fleet()
+    expect((await put('vehicles', [...data, vehicle], { version })).status).toBe(200)
+  })
+
+  it('ignores a backdated movement signed with somebody else\'s name', async () => {
+    const { data, version } = await fleet()
+    mine(data).keyHolder = { personId: null, name: 'Sdt Clerk', since: '2020-01-01T03:00', recordedBy: 'Cdt X' }
+    mine(data).keyHistory = [{ id: 'forged', at: '2020-01-01T03:00', action: 'taken', name: 'Sdt Clerk', recordedBy: 'Cdt X' }]
+    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
+
+    const stored = mine((await fleet()).data)
+    expect(stored.keyHistory[0]).toMatchObject({ recordedBy: 'clerk' })
+    expect(stored.keyHistory[0].at).not.toBe('2020-01-01T03:00')
+    expect(stored.keyHolder).toMatchObject({ recordedBy: 'clerk', since: stored.keyHistory[0].at })
+
+    const journal = await (await fetch(`${BASE}/api/journal`, { headers: auth() })).json()
+    expect(journal.entries.find(entry => entry.id === 'forged')).toMatchObject({ recordedBy: 'clerk' })
+  })
+
+  it('keeps a stored movement from being rewritten', async () => {
+    const { data, version } = await fleet()
+    mine(data).keyHistory[0] = { ...mine(data).keyHistory[0], name: 'Somebody else', recordedBy: 'Cdt X' }
+    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
+    expect(mine((await fleet()).data).keyHistory[0]).toMatchObject({ name: 'Sdt Clerk', recordedBy: 'clerk' })
+  })
+
+  it('stamps the author of a check', async () => {
+    const { data, version } = await fleet()
+    mine(data).checks = [{ id: 'chk1', date: '2026-10-09', personId: null, note: 'Atelier' }]
+    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
+    expect(mine((await fleet()).data).checks[0]).toMatchObject({ recordedBy: 'clerk', recordedById: clerkId })
+  })
+
+  it('refuses to let another plain account wipe that check', async () => {
+    const { data, version } = await fleet()
+    mine(data).checks = []
+    const res = await put('vehicles', data, { version, headers: as(otherToken) })
+    expect(res.status).toBe(403)
+    expect(await res.json()).toMatchObject({ code: 'permissions.checkRemoval', params: { plate: 'M77' } })
+  })
+
+  it('lets its author withdraw it', async () => {
+    const { data, version } = await fleet()
+    mine(data).checks = []
+    expect((await put('vehicles', data, { version, headers: as(clerkToken) })).status).toBe(200)
+    expect(mine((await fleet()).data).checks).toEqual([])
+  })
+})
+
+describe('missions that name nothing real', () => {
+  it('refuses a vehicle that does not exist', async () => {
+    const res = await put('missions', [{ id: 'mx', title: 'Fantôme', vehicles: [{ vehicleId: 'ghost' }], staffIds: [] }])
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ code: 'validation.unknownReference', params: { field: 'vehicleId' } })
+  })
+})
+
+describe('security headers', () => {
+  it('forbids framing and foreign scripts', async () => {
+    const res = await fetch(`${BASE}/api/config`)
+    expect(res.headers.get('x-frame-options')).toBe('DENY')
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(res.headers.get('content-security-policy')).toContain("script-src 'self'")
+    expect(res.headers.get('content-security-policy')).toContain("frame-ancestors 'none'")
+  })
+})
+
 describe('own password', () => {
   it('refuses a wrong current password', async () => {
     const res = await fetch(`${BASE}/api/auth/password`, {

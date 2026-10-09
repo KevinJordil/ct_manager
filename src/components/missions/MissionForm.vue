@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BaseModal from '../common/BaseModal.vue'
 import DateTimeField from '../common/DateTimeField.vue'
 import { usePersonsStore } from '../../stores/persons.js'
@@ -7,7 +8,13 @@ import { useVehiclesStore } from '../../stores/vehicles.js'
 import { useMissionsStore } from '../../stores/missions.js'
 import { useClock } from '../../stores/clock.js'
 import { useConfigStore } from '../../stores/config.js'
-import { isPersonAvailable, isVehicleAvailable } from '../../availability.js'
+import {
+  isPersonAvailable, isVehicleAvailable, isVehicleAwayDuring, isOnLeaveDuring,
+  isPersonCommitted, isVehicleCommitted, getMissionStatus,
+  isTrailerCommitted, trailerFits,
+} from '../../availability.js'
+import { useTrailersStore } from '../../stores/trailers.js'
+import { MISSION_STATUS } from '../../constants.js'
 import { personName } from '../../labels.js'
 import { newId } from '../../id.js'
 
@@ -18,7 +25,9 @@ const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
 const missionsStore = useMissionsStore()
 const configStore = useConfigStore()
+const trailersStore = useTrailersStore()
 const { nowString } = useClock()
+const { t } = useI18n()
 
 // The form reads four stores; it loads them itself rather than assuming the
 // view that opened it already did. init() is memoised, so this costs nothing
@@ -27,6 +36,7 @@ personsStore.init()
 vehiclesStore.init()
 missionsStore.init()
 configStore.init()
+trailersStore.init()
 
 const form = reactive({ title: '', description: '', startDate: '', endDate: '', notes: '' })
 const vehicleRows = ref([])
@@ -48,6 +58,7 @@ watch(() => props.mission, mission => {
       vehicleId: entry.vehicleId,
       driverId: entry.driverId ?? null,
       withTrailer: entry.withTrailer ?? false,
+      trailerId: entry.trailerId ?? '',
       // Only set when the mission comes from a request: what was asked for,
       // and whether that line found a vehicle at all.
       requestedLabel: entry.requestedLabel ?? '',
@@ -108,48 +119,165 @@ function alreadyPicked({ exceptVehicleRow = null, exceptStaffRow = null } = {}) 
   ])
 }
 
-function availableVehiclesFor(row) {
+function vehiclesNotElsewhere(row) {
   const takenElsewhere = new Set(
     vehicleRows.value.filter(other => other.rowId !== row.rowId).map(other => other.vehicleId).filter(Boolean)
   )
-  return vehiclesStore.vehicles.filter(vehicle => {
-    if (takenElsewhere.has(vehicle.id)) return false
-    return vehicleIsAvailable(vehicle, row.vehicleId)
-  })
+  return vehiclesStore.vehicles.filter(vehicle => !takenElsewhere.has(vehicle.id))
 }
 
+function availableVehiclesFor(row) {
+  return vehiclesNotElsewhere(row).filter(vehicle => vehicleIsAvailable(vehicle, row.vehicleId))
+}
+
+/**
+ * The vehicles that are not free, offered apart with their reason: the
+ * person planning may know better — a vehicle back early — and decides.
+ */
+function unavailableVehiclesFor(row) {
+  return vehiclesNotElsewhere(row).filter(vehicle => !vehicleIsAvailable(vehicle, row.vehicleId))
+}
+
+/**
+ * Licences that allow driving the row's vehicle. A vehicle without a known
+ * category cannot be checked, so nobody counts as qualified for it.
+ */
 function requiredLicensesFor(row) {
   const vehicle = vehiclesStore.vehicles.find(v => v.id === row.vehicleId)
   if (!vehicle) return null
-  return row.withTrailer
-    ? configStore.trailerLicensesByCategory[vehicle.category]
-    : configStore.licensesByCategory[vehicle.category]
+  const matrix = row.withTrailer ? configStore.trailerLicensesByCategory : configStore.licensesByCategory
+  return matrix[vehicle.category] ?? []
+}
+
+function isQualified(person, row) {
+  const required = requiredLicensesFor(row)
+  if (!required) return true
+  return (person.licenses ?? []).some(license => required.includes(license))
+}
+
+function driversNotElsewhere(row) {
+  const taken = alreadyPicked({ exceptVehicleRow: row.rowId })
+  return personsStore.persons.filter(person => person.id === row.driverId || !taken.has(person.id))
 }
 
 function availableDriversFor(row) {
-  const required = requiredLicensesFor(row)
-  const taken = alreadyPicked({ exceptVehicleRow: row.rowId })
-  return personsStore.persons.filter(person => {
-    if (person.id !== row.driverId && taken.has(person.id)) return false
-    if (!personIsAvailable(person, row.driverId)) return false
-    if (required && !person.licenses.some(license => required.includes(license))) return false
-    return true
-  })
+  return driversNotElsewhere(row)
+    .filter(person => personIsAvailable(person, row.driverId) && isQualified(person, row))
+}
+
+function unavailableDriversFor(row) {
+  const available = new Set(availableDriversFor(row).map(person => person.id))
+  return driversNotElsewhere(row).filter(person => !available.has(person.id))
+}
+
+function staffNotElsewhere(row) {
+  const taken = alreadyPicked({ exceptStaffRow: row.rowId })
+  return personsStore.persons.filter(person => person.id === row.personId || !taken.has(person.id))
 }
 
 function availableStaffFor(row) {
-  const taken = alreadyPicked({ exceptStaffRow: row.rowId })
-  return personsStore.persons.filter(person => {
-    if (person.id !== row.personId && taken.has(person.id)) return false
-    return personIsAvailable(person, row.personId)
-  })
+  return staffNotElsewhere(row).filter(person => personIsAvailable(person, row.personId))
 }
+
+function unavailableStaffFor(row) {
+  return staffNotElsewhere(row).filter(person => !personIsAvailable(person, row.personId))
+}
+
+// ── Trailers ──
+
+function rowVehicle(row) {
+  return vehiclesStore.vehicles.find(vehicle => vehicle.id === row.vehicleId)
+}
+
+function trailersNotElsewhere(row) {
+  const takenElsewhere = new Set(
+    vehicleRows.value.filter(other => other.rowId !== row.rowId).map(other => other.trailerId).filter(Boolean))
+  return trailersStore.trailers.filter(trailer => !takenElsewhere.has(trailer.id))
+}
+
+/** Why a trailer should not go behind this row's vehicle; empty when it can. */
+function trailerProblems(trailer, row) {
+  if (!trailer) return []
+  const problems = []
+  if (!trailerFits(trailer, rowVehicle(row))) problems.push('incompatible')
+  if (isVehicleAwayDuring(trailer, form.startDate)) problems.push('away')
+  if (form.startDate && form.endDate && isTrailerCommitted(trailer.id, otherLiveMissions(),
+    form.startDate, form.endDate, { excludeMissionId: props.mission?.id ?? null })) problems.push('busy')
+  return problems
+}
+
+function availableTrailersFor(row) {
+  return trailersNotElsewhere(row).filter(trailer => !trailerProblems(trailer, row).length)
+}
+
+function unavailableTrailersFor(row) {
+  return trailersNotElsewhere(row).filter(trailer => trailerProblems(trailer, row).length)
+}
+
+function onTrailerToggle(row) {
+  if (!row.withTrailer) row.trailerId = ''
+  dropDriverIfUnqualified(row)
+}
+
+// ── Problems, shown before saving rather than discovered afterwards ──
+
+/** Missions that still tie resources up: not over, not cancelled, not this one. */
+function otherLiveMissions() {
+  return missionsStore.missions.filter(mission =>
+    getMissionStatus(mission, nowString.value) !== MISSION_STATUS.COMPLETED)
+}
+
+/** Why a vehicle should not go, as translation keys; empty when it can. */
+function vehicleProblems(vehicle) {
+  if (!vehicle) return []
+  const problems = []
+  if (isVehicleAwayDuring(vehicle, form.startDate)) problems.push('away')
+  if (form.startDate && form.endDate && isVehicleCommitted(vehicle.id, otherLiveMissions(),
+    form.startDate, form.endDate, { excludeMissionId: props.mission?.id ?? null })) problems.push('busy')
+  return problems
+}
+
+/** Why a person should not go — and, as a driver, whether they may drive it. */
+function personProblems(person, row = null) {
+  if (!person) return []
+  const problems = []
+  if (person.unavailable) problems.push('unavailable')
+  if (isOnLeaveDuring(person, form.startDate, form.endDate)) problems.push('onLeave')
+  if (form.startDate && form.endDate && isPersonCommitted(person.id, otherLiveMissions(),
+    form.startDate, form.endDate, { excludeMissionId: props.mission?.id ?? null })) problems.push('busy')
+  if (row && !isQualified(person, row)) problems.push('noLicense')
+  return problems
+}
+
+const explain = problems => problems.map(problem => t(`missions.problems.${problem}`)).join(', ')
+
+/** Every assignment that goes against a rule, in reading order. */
+const conflicts = computed(() => {
+  const lines = []
+  for (const row of vehicleRows.value) {
+    const vehicle = vehiclesStore.vehicles.find(v => v.id === row.vehicleId)
+    const vehicleIssues = vehicleProblems(vehicle)
+    if (vehicleIssues.length) lines.push({ key: `v-${row.rowId}`, name: vehicle.plate || vehicle.name, problems: explain(vehicleIssues) })
+    const trailer = trailersStore.trailers.find(candidate => candidate.id === row.trailerId)
+    const trailerIssues = row.withTrailer ? trailerProblems(trailer, row) : []
+    if (trailerIssues.length) lines.push({ key: `t-${row.rowId}`, name: trailer.plate, problems: explain(trailerIssues) })
+    const driver = personsStore.persons.find(p => p.id === row.driverId)
+    const driverIssues = personProblems(driver, row)
+    if (driverIssues.length) lines.push({ key: `d-${row.rowId}`, name: personName(driver), problems: explain(driverIssues) })
+  }
+  for (const row of staffRows.value) {
+    const person = personsStore.persons.find(p => p.id === row.personId)
+    const issues = personProblems(person)
+    if (issues.length) lines.push({ key: `s-${row.rowId}`, name: personName(person), problems: explain(issues) })
+  }
+  return lines
+})
 
 // ── List mutations ──
 
 function addVehicleRow() {
   vehicleRows.value.push({
-    rowId: newId(), id: null, vehicleId: '', driverId: null, withTrailer: false,
+    rowId: newId(), id: null, vehicleId: '', driverId: null, withTrailer: false, trailerId: '',
     requestedLabel: '', driverRequired: false, unavailable: false,
   })
 }
@@ -181,6 +309,7 @@ function removeVehicleRow(rowId) {
 
 function onVehicleChange(row) {
   row.withTrailer = false
+  row.trailerId = ''
   // The row no longer waits for a vehicle; whatever the proposal said, a
   // choice has been made.
   row.unavailable = false
@@ -189,7 +318,8 @@ function onVehicleChange(row) {
 
 function dropDriverIfUnqualified(row) {
   if (!row.driverId) return
-  if (!availableDriversFor(row).find(person => person.id === row.driverId)) row.driverId = null
+  const driver = personsStore.persons.find(person => person.id === row.driverId)
+  if (!driver || !isQualified(driver, row)) row.driverId = null
 }
 
 function addStaffRow() {
@@ -228,6 +358,28 @@ watch([() => form.startDate, () => form.endDate], () => {
   dropped += staffRows.value.length - keptStaff.length
   staffRows.value = keptStaff
 
+  // A trailer chosen for the old dates may be hitched elsewhere on the new ones.
+  vehicleRows.value.forEach(row => {
+    if (!row.trailerId) return
+    const trailer = trailersStore.trailers.find(candidate => candidate.id === row.trailerId)
+    const issues = trailerProblems(trailer, row).filter(problem => problem !== 'incompatible')
+    if (!trailer || issues.length) {
+      row.trailerId = ''
+      dropped++
+    }
+  })
+
+  // A vehicle chosen for the old dates may be booked on the new ones.
+  vehicleRows.value.forEach(row => {
+    if (!row.vehicleId) return
+    const vehicle = vehiclesStore.vehicles.find(v => v.id === row.vehicleId)
+    if (!vehicle || !vehicleIsAvailable(vehicle)) {
+      row.vehicleId = ''
+      row.driverId = null
+      dropped++
+    }
+  })
+
   // Accumulated, not replaced: setting the start date then the end date runs
   // this twice, and the second pass would otherwise erase the first warning.
   droppedAssignments.value += dropped
@@ -244,8 +396,20 @@ const capacity = computed(() => {
   return { seats, drivers: picked.filter(row => row.driverId).length }
 })
 
+/** A mission has to end after it starts, or it never runs and blocks nothing. */
+const endBeforeStart = computed(() =>
+  Boolean(form.startDate && form.endDate && form.endDate <= form.startDate))
+
+/** Set once the person planning has read the conflicts and keeps them. */
+const forcing = ref(false)
+watch(conflicts, () => { forcing.value = false })
+
 function submit() {
-  if (!form.title.trim() || !form.startDate || !form.endDate) return
+  if (!form.title.trim() || !form.startDate || !form.endDate || endBeforeStart.value) return
+  if (conflicts.value.length && !forcing.value) {
+    forcing.value = true
+    return
+  }
   emit('save', {
     ...form,
     vehicles: vehicleRows.value.filter(row => row.vehicleId).map(row => ({
@@ -253,6 +417,7 @@ function submit() {
       vehicleId: row.vehicleId,
       driverId: row.driverId || null,
       withTrailer: row.withTrailer ?? false,
+      trailerId: row.withTrailer ? (row.trailerId || null) : null,
     })),
     staffIds: staffRows.value.map(row => row.personId).filter(Boolean),
   })
@@ -260,7 +425,7 @@ function submit() {
 </script>
 
 <template>
-  <BaseModal :title="mission?.id ? $t('missions.edit') : $t('missions.new')" @close="$emit('close')">
+  <BaseModal persistent :title="mission?.id ? $t('missions.edit') : $t('missions.new')" @close="$emit('close')">
     <form @submit.prevent="submit" class="space-y-5">
 
       <p v-if="droppedAssignments" role="status"
@@ -286,7 +451,7 @@ function submit() {
           <textarea id="mission-description" v-model="form.description" class="input" rows="2"
             :placeholder="$t('missions.descriptionPlaceholder')" />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="label" for="mission-start">{{ $t('missions.start') }} *</label>
             <DateTimeField id="mission-start" v-model="form.startDate" required />
@@ -295,6 +460,9 @@ function submit() {
             <label class="label" for="mission-end">{{ $t('missions.end') }} *</label>
             <DateTimeField id="mission-end" v-model="form.endDate"
               :min="form.startDate" default-time="17:00" required />
+            <p v-if="endBeforeStart" role="alert" class="mt-1 text-xs font-medium text-red-700">
+              {{ $t('missions.endBeforeStart') }}
+            </p>
           </div>
         </div>
       </div>
@@ -349,6 +517,11 @@ function submit() {
                 <option v-for="vehicle in availableVehiclesFor(row)" :key="vehicle.id" :value="vehicle.id">
                   {{ vehicle.plate }} — {{ vehicle.name }}{{ vehicle.seats ? ` — ${$t('missions.capacity', vehicle.seats, { count: vehicle.seats })}` : '' }}
                 </option>
+                <optgroup v-if="unavailableVehiclesFor(row).length" :label="$t('missions.unavailableGroup')">
+                  <option v-for="vehicle in unavailableVehiclesFor(row)" :key="vehicle.id" :value="vehicle.id">
+                    {{ vehicle.plate }} — {{ vehicle.name }} ({{ explain(vehicleProblems(vehicle)) }})
+                  </option>
+                </optgroup>
               </select>
               <button type="button" @click="removeVehicleRow(row.rowId)" :aria-label="$t('missions.removeVehicle')"
                 class="mt-1 icon-btn text-red-400 hover:text-red-600 shrink-0">
@@ -359,19 +532,37 @@ function submit() {
             </div>
             <div v-if="row.vehicleId" class="space-y-2">
               <label class="flex items-center gap-2 cursor-pointer w-fit">
-                <input type="checkbox" v-model="row.withTrailer" @change="dropDriverIfUnqualified(row)"
+                <input type="checkbox" v-model="row.withTrailer" @change="onTrailerToggle(row)"
                   class="w-4 h-4 rounded border-stone-300 text-olive-600 focus:ring-olive-500" />
                 <span class="text-sm text-stone-700">{{ $t('missions.withTrailer') }}</span>
                 <span v-if="row.withTrailer" class="text-xs text-olive-600 font-medium">
                   {{ $t('missions.trailerLicense') }}
                 </span>
               </label>
+              <div v-if="row.withTrailer">
+                <select v-model="row.trailerId" class="input text-sm w-full" :aria-label="$t('missions.trailer')">
+                  <option value="">{{ $t('missions.trailerUnspecified') }}</option>
+                  <option v-for="trailer in availableTrailersFor(row)" :key="trailer.id" :value="trailer.id">
+                    {{ trailer.plate }}{{ trailer.name ? ` — ${trailer.name}` : '' }}
+                  </option>
+                  <optgroup v-if="unavailableTrailersFor(row).length" :label="$t('missions.unavailableGroup')">
+                    <option v-for="trailer in unavailableTrailersFor(row)" :key="trailer.id" :value="trailer.id">
+                      {{ trailer.plate }}{{ trailer.name ? ` — ${trailer.name}` : '' }} ({{ explain(trailerProblems(trailer, row)) }})
+                    </option>
+                  </optgroup>
+                </select>
+              </div>
               <div class="flex gap-2">
                 <select v-model="row.driverId" class="input text-sm flex-1" :aria-label="$t('fields.driverId')">
                   <option :value="null">{{ $t('missions.noDriverOption') }}</option>
                   <option v-for="person in availableDriversFor(row)" :key="person.id" :value="person.id">
-                    {{ personName(person) }} ({{ person.licenses.join(', ') }})
+                    {{ personName(person) }} ({{ (person.licenses ?? []).join(', ') }})
                   </option>
+                  <optgroup v-if="unavailableDriversFor(row).length" :label="$t('missions.unavailableGroup')">
+                    <option v-for="person in unavailableDriversFor(row)" :key="person.id" :value="person.id">
+                      {{ personName(person) }} ({{ explain(personProblems(person, row)) }})
+                    </option>
+                  </optgroup>
                 </select>
                 <button type="button" @click="pickRandomDriver(row)"
                   :disabled="availableDriversFor(row).length === 0"
@@ -410,6 +601,11 @@ function submit() {
               <option v-for="person in availableStaffFor(row)" :key="person.id" :value="person.id">
                 {{ personName(person) }}
               </option>
+              <optgroup v-if="unavailableStaffFor(row).length" :label="$t('missions.unavailableGroup')">
+                <option v-for="person in unavailableStaffFor(row)" :key="person.id" :value="person.id">
+                  {{ personName(person) }} ({{ explain(personProblems(person)) }})
+                </option>
+              </optgroup>
             </select>
             <button type="button" @click="removeStaffRow(row.rowId)" :aria-label="$t('missions.removeStaff')"
               class="icon-btn text-red-400 hover:text-red-600 shrink-0">
@@ -428,9 +624,20 @@ function submit() {
           :placeholder="$t('missions.notesPlaceholder')" />
       </div>
 
+      <div v-if="conflicts.length" role="status"
+        class="px-3 py-2 rounded-lg bg-amber-50 border border-amber-300 text-sm text-amber-900 space-y-1">
+        <p class="font-semibold">{{ $t('missions.conflictsTitle') }}</p>
+        <ul class="list-disc pl-5">
+          <li v-for="line in conflicts" :key="line.key">{{ line.name }} : {{ line.problems }}</li>
+        </ul>
+        <p v-if="forcing" class="font-medium">{{ $t('missions.forceHint') }}</p>
+      </div>
+
       <div class="flex justify-end gap-3 pt-1">
         <button type="button" @click="$emit('close')" class="btn-secondary">{{ $t('actions.cancel') }}</button>
-        <button type="submit" class="btn-primary">{{ mission?.id ? $t('actions.save') : $t('actions.create') }}</button>
+        <button type="submit" :class="forcing ? 'btn-danger' : 'btn-primary'">
+          {{ forcing ? $t('missions.forceSave') : (mission?.id ? $t('actions.save') : $t('actions.create')) }}
+        </button>
       </div>
     </form>
   </BaseModal>

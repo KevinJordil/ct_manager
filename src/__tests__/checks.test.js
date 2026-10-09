@@ -106,3 +106,12 @@ describe('byCheckUrgency', () => {
     expect(byCheckUrgency([], TODAY)).toEqual([])
   })
 })
+
+describe('across the clock change', () => {
+  it('comes due on the seventh day even when that week lost an hour', () => {
+    // Summer time starts on Sunday 29 March 2026 in Zurich.
+    const vehicle = { checks: [{ id: 'c', date: '2026-03-23' }] }
+    expect(daysSinceLastCheck(vehicle, '2026-03-30')).toBe(7)
+    expect(checkStatus(vehicle, '2026-03-30')).toBe('due')
+  })
+})

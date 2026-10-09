@@ -12,7 +12,7 @@ const MAX_ITEMS = 5000
 const MAX_TEXT = 5000
 
 const CATEGORIES = ['light-road', 'light-offroad', 'medium', 'heavy']
-const VEHICLE_STATUSES = ['free', 'on-loan']
+const VEHICLE_STATUSES = ['free', 'on-loan', 'maintenance', 'broken']
 const REQUEST_STATUSES = ['pending', 'approved', 'rejected']
 const BUILT_IN_REQUEST_VEHICLE_TYPES = [
   'car', 'van-9', 'class-g', 'duro-personnel', 'duro-cargo',
@@ -24,8 +24,19 @@ const MAX_REQUEST_VEHICLES = 20
 const isText = v => typeof v === 'string' && v.length <= MAX_TEXT
 const isOptionalText = v => v === undefined || v === null || isText(v)
 const isOptionalBoolean = v => v === undefined || typeof v === 'boolean'
-const isOptionalDate = v => v === undefined || v === null || v === '' ||
-  (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(v))
+/**
+ * A date that exists on the calendar — "2026-13-45T99:99" has the right
+ * shape and still means nothing.
+ */
+export function isRealDate(v) {
+  const match = typeof v === 'string' && v.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/)
+  if (!match) return false
+  const [y, m, d, hh = 0, mm = 0] = match.slice(1).filter(part => part !== undefined).map(Number)
+  const day = new Date(Date.UTC(y, m - 1, d))
+  return day.getUTCFullYear() === y && day.getUTCMonth() === m - 1 && day.getUTCDate() === d &&
+    hh < 24 && mm < 60
+}
+const isOptionalDate = v => v === undefined || v === null || v === '' || isRealDate(v)
 const isOptionalTextList = v => v === undefined || (Array.isArray(v) && v.every(isText))
 
 const invalidField = field => ({ code: 'invalidField', params: { field } })
@@ -64,6 +75,9 @@ function validatePerson(p) {
       if (!isOptionalDate(leave.startDate) || !isOptionalDate(leave.endDate)) {
         return { code: 'invalidNested', params: { list: 'leaves', position: i, field: 'dates' } }
       }
+      if (leave.startDate && leave.endDate && leave.endDate < leave.startDate) {
+        return { code: 'endBeforeStart', params: {} }
+      }
     }
   }
   return null
@@ -88,6 +102,7 @@ function validateVehicle(v) {
   if (v.seats !== undefined && (!Number.isInteger(v.seats) || v.seats < 0 || v.seats > 200)) {
     return invalidField('seats')
   }
+  if (!isOptionalText(v.type)) return invalidField('type')
 
   if (v.keyHolder !== undefined && v.keyHolder !== null) {
     const holder = v.keyHolder
@@ -107,6 +122,9 @@ function validateVehicle(v) {
     for (const [i, entry] of v.keyHistory.entries()) {
       if (entry === null || typeof entry !== 'object') {
         return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: '' } }
+      }
+      if (!isText(entry.id) || !entry.id.trim()) {
+        return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: 'id' } }
       }
       if (!['taken', 'transferred', 'returned'].includes(entry.action)) {
         return { code: 'invalidNested', params: { list: 'keyHistory', position: i, field: 'action' } }
@@ -131,7 +149,7 @@ function validateVehicle(v) {
       if (!isText(check.id)) {
         return { code: 'invalidNested', params: { list: 'checks', position: i, field: 'id' } }
       }
-      if (typeof check.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(check.date)) {
+      if (typeof check.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(check.date) || !isRealDate(check.date)) {
         return { code: 'invalidNested', params: { list: 'checks', position: i, field: 'date' } }
       }
       if (check.personId !== null && check.personId !== undefined && !isText(check.personId)) {
@@ -148,11 +166,16 @@ function validateVehicle(v) {
 function validateMission(m) {
   const common = validateCommon(m)
   if (common) return common
-  if (!isText(m.title)) return invalidField('title')
+  if (!isOptionalBoolean(m.cancelled)) return invalidField('cancelled')
+  if (!isText(m.title) || m.title.trim() === '') return invalidField('title')
   if (!isOptionalText(m.description)) return invalidField('description')
   if (!isOptionalText(m.notes)) return invalidField('notes')
   if (!isOptionalDate(m.startDate) || !isOptionalDate(m.endDate)) {
     return { code: 'invalidDates', params: {} }
+  }
+  // A mission ending before it starts never runs and blocks nothing.
+  if (m.startDate && m.endDate && m.endDate < m.startDate) {
+    return { code: 'endBeforeStart', params: {} }
   }
 
   if (m.vehicles !== undefined) {
@@ -170,9 +193,31 @@ function validateMission(m) {
       if (!isOptionalBoolean(entry.withTrailer)) {
         return { code: 'invalidNested', params: { list: 'vehicles', position: i, field: 'withTrailer' } }
       }
+      if (entry.trailerId !== null && entry.trailerId !== undefined && !isText(entry.trailerId)) {
+        return { code: 'invalidNested', params: { list: 'vehicles', position: i, field: 'trailerId' } }
+      }
     }
   }
   if (!isOptionalTextList(m.staffIds)) return invalidField('staffIds')
+  return null
+}
+
+/** A trailer: a plate, the vehicle models it fits, and whether it is away. */
+function validateTrailer(t) {
+  const common = validateCommon(t)
+  if (common) return common
+  if (!isText(t.plate) || t.plate.trim() === '') return invalidField('plate')
+  if (!isOptionalText(t.name)) return invalidField('name')
+  if (!isOptionalText(t.notes)) return invalidField('notes')
+  if (!isOptionalTextList(t.compatibleTypes)) return invalidField('compatibleTypes')
+  if (t.status !== undefined && !VEHICLE_STATUSES.includes(t.status)) {
+    return { code: 'unknownValue', params: { field: 'status' } }
+  }
+  if (!isOptionalText(t.loanNote)) return invalidField('loanNote')
+  if (t.loanUntil !== undefined && t.loanUntil !== null && t.loanUntil !== '' &&
+      !(/^\d{4}-\d{2}-\d{2}$/.test(t.loanUntil) && isRealDate(t.loanUntil))) {
+    return invalidField('loanUntil')
+  }
   return null
 }
 
@@ -180,6 +225,7 @@ const VALIDATORS = {
   persons: validatePerson,
   vehicles: validateVehicle,
   missions: validateMission,
+  trailers: validateTrailer,
 }
 
 export const ENTITIES = Object.keys(VALIDATORS)
@@ -187,7 +233,7 @@ export const ENTITIES = Object.keys(VALIDATORS)
 // ── Public request form ──
 
 const isRequired = v => typeof v === 'string' && v.trim() !== '' && v.length <= 200
-const isDateTime = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)
+const isDateTime = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v) && isRealDate(v)
 
 /**
  * Validates a submission from the public form.
@@ -276,11 +322,16 @@ export function validateCollection(entity, data) {
   if (data.length > MAX_ITEMS) return { code: 'tooManyItems', params: { max: MAX_ITEMS } }
 
   const seen = new Set()
+  const movements = new Set()
   for (const [index, item] of data.entries()) {
     const error = validate(item)
     if (error) return { ...error, params: { ...error.params, index } }
     if (seen.has(item.id)) return { code: 'duplicateId', params: { index, id: item.id } }
     seen.add(item.id)
+    if (entity === 'vehicles') for (const entry of item.keyHistory ?? []) {
+      if (movements.has(entry.id)) return { code: 'duplicateId', params: { index, id: entry.id } }
+      movements.add(entry.id)
+    }
   }
   return null
 }
@@ -409,6 +460,19 @@ export function validateConfig(body) {
     }
   }
 
+  if (body.vehicleTypes !== undefined) {
+    if (!Array.isArray(body.vehicleTypes)) return invalidField('vehicleTypes')
+    if (body.vehicleTypes.length > MAX_CONFIG_ENTRIES) return { code: 'tooManyItems', params: { max: MAX_CONFIG_ENTRIES } }
+    const models = new Set()
+    for (const [index, type] of body.vehicleTypes.entries()) {
+      if (type === null || typeof type !== 'object') return { code: 'notAnObject', params: { index } }
+      if (!ID_PATTERN.test(type.id ?? '')) return { code: 'invalidField', params: { index, field: 'id' } }
+      if (models.has(type.id)) return { code: 'duplicateId', params: { index, id: type.id } }
+      models.add(type.id)
+      if (!isText(type.label) || !type.label.trim()) return { code: 'invalidField', params: { index, field: 'label' } }
+    }
+  }
+
   if (!Array.isArray(body.licenses)) return invalidField('licenses')
   if (body.licenses.length === 0) return { code: 'emptyList', params: { field: 'licenses' } }
   if (!body.licenses.every(code => ID_PATTERN.test(code ?? ''))) return invalidField('licenses')
@@ -423,6 +487,32 @@ export function validateConfig(body) {
       if (!Array.isArray(codes) || !codes.every(code => body.licenses.includes(code))) {
         return { code: 'unknownLicense', params: { field: category } }
       }
+    }
+  }
+  return null
+}
+
+/**
+ * Every vehicle and person a mission names must exist — or have existed:
+ * a deleted one stays named through its frozen copy.
+ *
+ * @returns {{code: string, params: object}|null}
+ */
+export function unknownReference(missions, persons, vehicles, trailers = []) {
+  const personIds = new Set(persons.map(person => person.id))
+  const vehicleIds = new Set(vehicles.map(vehicle => vehicle.id))
+  const trailerIds = new Set(trailers.map(trailer => trailer.id))
+  for (const mission of missions) {
+    const knownPerson = id => personIds.has(id) || Boolean(mission.retiredPersons?.[id])
+    const knownVehicle = id => vehicleIds.has(id) || Boolean(mission.retiredVehicles?.[id])
+    const knownTrailer = id => trailerIds.has(id) || Boolean(mission.retiredTrailers?.[id])
+    for (const entry of mission.vehicles ?? []) {
+      if (!knownVehicle(entry.vehicleId)) return { code: 'unknownReference', params: { title: mission.title, field: 'vehicleId' } }
+      if (entry.trailerId && !knownTrailer(entry.trailerId)) return { code: 'unknownReference', params: { title: mission.title, field: 'trailerId' } }
+      if (entry.driverId && !knownPerson(entry.driverId)) return { code: 'unknownReference', params: { title: mission.title, field: 'driverId' } }
+    }
+    for (const id of mission.staffIds ?? []) {
+      if (!knownPerson(id)) return { code: 'unknownReference', params: { title: mission.title, field: 'staffIds' } }
     }
   }
   return null

@@ -1,3 +1,4 @@
+import { mergeJournal, deletionBlocker, rememberResources } from './journal.js'
 import express from 'express'
 import crypto from 'crypto'
 import { promises as fs } from 'fs'
@@ -7,7 +8,7 @@ import {
   ENTITIES, validateCollection,
   validateRequestSubmission, sanitizeRequestSubmission, isValidRequestStatus,
   validateParkLayout, sanitizeParkLayout, decodeImageDataUrl, IMAGE_EXTENSIONS,
-  validateConfig,
+  validateConfig, unknownReference,
 } from './validation.js'
 import { withDefaults } from './src/config.js'
 import { reanchor } from './seed.js'
@@ -17,7 +18,9 @@ import {
   publicUser, isLastAdmin, usernameFromLastName,
 } from './users.js'
 import { createRateLimiter } from './rate-limit.js'
-import { PERMISSIONS, can, sanitisePermissions, forbiddenChange } from './permissions.js'
+import { PERMISSIONS, can, sanitisePermissions, forbiddenChange, managePermission } from './permissions.js'
+import { stampVehicles, forbiddenCheckRemoval } from './stamps.js'
+import { recorderName } from './src/keys.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, 'data')
@@ -33,6 +36,28 @@ app.disable('x-powered-by')
 // Behind a reverse proxy, req.ip must come from X-Forwarded-For, otherwise
 // every client shares the proxy's address and they throttle one another.
 if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY)
+
+// ── Security headers ──
+// The application is reachable from the internet. It loads nothing from
+// another origin, so the policy can stay strict: no foreign script, no
+// framing by another site (clickjacking), no guessing of content types.
+// Inline styles stay allowed because Vue binds style attributes.
+app.use((req, res, next) => {
+  res.set({
+    'Content-Security-Policy': [
+      "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:", "connect-src 'self'", "object-src 'none'",
+      "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
+    ].join('; '),
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'no-referrer',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  })
+  // Only over HTTPS, which behind a proxy needs TRUST_PROXY to be detected.
+  if (req.secure) res.set('Strict-Transport-Security', 'max-age=15552000')
+  next()
+})
 // The site plan travels as a data URL and is far larger than any collection,
 // so it gets its own, wider limit.
 app.use('/api/parc/image', express.json({ limit: '16mb' }))
@@ -56,7 +81,7 @@ if (CORS_ORIGIN) {
   app.use('/api', (req, res, next) => {
     res.header('Access-Control-Allow-Origin', CORS_ORIGIN)
     res.header('Vary', 'Origin')
-    res.header('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS')
+    res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS')
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, If-Match')
     res.header('Access-Control-Expose-Headers', 'ETag')
     if (req.method === 'OPTIONS') return res.sendStatus(204)
@@ -140,6 +165,9 @@ function requireAdmin(req, res, next) {
   next()
 }
 
+/** Stand-in compared against when the username matches no account. */
+const UNKNOWN_ACCOUNT = hashPassword(crypto.randomBytes(16).toString('hex'))
+
 app.post('/api/auth/login', async (req, res, next) => {
   const key = clientKey(req)
   if (loginLimiter.hit(key)) {
@@ -154,8 +182,13 @@ app.post('/api/auth/login', async (req, res, next) => {
     const user = users.find(candidate => candidate.username === username)
 
     // The same answer whether the account or the password is wrong, so the
-    // response never reveals which usernames exist.
-    if (!user || !verifyPassword(password, user)) {
+    // response never reveals which usernames exist — nor its timing: an
+    // unknown name still costs one password hash.
+    if (!user) {
+      verifyPassword(password, UNKNOWN_ACCOUNT)
+      return fail(res, 401, 'auth.invalidCredentials', {}, 'Wrong username or password')
+    }
+    if (!verifyPassword(password, user)) {
       return fail(res, 401, 'auth.invalidCredentials', {}, 'Wrong username or password')
     }
 
@@ -372,16 +405,78 @@ async function write(entity, content) {
   await fs.rename(tmp, target)
 }
 
+// A write-ahead transaction is replayed before serving after an interrupted save.
+async function commitResources(changes) {
+  await write('resource-transaction', JSON.stringify(changes))
+  for (const [entity, content] of Object.entries(changes)) await write(entity, content)
+  await fs.unlink(fileOf('resource-transaction'))
+}
+
+async function recoverResources() {
+  try {
+    const changes = JSON.parse(await fs.readFile(fileOf('resource-transaction'), 'utf-8'))
+    for (const [entity, content] of Object.entries(changes)) await write(entity, content)
+    await fs.unlink(fileOf('resource-transaction'))
+  } catch (error) { if (error.code !== 'ENOENT') throw error }
+}
+
+async function withResources(fn) {
+  return withLock('resources', async () => {
+    await withLock('users', recoverResources)
+    return fn()
+  })
+}
+
+async function readJournal() {
+  try { return JSON.parse(await fs.readFile(fileOf('journal'), 'utf-8')) }
+  catch (error) {
+    if (error.code !== 'ENOENT') throw error
+    return mergeJournal({ entries: [], archives: [] }, JSON.parse(await readRaw('vehicles')))
+  }
+}
+
+app.get('/api/journal', async (_req, res, next) => {
+  try {
+    await withResources(async () => {
+      const journal = await readJournal()
+      const content = JSON.stringify(journal)
+      // Written once, when it is first built from the vehicles' histories.
+      try { await fs.access(fileOf('journal')) } catch { await write('journal', content) }
+      res.set('ETag', `"${versionOf(content)}"`).json(journal)
+    })
+  } catch (error) { next(error) }
+})
+
+app.post('/api/journal/archives', requireAdmin, async (req, res, next) => {
+  try {
+    await withResources(async () => {
+      const journal = await readJournal()
+      const expected = (req.get('If-Match') ?? '').replace(/"/g, '')
+      if (expected !== versionOf(JSON.stringify(journal))) return fail(res, 409, 'journal.changed')
+      const name = typeof req.body?.name === 'string' ? req.body.name.trim() : ''
+      if (typeof name !== 'string' || !name || name.length > 120) return fail(res, 400, 'journal.nameRequired')
+      const vehicles = JSON.parse(await readRaw('vehicles'))
+      if (vehicles.some(v => v.keyHolder)) return fail(res, 409, 'journal.keysOut')
+      if (!journal.entries.length) return fail(res, 400, 'journal.empty')
+      const archive = { id: crypto.randomUUID(), name, archivedAt: localDateTime(), archivedBy: req.user.username, entries: journal.entries }
+      const updated = { sequence: journal.sequence, entries: [], archives: [...journal.archives, archive] }
+      await write('journal', JSON.stringify(updated))
+      res.json({ id: archive.id })
+    })
+  } catch (error) { next(error) }
+})
+
 // ── API routes ──
 
 for (const entity of ENTITIES) {
   app.get(`/api/${entity}`, async (_req, res, next) => {
     try {
-      const raw = await readRaw(entity)
-      // The version lets a client detect that another tab changed the data
-      // since it last loaded.
-      res.set('ETag', `"${versionOf(raw)}"`)
-      res.type('application/json').send(raw)
+      await withResources(async () => {
+        const raw = await readRaw(entity)
+        // A version detects edits made by another tab.
+        res.set('ETag', `"${versionOf(raw)}"`)
+        res.type('application/json').send(raw)
+      })
     } catch (err) {
       next(err)
     }
@@ -394,7 +489,7 @@ for (const entity of ENTITIES) {
     }
 
     try {
-      await withLock(entity, async () => {
+      await withResources(async () => {
         const current = versionOf(await readRaw(entity))
         const expected = (req.get('If-Match') ?? '').replace(/"/g, '')
 
@@ -413,17 +508,60 @@ for (const entity of ENTITIES) {
         // Without the right to manage this collection, an account may still
         // record what it does with it — a key movement, a check, an absence.
         // The write is therefore weighed field by field rather than refused.
-        if (!can(req.user, `${entity}.manage`)) {
+        if (!can(req.user, managePermission(entity))) {
           const stored = JSON.parse(await readRaw(entity))
-          const forbidden = forbiddenChange(entity, stored, req.body)
+          const forbidden = forbiddenChange(entity, stored, req.body) ??
+            (entity === 'vehicles' ? forbiddenCheckRemoval(stored, req.body, req.user.id) : null)
           if (forbidden) {
             return fail(res, 403, `permissions.${forbidden.code}`, forbidden.params,
               'Not allowed to change this collection')
           }
         }
 
+        const stored = JSON.parse(await readRaw(entity))
+        if (entity === 'missions') {
+          const ghost = unknownReference(req.body, JSON.parse(await readRaw('persons')),
+            JSON.parse(await readRaw('vehicles')), JSON.parse(await readRaw('trailers')))
+          if (ghost) return fail(res, 400, `validation.${ghost.code}`, ghost.params, 'Unknown reference')
+        }
+        if (entity === 'vehicles') {
+          stampVehicles(stored, req.body, {
+            recordedBy: recorderName(req.user, JSON.parse(await readRaw('persons'))),
+            recordedById: req.user.id,
+            at: localDateTime(),
+          })
+        }
         const content = JSON.stringify(req.body, null, 2)
-        await write(entity, content)
+        const removed = stored.filter(item => !req.body.some(next => next.id === item.id))
+        if (['persons', 'vehicles', 'trailers'].includes(entity) && removed.length) {
+          const blocked = deletionBlocker(entity, removed, JSON.parse(await readRaw('vehicles')),
+            JSON.parse(await readRaw('missions')), localDateTime())
+          if (blocked) return fail(res, 409, blocked.code, blocked.params)
+        }
+        const cleanup = {}
+        if (['persons', 'vehicles', 'trailers'].includes(entity) && removed.length) {
+          const missions = JSON.parse(await readRaw('missions'))
+          const detached = rememberResources(entity, removed, missions)
+          if (JSON.stringify(detached) !== JSON.stringify(missions)) cleanup.missions = JSON.stringify(detached, null, 2)
+        }
+        if (entity === 'vehicles') {
+          const journal = mergeJournal(await readJournal(), req.body)
+          await commitResources({ ...cleanup, vehicles: content, journal: JSON.stringify(journal) })
+        } else if (entity === 'persons' && removed.length) {
+          const done = await withLock('users', async () => {
+            const users = await readUsers()
+            const removedIds = new Set(removed.map(person => person.id))
+            const remaining = users.filter(user => !removedIds.has(user.personId))
+            if (!remaining.some(user => user.role === ROLES.ADMIN)) {
+              fail(res, 409, 'users.lastAdmin'); return false
+            }
+            await commitResources({ ...cleanup, persons: content, users: JSON.stringify(remaining, null, 2) })
+            return true
+          })
+          if (!done) return
+        } else {
+          await write(entity, content)
+        }
         const version = versionOf(content)
         res.set('ETag', `"${version}"`)
         res.json({ ok: true, version })
@@ -438,6 +576,16 @@ for (const entity of ENTITIES) {
 // A person signs in with their family name. Setting the password is part of
 // managing the person, so it is open to any signed-in user; the role of such
 // an account is always "user" — promoting one stays an administrator's job.
+
+/**
+ * Managing persons lets an account set the password of a plain one. An
+ * account holding rights — let alone an administrator — is left to the
+ * administrators, or anybody with `persons.manage` could take it over.
+ */
+function outranks(target, actor) {
+  if (actor.role === ROLES.ADMIN) return false
+  return target.role === ROLES.ADMIN || Object.keys(sanitisePermissions(target.permissions)).length > 0
+}
 
 /** Which persons hold an account. Ids only: no account detail leaks here. */
 app.get('/api/persons/accounts', async (_req, res, next) => {
@@ -469,6 +617,9 @@ app.put('/api/persons/:id/account', requirePermission('persons.manage'), async (
         user.username === username && user.personId !== req.params.id)
       if (taken) {
         return fail(res, 409, 'users.usernameTaken', { username }, 'Family name already used')
+      }
+      if (existing !== -1 && outranks(users[existing], req.user)) {
+        return fail(res, 403, 'users.privilegedAccount', {}, 'Only an administrator may change this account')
       }
 
       if (existing === -1) {
@@ -502,6 +653,9 @@ app.delete('/api/persons/:id/account', requirePermission('persons.manage'), asyn
       const users = await readUsers()
       const target = users.find(user => user.personId === req.params.id)
       if (!target) return res.json({ ok: true, removed: false })
+      if (outranks(target, req.user)) {
+        return fail(res, 403, 'users.privilegedAccount', {}, 'Only an administrator may change this account')
+      }
       if (isLastAdmin(users, target.id)) {
         return fail(res, 409, 'users.lastAdmin', {}, 'The last administrator cannot be removed')
       }
@@ -776,7 +930,9 @@ app.get('*', async (req, res) => {
 // ── Error handling ──
 
 app.use((err, _req, res, _next) => {
-  console.error('[server]', err)
+  // The stack only: a malformed body is attached to its error and may hold
+  // a password typed into the login form.
+  console.error('[server]', err.stack ?? String(err))
   if (res.headersSent) return
   if (err.type === 'entity.too.large') return fail(res, 413, 'payloadTooLarge', {}, err.message)
   if (err instanceof SyntaxError) return fail(res, 400, 'malformedJson', {}, err.message)
@@ -834,6 +990,7 @@ async function seedAdministrator() {
 
 async function start() {
   await fs.mkdir(DATA_DIR, { recursive: true })
+  await recoverResources()
   await seedData()
   await seedAdministrator()
   app.listen(PORT, () => {

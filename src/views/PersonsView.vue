@@ -1,10 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { deletionBlocker } from '../../journal.js'
 import { useI18n } from 'vue-i18n'
 import { usePersonsStore } from '../stores/persons.js'
 import { useMissionsStore } from '../stores/missions.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { useAuthStore } from '../stores/auth.js'
+import { useClock } from '../stores/clock.js'
 import PersonCard from '../components/persons/PersonCard.vue'
 import PersonForm from '../components/persons/PersonForm.vue'
 import LeavesModal from '../components/persons/LeavesModal.vue'
@@ -18,6 +20,7 @@ import { personName } from '../labels.js'
 const store = usePersonsStore()
 const missionsStore = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
+const { nowString } = useClock()
 const auth = useAuthStore()
 const { t, te } = useI18n()
 
@@ -63,8 +66,12 @@ function openEdit(person) {
 async function onSave({ person, password }) {
   formError.value = ''
   const record = editedPerson.value
-    ? (store.update(editedPerson.value.id, person), editedPerson.value)
-    : store.add(person)
+    ? (await store.update(editedPerson.value.id, person) ? editedPerson.value : null)
+    : await store.add(person)
+  if (!record) return // refused: the banner says why, the form keeps the input
+  // Saved: sending the form again — after a refused password — edits this
+  // person instead of creating a second one.
+  editedPerson.value = record
 
   if (password) {
     try {
@@ -80,31 +87,24 @@ async function onSave({ person, password }) {
   showForm.value = false
 }
 
-/** Missions that would be left with a dead reference by this deletion */
-const impactedMissions = computed(() =>
-  deletedId.value ? missionsStore.missionsWithPerson(deletedId.value).length : 0
-)
-
-const deleteMessage = computed(() => {
-  const base = t('persons.deleteConfirm')
-  if (!impactedMissions.value) return base
-  return `${base} ${t('persons.deleteImpact', impactedMissions.value, { count: impactedMissions.value })}`
-})
+const deleting = ref(false)
+const blockedDeletion = computed(() => deletionBlocker('persons', [{ id: deletedId.value }],
+  vehiclesStore.vehicles, missionsStore.missions, nowString.value))
+const deleteMessage = computed(() => blockedDeletion.value
+  ? t(`server.${blockedDeletion.value.code}`, blockedDeletion.value.params)
+  : t('persons.deleteConfirm'))
 
 async function onDelete() {
-  // Clear the references first, so no mission is ever left pointing at a
-  // person who no longer exists — and take their account with them.
-  // A key stays where it is; only the link to the deleted record goes, so
-  // the board still says the key is out and under whose name.
-  vehiclesStore.forgetPersonKeys(deletedId.value)
-  missionsStore.forgetPerson(deletedId.value)
-  if (store.hasAccount(deletedId.value)) {
-    try {
-      await store.removeAccount(deletedId.value)
-    } catch { /* reported through the sync banner */ }
-  }
-  store.remove(deletedId.value)
-  deletedId.value = null
+  if (blockedDeletion.value || deleting.value) return
+  deleting.value = true
+  const id = deletedId.value
+  try {
+    if (!await store.remove(id)) return
+    await missionsStore.reload()
+    await store.loadAccounts()
+    deletedId.value = null
+  } catch { /* errors are reported by the store */ }
+  finally { deleting.value = false }
 }
 
 /** Marking someone unavailable asks for a reason; clearing it does not. */
@@ -180,6 +180,7 @@ function confirmUnavailable(note) {
       v-if="deletedId"
       :title="$t('persons.deleteTitle')"
       :message="deleteMessage"
+      :disabled="Boolean(blockedDeletion) || deleting"
       @confirm="onDelete"
       @cancel="deletedId = null"
     />

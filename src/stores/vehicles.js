@@ -9,16 +9,17 @@ import { useCollection } from './collection.js'
 export const useVehiclesStore = defineStore('vehicles', () => {
   const collection = useCollection('vehicles', migrateVehicles)
 
-  function lend(id, { note, until = '' }) {
-    collection.mutate(id, vehicle => {
-      vehicle.status = VEHICLE_STATUS.ON_LOAN
+  /** Lends the vehicle out, or takes it out of service (`status`). */
+  function lend(id, { note, until = '', status = VEHICLE_STATUS.ON_LOAN }) {
+    return collection.mutate(id, vehicle => {
+      vehicle.status = status
       vehicle.loanNote = note
       vehicle.loanUntil = until
     })
   }
 
   function release(id) {
-    collection.mutate(id, vehicle => {
+    return collection.mutate(id, vehicle => {
       vehicle.status = VEHICLE_STATUS.FREE
       vehicle.loanNote = ''
       vehicle.loanUntil = ''
@@ -31,7 +32,7 @@ export const useVehiclesStore = defineStore('vehicles', () => {
    * the history keeps the distinction.
    */
   function takeKey(vehicleId, { personId = null, name = '', recordedBy = '' } = {}) {
-    collection.mutate(vehicleId, vehicle => {
+    return collection.mutate(vehicleId, vehicle => {
       const at = nowString()
       const previous = vehicle.keyHolder
       const holder = makeHolder({ personId, name, recordedBy }, at)
@@ -56,7 +57,7 @@ export const useVehiclesStore = defineStore('vehicles', () => {
 
   /** Puts the key back on the board. */
   function returnKey(vehicleId, { recordedBy = '' } = {}) {
-    collection.mutate(vehicleId, vehicle => {
+    return collection.mutate(vehicleId, vehicle => {
       const previous = vehicle.keyHolder
       if (!previous) return
       const opened = openHolding(vehicle)
@@ -78,21 +79,20 @@ export const useVehiclesStore = defineStore('vehicles', () => {
 
   /** Called when a person leaves the application: their name stays readable. */
   function forgetPersonKeys(personId) {
-    for (const vehicle of collection.items.value) {
-      if (vehicle.keyHolder?.personId !== personId) continue
-      collection.mutate(vehicle.id, v => { v.keyHolder = { ...v.keyHolder, personId: null } })
-    }
+    return Promise.all(collection.items.value
+      .filter(vehicle => vehicle.keyHolder?.personId === personId)
+      .map(vehicle => collection.mutate(vehicle.id, v => { v.keyHolder = { ...v.keyHolder, personId: null } })))
   }
 
   function addCheck(vehicleId, check) {
-    collection.mutate(vehicleId, vehicle => {
+    return collection.mutate(vehicleId, vehicle => {
       if (!vehicle.checks) vehicle.checks = []
       vehicle.checks.push({ ...check, id: newId() })
     })
   }
 
   function removeCheck(vehicleId, checkId) {
-    collection.mutate(vehicleId, vehicle => {
+    return collection.mutate(vehicleId, vehicle => {
       vehicle.checks = (vehicle.checks ?? []).filter(check => check.id !== checkId)
     })
   }

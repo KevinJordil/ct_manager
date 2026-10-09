@@ -12,6 +12,8 @@ const COLOR_BY_STATUS = {
   'on-mission': 'bg-orange-100 text-orange-800',
   ongoing: 'bg-orange-100 text-orange-800',
   'on-loan': 'bg-red-100 text-red-800',
+  maintenance: 'bg-amber-100 text-amber-800',
+  broken: 'bg-red-100 text-red-800',
   'on-leave': 'bg-red-100 text-red-800',
   planned: 'bg-sky-100 text-sky-800',
   unavailable: 'bg-amber-100 text-amber-800',

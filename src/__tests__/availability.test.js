@@ -3,7 +3,7 @@ import {
   getMissionStatus, ongoingMissions, missionInvolvesPerson, missionInvolvesVehicle,
   isOnLeaveAt, isOnLeaveDuring, getPersonStatus, getDisplayedPersonStatus,
   getVehicleStatus, missionsOverlapping, isPersonCommitted, isVehicleCommitted,
-  isPersonAvailable, isVehicleAvailable,
+  isPersonAvailable, isVehicleAvailable, trailerFits, isTrailerCommitted,
 } from '../availability.js'
 
 const NOW = '2026-09-02T10:00'
@@ -197,8 +197,24 @@ describe('isPersonAvailable', () => {
 describe('isVehicleAvailable', () => {
   const missions = [mission({ id: 'a', vehicles: [{ vehicleId: 'v1', driverId: null }] })]
 
-  it('refuses a vehicle on loan', () => {
+  it('refuses a vehicle on loan with no return date', () => {
     expect(isVehicleAvailable(vehicle({ status: 'on-loan' }), [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
+  })
+
+  it('refuses a vehicle on loan until the end of its return day', () => {
+    const lent = vehicle({ status: 'on-loan', loanUntil: '2026-09-10' })
+    expect(isVehicleAvailable(lent, [], '2026-09-10T16:00', '2026-09-10T17:00')).toBe(false)
+  })
+
+  it('offers a lent vehicle for a mission after its return day', () => {
+    const lent = vehicle({ status: 'on-loan', loanUntil: '2026-09-10' })
+    expect(isVehicleAvailable(lent, [], '2026-09-11T08:00', '2026-09-11T17:00')).toBe(true)
+  })
+
+  it('lets a vehicle leave again when its previous mission ends', () => {
+    const before = [{ id: 'a', startDate: '2026-09-10T08:00', endDate: '2026-09-10T12:00',
+      vehicles: [{ vehicleId: 'v1' }], staffIds: [] }]
+    expect(isVehicleAvailable(vehicle(), before, '2026-09-10T12:00', '2026-09-10T17:00', { now: '2026-09-01T00:00' })).toBe(true)
   })
 
   it('refuses a vehicle already committed over the period', () => {
@@ -222,5 +238,38 @@ describe('ongoingMissions', () => {
       mission({ id: 'b', startDate: '2026-09-10T08:00', endDate: '2026-09-10T17:00' }),
     ]
     expect(ongoingMissions(missions, NOW).map(m => m.id)).toEqual(['a'])
+  })
+})
+
+describe('vehicles out of service', () => {
+  const broken = (over = {}) => ({ id: 'v9', status: 'broken', loanNote: 'Embrayage', loanUntil: '', ...over })
+
+  it('keeps a broken vehicle off every mission until it is repaired', () => {
+    expect(isVehicleAvailable(broken(), [], '2026-12-01T08:00', '2026-12-01T17:00')).toBe(false)
+    expect(getVehicleStatus(broken(), [], '2026-09-02T10:00')).toBe('broken')
+  })
+
+  it('offers it again after its expected return to service', () => {
+    const workshop = broken({ status: 'maintenance', loanUntil: '2026-09-10' })
+    expect(isVehicleAvailable(workshop, [], '2026-09-10T08:00', '2026-09-10T17:00')).toBe(false)
+    expect(isVehicleAvailable(workshop, [], '2026-09-11T08:00', '2026-09-11T17:00')).toBe(true)
+  })
+})
+
+describe('trailers', () => {
+  const trailer = { id: 't1', plate: 'M 1', compatibleTypes: ['class-g', 'duro'] }
+
+  it('fits only the vehicle models it lists', () => {
+    expect(trailerFits(trailer, { type: 'duro' })).toBe(true)
+    expect(trailerFits(trailer, { type: 'truck-6x6' })).toBe(false)
+    // A vehicle whose model is not recorded cannot be checked.
+    expect(trailerFits(trailer, { type: '' })).toBe(false)
+  })
+
+  it('is booked by a mission that hitches it', () => {
+    const missions = [{ id: 'a', startDate: '2026-09-10T08:00', endDate: '2026-09-10T12:00',
+      vehicles: [{ vehicleId: 'v1', trailerId: 't1' }], staffIds: [] }]
+    expect(isTrailerCommitted('t1', missions, '2026-09-10T11:00', '2026-09-10T13:00')).toBe(true)
+    expect(isTrailerCommitted('t1', missions, '2026-09-10T12:00', '2026-09-10T13:00')).toBe(false)
   })
 })

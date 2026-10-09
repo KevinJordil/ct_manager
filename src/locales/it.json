@@ -19,7 +19,9 @@
     "users": "Account",
     "log": "Giornale di combattimento",
     "permissions": "Diritti",
-    "mine": "Le mie missioni"
+    "mine": "Le mie missioni",
+    "trailers": "Rimorchi",
+    "export": "Esportazione"
   },
   "actions": {
     "add": "Aggiungi",
@@ -48,7 +50,8 @@
   "entities": {
     "persons": "persone",
     "vehicles": "veicoli",
-    "missions": "missioni"
+    "missions": "missioni",
+    "trailers": "rimorchi"
   },
   "status": {
     "available": "disponibile",
@@ -63,7 +66,10 @@
     "leave": "Congedo",
     "pending": "in attesa",
     "approved": "approvata",
-    "rejected": "rifiutata"
+    "rejected": "rifiutata",
+    "cancelled": "Annullata",
+    "maintenance": "in manutenzione",
+    "broken": "in panne"
   },
   "dashboard": {
     "title": "Cruscotto",
@@ -79,7 +85,8 @@
     "alerts": {
       "driverOnLeave": "Missione «{mission}»: {person} (conducente) è in congedo durante la missione",
       "staffOnLeave": "Missione «{mission}»: {person} è in congedo durante la missione",
-      "vehicleOnLoan": "Missione «{mission}»: il veicolo {vehicle} è indicato come «in prestito»"
+      "vehicleOnLoan": "Missione «{mission}»: il veicolo {vehicle} è indicato come «in prestito»",
+      "vehicleOutOfService": "Missione «{mission}»: il veicolo {vehicle} è {status}"
     },
     "attention": "Da trattare",
     "pendingRequests": "richieste in attesa | richiesta in attesa | richieste in attesa",
@@ -115,7 +122,9 @@
       "upcoming": "In arrivo",
       "past": "Passato",
       "addLeave": "Aggiungi il congedo",
-      "short": "Congedi"
+      "short": "Congedi",
+      "remove": "Eliminare questo congedo",
+      "keep": "Mantenere"
     },
     "unavailability": {
       "title": "Indisponibilità — {name}",
@@ -130,7 +139,7 @@
     "phone": "Telefono",
     "phonePlaceholder": "+41 79 000 00 00",
     "password": "Password",
-    "passwordHint": "La persona accederà con il proprio cognome e questa password.",
+    "passwordHint": "La persona accederà con il proprio cognome e questa password. Senza password la scheda esiste ma non può accedere.",
     "passwordOptional": "Nuova password (lascia vuoto per non cambiarla)",
     "accountActive": "account attivo",
     "noAccount": "senza account",
@@ -184,10 +193,25 @@
     "loanOverdue": "Restituzione scaduta dal {date}",
     "loanUntilLabel": "Restituzione prevista il {date}",
     "allTypes": "Tutti i tipi",
-    "availableOf": "{available} disponibili su {total}",
+    "availableOf": "{available} disponibile su {total} | {available} disponibile su {total} | {available} disponibili su {total}",
     "keyOutCount": "chiave in uso | 1 chiave in uso | {count} chiavi in uso",
     "onMissionCount": "in missione | 1 in missione | {count} in missione",
-    "onLoanCount": "in prestito | 1 in prestito | {count} in prestito"
+    "onLoanCount": "in prestito | 1 in prestito | {count} in prestito",
+    "outOfService": {
+      "action": "Mettere fuori servizio",
+      "title": "Mettere fuori servizio",
+      "reason": "Motivo",
+      "note": "Cosa succede",
+      "notePlaceholder": "Officina, pezzo atteso, guasto constatato…",
+      "untilOptional": "Rientro in servizio previsto (facoltativo)",
+      "confirm": "Mettere fuori servizio",
+      "release": "Rimettere in servizio",
+      "releaseConfirm": "Rimettere {plate} in servizio e renderlo disponibile?"
+    },
+    "outOfServiceCount": "fuori servizio | 1 fuori servizio | {count} fuori servizio",
+    "type": "Modello",
+    "typeNone": "Non indicato",
+    "typeHint": "Serve a sapere quali rimorchi può trainare."
   },
   "keys": {
     "dashboardTitle": "Chiavi dei veicoli",
@@ -256,7 +280,16 @@
       "minutes": "da meno di un minuto | da 1 min | da {count} min",
       "hours": "da 1 h | da 1 h | da {count} h",
       "days": "da 1 g | da 1 g | da {count} g"
-    }
+    },
+    "journalLabel": "Giornale",
+    "current": "Giornale corrente",
+    "refresh": "Aggiornare",
+    "exportCsv": "Scaricare CSV",
+    "archive": "Archiviare e aprire un nuovo giornale",
+    "archivedBy": "Archiviato il {date} da {name}.",
+    "archiveName": "Nome del corso / archivio",
+    "archiveConfirm": "Il giornale corrente sarà archiviato e ne sarà aperto uno nuovo vuoto. Tutte le chiavi devono essere al quadro. Missioni e schede saranno conservate.",
+    "archiveMissing": "Archivio non trovato."
   },
   "missions": {
     "title": "Missioni",
@@ -264,7 +297,7 @@
     "new": "Nuova missione",
     "edit": "Modifica la missione",
     "deleteTitle": "Elimina la missione",
-    "deleteConfirm": "Vuoi davvero eliminare questa missione?",
+    "deleteConfirm": "Eliminare definitivamente la missione «{title}»? Per tenerla nello storico, annullala piuttosto.",
     "missionTitle": "Titolo",
     "titlePlaceholder": "Titolo della missione",
     "description": "Descrizione",
@@ -277,7 +310,8 @@
       "all": "Tutte",
       "planned": "Pianificate",
       "ongoing": "In corso",
-      "completed": "Concluse"
+      "completed": "Concluse",
+      "cancelled": "Annullate"
     },
     "vehiclesSection": "Veicoli impiegati",
     "staffSection": "Personale senza veicolo",
@@ -300,7 +334,28 @@
     "proposedAvailable": "Disponibile",
     "randomDriver": "A caso",
     "fillDrivers": "Completare gli autisti",
-    "pickVehicleFirst": "Scegliere prima un veicolo: la licenza richiesta dipende da questo."
+    "pickVehicleFirst": "Scegliere prima un veicolo: la licenza richiesta dipende da questo.",
+    "cancelMission": "Annullare la missione",
+    "cancelConfirm": "Annullare la missione «{title}»? Resterà consultabile e le sue risorse saranno liberate.",
+    "emptyWarning": "Questa missione non contiene più risorse esistenti. Verificarla o annullarla.",
+    "problems": {
+      "away": "in prestito o fuori servizio",
+      "busy": "già impegnato in un'altra missione",
+      "unavailable": "non disponibile",
+      "onLeave": "in congedo",
+      "noLicense": "senza la licenza richiesta",
+      "incompatible": "non va dietro a questo veicolo"
+    },
+    "unavailableGroup": "Non disponibili — da confermare",
+    "conflictsTitle": "Assegnazioni in conflitto:",
+    "forceHint": "Verifica questi conflitti. Per mantenerli, salva di nuovo.",
+    "forceSave": "Salva comunque",
+    "endBeforeStart": "La fine deve essere dopo l'inizio.",
+    "reopen": "Riaprire",
+    "keepMission": "Mantenere la missione",
+    "reopenConfirm": "Riaprire la missione «{title}»? I suoi veicoli e il suo personale saranno di nuovo considerati impegnati.",
+    "trailer": "Rimorchio",
+    "trailerUnspecified": "Rimorchio non precisato"
   },
   "mine": {
     "title": "Le mie missioni",
@@ -330,9 +385,11 @@
     },
     "tabs": {
       "vehicles": "Veicoli",
-      "persons": "Persone"
+      "persons": "Persone",
+      "trailers": "Rimorchi"
     },
-    "noResource": "Nessuna risorsa da visualizzare"
+    "noResource": "Nessuna risorsa da visualizzare",
+    "conflict": "Più eventi lo stesso giorno: {list}"
   },
   "fields": {
     "id": "identificatore",
@@ -362,7 +419,7 @@
   "errors": {
     "loadFailed": "Caricamento impossibile ({entity}): {reason}",
     "saveFailed": "Salvataggio impossibile ({entity}): {reason}",
-    "conflict": "Le {entity} sono state modificate altrove. Ricarica la pagina per ripartire dalla versione del server.",
+    "conflict": "Qualcun altro ha modificato i dati ({entity}) nello stesso momento; la visualizzazione è stata aggiornata. Verifica e ripeti la modifica se necessario.",
     "notLoaded": "Dati non caricati ({entity}): salvataggio annullato per non sovrascrivere il server.",
     "unsavedSuffix": "Le tue ultime modifiche non sono state salvate."
   },
@@ -396,7 +453,8 @@
       "invalidImage": "Immagine non valida. Usa JPEG, PNG o WebP.",
       "imageTooLarge": "Immagine troppo grande (massimo {max} MB).",
       "emptyList": "L'elenco «{field}» non può essere vuoto",
-      "unknownLicense": "Licenza sconosciuta per la categoria «{field}»"
+      "unknownLicense": "Licenza sconosciuta per la categoria «{field}»",
+      "unknownReference": "La missione «{title}» indica un veicolo o una persona che non esiste ({field}). Ricarica la pagina e verifica le assegnazioni."
     },
     "tooManyRequests": "Troppe richieste inviate. Riprova tra qualche minuto.",
     "requestsFull": "La coda delle richieste è piena. Contatta l'amministrazione.",
@@ -408,13 +466,25 @@
       "passwordEmpty": "È necessaria una password",
       "lastAdmin": "Deve restare almeno un amministratore",
       "selfDelete": "Non puoi eliminare il tuo account",
-      "invalidLastName": "Il cognome non permette di creare un identificatore (almeno tre lettere)"
+      "invalidLastName": "Il cognome non permette di creare un identificatore (almeno tre lettere)",
+      "privilegedAccount": "Questo account ha diritti estesi: solo un amministratore può cambiarne la password o eliminarlo."
     },
     "permissions": {
       "denied": "Questo account non è autorizzato a farlo.",
       "created": "Creare una risorsa richiede il diritto di gestione.",
       "edited": "Modificare una risorsa richiede il diritto di gestione.",
-      "deleted": "Eliminare una risorsa richiede il diritto di gestione."
+      "deleted": "Eliminare una risorsa richiede il diritto di gestione.",
+      "checkRemoval": "Questo SPH di {plate} è stato registrato da un altro account: solo il suo autore o un account che gestisce i veicoli può eliminarlo."
+    },
+    "deletion": {
+      "keys": "Eliminazione impossibile: una chiave è ancora fuori ({vehicles}). Registrare prima la restituzione o il trasferimento.",
+      "missions": "Eliminazione impossibile: questa risorsa è assegnata alle missioni seguenti: {missions}. Riassegnarla o annullare le missioni prima di eliminarla."
+    },
+    "journal": {
+      "changed": "Il giornale è cambiato. Chiudere questa finestra, aggiornare il giornale e riprovare.",
+      "nameRequired": "Inserire un nome per l’archivio (massimo 120 caratteri).",
+      "keysOut": "Alcune chiavi sono ancora fuori. Registrarene la restituzione prima di archiviare.",
+      "empty": "Il giornale corrente è vuoto."
     }
   },
   "auth": {
@@ -589,7 +659,14 @@
     "reset": "Ripristina i valori predefiniti",
     "resetConfirm": "Ripristinare tutta la configurazione ai valori predefiniti?",
     "loadFailed": "Impossibile caricare la configurazione: {reason}",
-    "saveFailed": "Impossibile salvare la configurazione: {reason}"
+    "saveFailed": "Impossibile salvare la configurazione: {reason}",
+    "vehicleTypes": "Modelli di veicolo",
+    "vehicleTypesHint": "I modelli della flotta (Class G, Duro, autocarro…). Ogni veicolo ne riceve uno, e ogni rimorchio indica dietro quali può andare.",
+    "vehicleTypeLabel": "Nuovo modello",
+    "addVehicleType": "Aggiungere il modello",
+    "typeIdPlaceholder": "minibus",
+    "typeLabelPlaceholder": "Minibus 20 posti",
+    "licensePlaceholder": "940"
   },
   "users": {
     "title": "Account",
@@ -604,7 +681,7 @@
     "roleAdmin": "Amministratore",
     "roleUser": "Utente",
     "roleAdminHint": "Gestisce account e configurazione, oltre a tutto il resto.",
-    "roleUserHint": "Gestisce persone, veicoli, missioni, richieste, parco e SPH. Né account né configurazione.",
+    "roleUserHint": "Può lavorare con la flotta: chiavi, SPH, consultazione. Ciò che può gestire in più si concede nella pagina Diritti.",
     "person": "Militare associato",
     "noPerson": "— Nessuno —",
     "createdOn": "Creato il {date}",
@@ -651,7 +728,8 @@
       "mission": "Ordine di missione",
       "missions": "Elenco delle missioni",
       "calendar": "Calendario",
-      "checks": "Stato SPH"
+      "checks": "Stato SPH",
+      "report": "Rapporto di fine corso"
     },
     "generatedOn": "Emesso il {date}",
     "page": "Gestione CT",
@@ -666,6 +744,91 @@
     "status": "Stato",
     "resource": "Risorsa",
     "driver": "Conducente",
-    "short": "Ordine di missione"
+    "short": "Ordine di missione",
+    "trailers": "Rimorchi"
+  },
+  "trailers": {
+    "title": "Rimorchi",
+    "intro": "Ogni rimorchio indica dietro quali modelli di veicolo può andare. In una missione sono proposti solo i rimorchi compatibili e liberi; gli altri restano selezionabili, con un avviso.",
+    "new": "Nuovo rimorchio",
+    "edit": "Modificare il rimorchio",
+    "plate": "Targa",
+    "platePlaceholder": "M 12345",
+    "name": "Designazione",
+    "namePlaceholder": "Rimorchio 1 t, cisterna…",
+    "compatibleTypes": "Va dietro a",
+    "compatibleHint": "Seleziona tutti i modelli di veicolo che possono trainarlo. L'elenco dei modelli si gestisce nella Configurazione.",
+    "noTypes": "Nessun modello di veicolo definito: aggiungine nella Configurazione.",
+    "noCompatible": "Nessun veicolo compatibile indicato",
+    "notes": "Osservazioni",
+    "empty": "Nessun rimorchio.",
+    "delete": "Eliminare il rimorchio",
+    "deleteConfirm": "Eliminare il rimorchio {plate}? Le missioni passate manterranno la sua targa."
+  },
+  "export": {
+    "title": "Esportazione di fine corso",
+    "intro": "Tutto ciò che il corso ha registrato, da conservare una volta spenta l'applicazione: una tabella per argomento in un file ZIP, e lo stesso contenuto come rapporto da stampare o salvare in PDF. Nomi e targhe sono scritti per esteso.",
+    "contents": "Contenuto",
+    "downloadZip": "Scaricare le tabelle (.zip)",
+    "openReport": "Aprire il rapporto stampabile",
+    "sensitive": "Questi file contengono tutti i dati dell'unità (nomi, telefoni, orari, luoghi): conservali su un supporto protetto.",
+    "journalMissing": "Il giornale delle chiavi non ha potuto essere letto: mancherà nell'esportazione.",
+    "noRows": "Niente da segnalare.",
+    "trailer": "rimorchio",
+    "currentJournal": "Giornale corrente",
+    "columns": {
+      "title": "Titolo",
+      "start": "Inizio",
+      "end": "Fine",
+      "status": "Stato",
+      "vehicles": "Veicoli",
+      "drivers": "Autisti",
+      "staff": "Personale",
+      "description": "Descrizione",
+      "notes": "Osservazioni",
+      "mission": "Missione",
+      "plate": "Targa",
+      "model": "Modello",
+      "trailer": "Rimorchio",
+      "driver": "Autista",
+      "category": "Categoria",
+      "type": "Modello (aggancio)",
+      "seats": "Posti",
+      "reason": "Motivo",
+      "until": "Rientro previsto",
+      "keyHolder": "Chiave presso",
+      "designation": "Designazione",
+      "fits": "Va dietro a",
+      "rank": "Grado",
+      "firstName": "Nome",
+      "lastName": "Cognome",
+      "phone": "Telefono",
+      "licenses": "Licenze",
+      "unavailable": "Non disponibilità",
+      "person": "Persona",
+      "date": "Data",
+      "doneBy": "Eseguito da",
+      "recordedBy": "Registrato da",
+      "course": "Giornale",
+      "when": "Data e ora",
+      "movement": "Movimento",
+      "holder": "Detentore",
+      "received": "Ricevuta il",
+      "requester": "Richiedente",
+      "unit": "Unità",
+      "meetingPoint": "Ritrovo",
+      "decidedBy": "Decisa da"
+    },
+    "tables": {
+      "missions": "Missioni",
+      "assignments": "Assegnazioni (una riga per veicolo)",
+      "vehicles": "Veicoli",
+      "trailers": "Rimorchi",
+      "persons": "Persone",
+      "leaves": "Congedi",
+      "checks": "SPH",
+      "keys": "Giornale delle chiavi",
+      "requests": "Richieste di veicoli"
+    }
   }
 }

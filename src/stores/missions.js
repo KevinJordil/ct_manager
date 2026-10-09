@@ -9,7 +9,7 @@ function withoutStatus(mission) {
 }
 
 export const useMissionsStore = defineStore('missions', () => {
-  const collection = useCollection('missions', migrateMissions)
+  const collection = useCollection('missions', migrateMissions, { replay: false })
 
   /** Missions still referring to a person, as a driver or as unmounted staff */
   function missionsWithPerson(personId) {
@@ -23,40 +23,6 @@ export const useMissionsStore = defineStore('missions', () => {
       mission.vehicles?.some(entry => entry.vehicleId === vehicleId))
   }
 
-  /**
-   * Drops every reference to a deleted person. Without this the mission keeps
-   * a dead identifier and silently displays an empty driver.
-   */
-  function forgetPerson(personId) {
-    let changed = false
-    collection.items.value = collection.items.value.map(mission => {
-      const vehicles = (mission.vehicles ?? []).map(entry =>
-        entry.driverId === personId ? { ...entry, driverId: null } : entry)
-      const staffIds = (mission.staffIds ?? []).filter(id => id !== personId)
-      if (vehicles.some((entry, i) => entry !== mission.vehicles[i]) ||
-          staffIds.length !== (mission.staffIds ?? []).length) {
-        changed = true
-        return { ...mission, vehicles, staffIds }
-      }
-      return mission
-    })
-    if (changed) collection.persist()
-  }
-
-  /** Drops every reference to a deleted vehicle, entry included. */
-  function forgetVehicle(vehicleId) {
-    let changed = false
-    collection.items.value = collection.items.value.map(mission => {
-      const vehicles = (mission.vehicles ?? []).filter(entry => entry.vehicleId !== vehicleId)
-      if (vehicles.length !== (mission.vehicles ?? []).length) {
-        changed = true
-        return { ...mission, vehicles }
-      }
-      return mission
-    })
-    if (changed) collection.persist()
-  }
-
   return {
     missions: collection.items,
     loading: collection.loading,
@@ -66,6 +32,6 @@ export const useMissionsStore = defineStore('missions', () => {
     add: mission => collection.add(withoutStatus(mission)),
     update: (id, data) => collection.update(id, withoutStatus(data)),
     remove: collection.remove,
-    missionsWithPerson, missionsWithVehicle, forgetPerson, forgetVehicle,
+    missionsWithPerson, missionsWithVehicle,
   }
 })

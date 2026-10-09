@@ -69,10 +69,15 @@ export function mondayOf(dateStr) {
   return toDateString(d)
 }
 
-/** Do two [start, end] ranges overlap? Bounds are inclusive. */
+/**
+ * Do two [start, end] ranges overlap?
+ *
+ * Touching bounds do not: a vehicle back at 12:00 can leave again at 12:00,
+ * which is how missions are chained.
+ */
 export function overlaps(aStart, aEnd, bStart, bEnd) {
   if (!aStart || !aEnd || !bStart || !bEnd) return false
-  return aStart <= bEnd && bStart <= aEnd
+  return aStart < bEnd && bStart < aEnd
 }
 
 /**

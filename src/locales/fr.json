@@ -19,7 +19,9 @@
     "users": "Comptes",
     "log": "Journal de combat",
     "permissions": "Droits",
-    "mine": "Mes missions"
+    "mine": "Mes missions",
+    "trailers": "Remorques",
+    "export": "Export"
   },
   "actions": {
     "add": "Ajouter",
@@ -48,7 +50,8 @@
   "entities": {
     "persons": "personnes",
     "vehicles": "véhicules",
-    "missions": "missions"
+    "missions": "missions",
+    "trailers": "remorques"
   },
   "status": {
     "available": "disponible",
@@ -63,7 +66,10 @@
     "leave": "Congé",
     "pending": "en attente",
     "approved": "approuvée",
-    "rejected": "refusée"
+    "rejected": "refusée",
+    "cancelled": "Annulée",
+    "maintenance": "en maintenance",
+    "broken": "en panne"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -79,7 +85,8 @@
     "alerts": {
       "driverOnLeave": "Mission « {mission} » : {person} (chauffeur) est en congé pendant la mission",
       "staffOnLeave": "Mission « {mission} » : {person} est en congé pendant la mission",
-      "vehicleOnLoan": "Mission « {mission} » : le véhicule {vehicle} est marqué « en prêt »"
+      "vehicleOnLoan": "Mission « {mission} » : le véhicule {vehicle} est marqué « en prêt »",
+      "vehicleOutOfService": "Mission « {mission} » : le véhicule {vehicle} est {status}"
     },
     "attention": "À traiter",
     "pendingRequests": "demande en attente | demande en attente | demandes en attente",
@@ -115,7 +122,9 @@
       "upcoming": "À venir",
       "past": "Passé",
       "addLeave": "Ajouter le congé",
-      "short": "Congés"
+      "short": "Congés",
+      "remove": "Supprimer ce congé",
+      "keep": "Garder"
     },
     "unavailability": {
       "title": "Indisponibilité — {name}",
@@ -130,7 +139,7 @@
     "phone": "Téléphone",
     "phonePlaceholder": "+41 79 000 00 00",
     "password": "Mot de passe",
-    "passwordHint": "La personne se connectera avec son nom de famille et ce mot de passe.",
+    "passwordHint": "La personne se connectera avec son nom de famille et ce mot de passe. Sans mot de passe, la fiche existe mais ne peut pas se connecter.",
     "passwordOptional": "Nouveau mot de passe (laisser vide pour ne pas changer)",
     "accountActive": "compte actif",
     "noAccount": "sans compte",
@@ -184,10 +193,25 @@
     "loanOverdue": "Retour dépassé depuis le {date}",
     "loanUntilLabel": "Retour prévu le {date}",
     "allTypes": "Tous les types",
-    "availableOf": "{available} disponibles sur {total}",
+    "availableOf": "{available} disponible sur {total} | {available} disponible sur {total} | {available} disponibles sur {total}",
     "keyOutCount": "clé sortie | 1 clé sortie | {count} clés sorties",
     "onMissionCount": "en mission | 1 en mission | {count} en mission",
-    "onLoanCount": "en prêt | 1 en prêt | {count} en prêt"
+    "onLoanCount": "en prêt | 1 en prêt | {count} en prêt",
+    "outOfService": {
+      "action": "Mettre hors service",
+      "title": "Mettre hors service",
+      "reason": "Motif",
+      "note": "Ce qui se passe",
+      "notePlaceholder": "Atelier, pièce attendue, panne constatée…",
+      "untilOptional": "Retour en service prévu (optionnel)",
+      "confirm": "Mettre hors service",
+      "release": "Remettre en service",
+      "releaseConfirm": "Remettre {plate} en service et le rendre disponible ?"
+    },
+    "outOfServiceCount": "hors service | 1 hors service | {count} hors service",
+    "type": "Modèle",
+    "typeNone": "Non renseigné",
+    "typeHint": "Sert à savoir quelles remorques il peut tracter."
   },
   "keys": {
     "dashboardTitle": "Clés des véhicules",
@@ -256,7 +280,16 @@
       "minutes": "depuis moins d'une minute | depuis 1 min | depuis {count} min",
       "hours": "depuis 1 h | depuis 1 h | depuis {count} h",
       "days": "depuis 1 j | depuis 1 j | depuis {count} j"
-    }
+    },
+    "journalLabel": "Journal",
+    "current": "Journal courant",
+    "refresh": "Actualiser",
+    "exportCsv": "Télécharger CSV",
+    "archive": "Archiver et ouvrir un nouveau journal",
+    "archivedBy": "Archivé le {date} par {name}.",
+    "archiveName": "Nom du cours / de l’archive",
+    "archiveConfirm": "Le journal courant sera conservé dans les archives et un nouveau journal vide sera ouvert. Toutes les clés doivent être au tableau. Les missions et les fiches restent conservées.",
+    "archiveMissing": "Archive introuvable."
   },
   "missions": {
     "title": "Missions",
@@ -264,7 +297,7 @@
     "new": "Nouvelle mission",
     "edit": "Modifier la mission",
     "deleteTitle": "Supprimer la mission",
-    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette mission ?",
+    "deleteConfirm": "Supprimer définitivement la mission « {title} » ? Pour la garder dans l'historique, annulez-la plutôt.",
     "missionTitle": "Titre",
     "titlePlaceholder": "Titre de la mission",
     "description": "Description",
@@ -277,7 +310,8 @@
       "all": "Toutes",
       "planned": "Planifiées",
       "ongoing": "En cours",
-      "completed": "Terminées"
+      "completed": "Terminées",
+      "cancelled": "Annulées"
     },
     "vehiclesSection": "Véhicules engagés",
     "staffSection": "Personnel sans véhicule",
@@ -300,7 +334,28 @@
     "proposedAvailable": "Disponible",
     "randomDriver": "Au hasard",
     "fillDrivers": "Compléter les chauffeurs",
-    "pickVehicleFirst": "Choisissez d'abord un véhicule : le permis exigé en dépend."
+    "pickVehicleFirst": "Choisissez d'abord un véhicule : le permis exigé en dépend.",
+    "cancelMission": "Annuler la mission",
+    "cancelConfirm": "Annuler la mission « {title} » ? Elle restera consultable et ses ressources seront libérées.",
+    "emptyWarning": "Cette mission ne contient plus de ressource existante. Vérifiez-la ou annulez-la.",
+    "problems": {
+      "away": "en prêt ou hors service",
+      "busy": "déjà engagé sur une autre mission",
+      "unavailable": "indisponible",
+      "onLeave": "en congé",
+      "noLicense": "sans le permis requis",
+      "incompatible": "ne se met pas derrière ce véhicule"
+    },
+    "unavailableGroup": "Non disponibles — à confirmer",
+    "conflictsTitle": "Affectations en conflit :",
+    "forceHint": "Vérifiez ces conflits. Pour les garder, enregistrez à nouveau.",
+    "forceSave": "Enregistrer quand même",
+    "endBeforeStart": "La fin doit être après le début.",
+    "reopen": "Rouvrir",
+    "keepMission": "Garder la mission",
+    "reopenConfirm": "Rouvrir la mission « {title} » ? Ses véhicules et son personnel compteront à nouveau comme engagés.",
+    "trailer": "Remorque",
+    "trailerUnspecified": "Remorque non précisée"
   },
   "mine": {
     "title": "Mes missions",
@@ -330,9 +385,11 @@
     },
     "tabs": {
       "vehicles": "Véhicules",
-      "persons": "Personnes"
+      "persons": "Personnes",
+      "trailers": "Remorques"
     },
-    "noResource": "Aucune ressource à afficher"
+    "noResource": "Aucune ressource à afficher",
+    "conflict": "Plusieurs événements le même jour : {list}"
   },
   "fields": {
     "id": "identifiant",
@@ -362,7 +419,7 @@
   "errors": {
     "loadFailed": "Chargement impossible ({entity}) : {reason}",
     "saveFailed": "Enregistrement impossible ({entity}) : {reason}",
-    "conflict": "Les {entity} ont été modifiées ailleurs. Rechargez la page pour repartir de la version du serveur.",
+    "conflict": "Quelqu'un d'autre a modifié les données ({entity}) au même moment ; l'affichage a été actualisé. Vérifiez et refaites la modification si besoin.",
     "notLoaded": "Données non chargées ({entity}) : enregistrement annulé pour ne pas écraser le serveur.",
     "unsavedSuffix": "Vos dernières modifications ne sont pas enregistrées."
   },
@@ -396,7 +453,8 @@
       "invalidImage": "Image invalide. Utilisez JPEG, PNG ou WebP.",
       "imageTooLarge": "Image trop volumineuse (maximum {max} Mo).",
       "emptyList": "La liste « {field} » ne peut pas être vide",
-      "unknownLicense": "Permis inconnu pour la catégorie « {field} »"
+      "unknownLicense": "Permis inconnu pour la catégorie « {field} »",
+      "unknownReference": "La mission « {title} » désigne un véhicule ou une personne qui n'existe pas ({field}). Rechargez la page et vérifiez les affectations."
     },
     "tooManyRequests": "Trop de demandes envoyées. Réessayez dans quelques minutes.",
     "requestsFull": "La file de demandes est pleine. Contactez l'administration.",
@@ -408,13 +466,25 @@
       "passwordEmpty": "Un mot de passe est nécessaire",
       "lastAdmin": "Il doit rester au moins un administrateur",
       "selfDelete": "Vous ne pouvez pas supprimer votre propre compte",
-      "invalidLastName": "Le nom de famille ne permet pas de créer un identifiant (au moins trois lettres)"
+      "invalidLastName": "Le nom de famille ne permet pas de créer un identifiant (au moins trois lettres)",
+      "privilegedAccount": "Ce compte a des droits étendus : seul un administrateur peut changer son mot de passe ou le supprimer."
     },
     "permissions": {
       "denied": "Ce compte n'a pas le droit de faire cela.",
       "created": "Créer une ressource demande le droit de gestion.",
       "edited": "Modifier une ressource demande le droit de gestion.",
-      "deleted": "Supprimer une ressource demande le droit de gestion."
+      "deleted": "Supprimer une ressource demande le droit de gestion.",
+      "checkRemoval": "Ce SPH de {plate} a été saisi par un autre compte : seul son auteur ou un compte qui gère les véhicules peut le supprimer."
+    },
+    "deletion": {
+      "keys": "Suppression impossible : une clé est encore sortie ({vehicles}). Enregistrez son retour ou son transfert avant de supprimer cette fiche.",
+      "missions": "Suppression impossible : cette ressource est affectée aux missions suivantes : {missions}. Réaffectez-la ou annulez ces missions avant de supprimer cette fiche."
+    },
+    "journal": {
+      "changed": "Le journal a changé. Fermez cette fenêtre, actualisez le journal et recommencez.",
+      "nameRequired": "Saisissez un nom d’archive (120 caractères maximum).",
+      "keysOut": "Des clés sont encore sorties. Enregistrez leur retour avant d’archiver le journal.",
+      "empty": "Le journal courant est vide."
     }
   },
   "auth": {
@@ -589,7 +659,14 @@
     "reset": "Rétablir les valeurs par défaut",
     "resetConfirm": "Rétablir toute la configuration par défaut ?",
     "loadFailed": "Chargement de la configuration impossible : {reason}",
-    "saveFailed": "Enregistrement de la configuration impossible : {reason}"
+    "saveFailed": "Enregistrement de la configuration impossible : {reason}",
+    "vehicleTypes": "Modèles de véhicule",
+    "vehicleTypesHint": "Les modèles de la flotte (Class G, Duro, camion…). Chaque véhicule en reçoit un, et chaque remorque dit derrière lesquels elle peut aller.",
+    "vehicleTypeLabel": "Nouveau modèle",
+    "addVehicleType": "Ajouter le modèle",
+    "typeIdPlaceholder": "minibus",
+    "typeLabelPlaceholder": "Minibus 20 places",
+    "licensePlaceholder": "940"
   },
   "users": {
     "title": "Comptes",
@@ -604,7 +681,7 @@
     "roleAdmin": "Administrateur",
     "roleUser": "Utilisateur",
     "roleAdminHint": "Gère les comptes et la configuration, en plus de tout le reste.",
-    "roleUserHint": "Gère personnes, véhicules, missions, demandes, parc et SPH. Ni comptes ni configuration.",
+    "roleUserHint": "Peut travailler avec la flotte : clés, SPH, consultation. Ce qu'il peut gérer en plus s'accorde sur la page Droits.",
     "person": "Militaire associé",
     "noPerson": "— Aucun —",
     "createdOn": "Créé le {date}",
@@ -651,7 +728,8 @@
       "mission": "Ordre de mission",
       "missions": "Liste des missions",
       "calendar": "Calendrier",
-      "checks": "État des SPH"
+      "checks": "État des SPH",
+      "report": "Rapport de fin de cours"
     },
     "generatedOn": "Édité le {date}",
     "page": "Gestion CT",
@@ -666,6 +744,91 @@
     "status": "Statut",
     "resource": "Ressource",
     "driver": "Chauffeur",
-    "short": "Ordre de mission"
+    "short": "Ordre de mission",
+    "trailers": "Remorques"
+  },
+  "trailers": {
+    "title": "Remorques",
+    "intro": "Chaque remorque dit derrière quels modèles de véhicule elle peut aller. Seules les remorques compatibles et libres sont proposées sur une mission ; les autres restent choisissables, avec un avertissement.",
+    "new": "Nouvelle remorque",
+    "edit": "Modifier la remorque",
+    "plate": "Plaque",
+    "platePlaceholder": "M 12345",
+    "name": "Désignation",
+    "namePlaceholder": "Remorque 1 t, citerne…",
+    "compatibleTypes": "Se met derrière",
+    "compatibleHint": "Cochez tous les modèles de véhicule qui peuvent la tracter. La liste des modèles se règle dans la Configuration.",
+    "noTypes": "Aucun modèle de véhicule n'est défini : ajoutez-en dans la Configuration.",
+    "noCompatible": "Aucun véhicule compatible renseigné",
+    "notes": "Remarques",
+    "empty": "Aucune remorque.",
+    "delete": "Supprimer la remorque",
+    "deleteConfirm": "Supprimer la remorque {plate} ? Les missions passées garderont sa plaque."
+  },
+  "export": {
+    "title": "Export de fin de cours",
+    "intro": "Tout ce que le cours a enregistré, à garder une fois l'application arrêtée : un tableur par sujet, réunis dans un fichier ZIP, et le même contenu en rapport à imprimer ou à enregistrer en PDF. Les noms et les plaques sont écrits en toutes lettres.",
+    "contents": "Contenu",
+    "downloadZip": "Télécharger les tableaux (.zip)",
+    "openReport": "Ouvrir le rapport imprimable",
+    "sensitive": "Ces fichiers contiennent toutes les données de l'unité (noms, téléphones, horaires, lieux) : conservez-les sur un support protégé.",
+    "journalMissing": "Le journal des clés n'a pas pu être lu : il manquera à l'export.",
+    "noRows": "Rien à signaler.",
+    "trailer": "remorque",
+    "currentJournal": "Journal courant",
+    "columns": {
+      "title": "Titre",
+      "start": "Début",
+      "end": "Fin",
+      "status": "Statut",
+      "vehicles": "Véhicules",
+      "drivers": "Chauffeurs",
+      "staff": "Personnel",
+      "description": "Description",
+      "notes": "Remarques",
+      "mission": "Mission",
+      "plate": "Plaque",
+      "model": "Modèle",
+      "trailer": "Remorque",
+      "driver": "Chauffeur",
+      "category": "Catégorie",
+      "type": "Modèle (attelage)",
+      "seats": "Places",
+      "reason": "Motif",
+      "until": "Retour prévu",
+      "keyHolder": "Clé chez",
+      "designation": "Désignation",
+      "fits": "Se met derrière",
+      "rank": "Grade",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "phone": "Téléphone",
+      "licenses": "Permis",
+      "unavailable": "Indisponibilité",
+      "person": "Personne",
+      "date": "Date",
+      "doneBy": "Effectué par",
+      "recordedBy": "Saisi par",
+      "course": "Journal",
+      "when": "Date et heure",
+      "movement": "Mouvement",
+      "holder": "Détenteur",
+      "received": "Reçue le",
+      "requester": "Demandeur",
+      "unit": "Unité",
+      "meetingPoint": "Rendez-vous",
+      "decidedBy": "Décidée par"
+    },
+    "tables": {
+      "missions": "Missions",
+      "assignments": "Affectations (une ligne par véhicule)",
+      "vehicles": "Véhicules",
+      "trailers": "Remorques",
+      "persons": "Personnes",
+      "leaves": "Congés",
+      "checks": "SPH",
+      "keys": "Journal des clés",
+      "requests": "Demandes de véhicules"
+    }
   }
 }

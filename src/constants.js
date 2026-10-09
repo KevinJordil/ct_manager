@@ -5,6 +5,7 @@ export const MISSION_STATUS = {
   PLANNED: 'planned',
   ONGOING: 'ongoing',
   COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
 }
 
 /** Person status shown in the interface. */
@@ -20,10 +21,18 @@ export const VEHICLE_STATUS = {
   FREE: 'free',
   ON_MISSION: 'on-mission',
   ON_LOAN: 'on-loan',
+  MAINTENANCE: 'maintenance',
+  BROKEN: 'broken',
 }
 
+/** Stored statuses that keep a vehicle away from the fleet until it is back. */
+export const AWAY_STATUSES = [VEHICLE_STATUS.ON_LOAN, VEHICLE_STATUS.MAINTENANCE, VEHICLE_STATUS.BROKEN]
+
+/** Out of service rather than lent: in the workshop, or broken down. */
+export const OUT_OF_SERVICE_STATUSES = [VEHICLE_STATUS.MAINTENANCE, VEHICLE_STATUS.BROKEN]
+
 /** Only these two are stored; 'on-mission' is derived from the missions. */
-export const STORED_VEHICLE_STATUSES = [VEHICLE_STATUS.FREE, VEHICLE_STATUS.ON_LOAN]
+export const STORED_VEHICLE_STATUSES = [VEHICLE_STATUS.FREE, ...AWAY_STATUSES]
 
 export const VEHICLE_CATEGORY = {
   LIGHT_ROAD: 'light-road',
@@ -112,4 +121,4 @@ export const KEY_ACTION = {
 export const KEY_HISTORY_LIMIT = 50
 
 /** Collections persisted by the API. */
-export const ENTITIES = ['persons', 'vehicles', 'missions']
+export const ENTITIES = ['persons', 'vehicles', 'missions', 'trailers']

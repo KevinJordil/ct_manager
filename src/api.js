@@ -77,6 +77,16 @@ function versionOf(res) {
 }
 
 export const api = {
+  async journal() {
+    const res = await request(`${BASE}/journal`)
+    return { data: await res.json(), version: versionOf(res) }
+  },
+  async archiveJournal(name, version) {
+    return (await request(`${BASE}/journal/archives`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'If-Match': version },
+      body: JSON.stringify({ name }),
+    })).json()
+  },
   /**
    * Exchanges credentials for a session token.
    * @returns {{ token: string, expiresAt: number, user: object }}

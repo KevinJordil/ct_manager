@@ -23,6 +23,11 @@ onMounted(() => {
   personsStore.init()
 })
 
+/** A check is withdrawn by whoever recorded it, or by a vehicle manager. */
+function mayRemove(check) {
+  return auth.can('vehicles.manage') || (Boolean(check.recordedById) && check.recordedById === auth.user?.id)
+}
+
 const recordingVehicle = ref(null)
 const deletedRecord = ref(null)
 const expandedId = ref(null)
@@ -63,7 +68,9 @@ function toggleExpanded(id) {
 }
 
 function onSave(data) {
-  vehiclesStore.addCheck(recordingVehicle.value.id, data)
+  // The server stamps the author itself; this only lets the author withdraw
+  // the check before the next reload.
+  vehiclesStore.addCheck(recordingVehicle.value.id, { ...data, recordedById: auth.user?.id })
   recordingVehicle.value = null
 }
 
@@ -130,7 +137,7 @@ function onDelete() {
                 <span class="text-stone-400">·</span>
                 <span>{{ performerLabel(check) }}</span>
               </span>
-              <button @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
+              <button v-if="mayRemove(check)" @click="deletedRecord = { vehicleId: row.vehicle.id, checkId: check.id }"
                 class="btn-action btn-action-danger">
                 {{ $t('actions.delete') }}
               </button>

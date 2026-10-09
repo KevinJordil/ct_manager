@@ -159,7 +159,7 @@ function closeApproval() {
 
 /** The request is only approved once the mission has actually been created. */
 async function onMissionSave(data) {
-  missionsStore.add(data)
+  if (!await missionsStore.add(data)) return // the form stays open, the request pending
   await store.setStatus(approvedRequestId.value, REQUEST_STATUS.APPROVED)
   closeApproval()
 }
@@ -220,7 +220,7 @@ async function onDelete() {
           </button>
 
           <div class="flex flex-col gap-1 shrink-0">
-            <button v-if="auth.can('requests.manage') && request.status !== 'approved'" @click="openApproval(request)"
+            <button v-if="auth.can('requests.manage') && auth.can('missions.manage') && request.status !== 'approved'" @click="openApproval(request)"
               class="btn-action border-green-300 bg-green-50 text-green-800 hover:bg-green-100 hover:border-green-400">
               {{ $t('requests.approve') }}
             </button>

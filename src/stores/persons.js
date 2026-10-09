@@ -48,27 +48,27 @@ export const usePersonsStore = defineStore('persons', () => {
   }
 
   function addLeave(personId, leave) {
-    collection.mutate(personId, person => {
+    return collection.mutate(personId, person => {
       if (!person.leaves) person.leaves = []
       person.leaves.push({ ...leave, id: newId() })
     })
   }
 
   function removeLeave(personId, leaveId) {
-    collection.mutate(personId, person => {
+    return collection.mutate(personId, person => {
       person.leaves = person.leaves.filter(l => l.id !== leaveId)
     })
   }
 
   function markUnavailable(id, note) {
-    collection.mutate(id, person => {
+    return collection.mutate(id, person => {
       person.unavailable = true
       person.unavailabilityNote = note
     })
   }
 
   function clearUnavailable(id) {
-    collection.mutate(id, person => {
+    return collection.mutate(id, person => {
       person.unavailable = false
       person.unavailabilityNote = ''
     })

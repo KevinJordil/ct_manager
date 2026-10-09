@@ -79,8 +79,7 @@ describe('useCollection — saving', () => {
     calls.save = async (_entity, _data, version) => { seen.push(version); return { version: 'v2' } }
     const collection = useCollection('persons')
     await collection.init()
-    collection.add({ lastName: 'X' })
-    await settle()
+    await collection.add({ lastName: 'X' })
     expect(seen).toEqual(['v1'])
   })
 
@@ -147,40 +146,145 @@ describe('useCollection — CRUD', () => {
   it('adds with a unique identifier', async () => {
     const collection = useCollection('persons')
     await collection.init()
-    const first = collection.add({ lastName: 'A' })
-    const second = collection.add({ lastName: 'B' })
+    const first = await collection.add({ lastName: 'A' })
+    const second = await collection.add({ lastName: 'B' })
     expect(first.id).not.toBe(second.id)
     expect(collection.items.value).toHaveLength(2)
+  })
+
+  it('shows a change at once, before the server answers', async () => {
+    const collection = useCollection('persons')
+    await collection.init()
+    const pending = collection.add({ lastName: 'A' })
+    expect(collection.items.value).toHaveLength(1)
+    await pending
   })
 
   it('updates without letting the identifier be rewritten', async () => {
     const collection = useCollection('persons')
     await collection.init()
-    const item = collection.add({ lastName: 'A' })
-    collection.update(item.id, { lastName: 'B', id: 'spoofed' })
+    const item = await collection.add({ lastName: 'A' })
+    await collection.update(item.id, { lastName: 'B', id: 'spoofed' })
     expect(collection.items.value[0]).toMatchObject({ id: item.id, lastName: 'B' })
   })
 
   it('ignores an update to a missing item', async () => {
     const collection = useCollection('persons')
     await collection.init()
-    collection.update('ghost', { lastName: 'X' })
+    expect(await collection.update('ghost', { lastName: 'X' })).toBe(false)
     expect(collection.items.value).toEqual([])
   })
 
   it('removes an item', async () => {
     const collection = useCollection('persons')
     await collection.init()
-    const item = collection.add({ lastName: 'A' })
-    collection.remove(item.id)
+    const item = await collection.add({ lastName: 'A' })
+    await collection.remove(item.id)
     expect(collection.items.value).toEqual([])
   })
 
   it('mutate applies the change to the target item', async () => {
     const collection = useCollection('persons')
     await collection.init()
-    const item = collection.add({ lastName: 'A' })
-    collection.mutate(item.id, person => { person.lastName = 'Changed' })
+    const item = await collection.add({ lastName: 'A' })
+    await collection.mutate(item.id, person => { person.lastName = 'Changed' })
     expect(collection.items.value[0].lastName).toBe('Changed')
+  })
+
+  it('takes back an addition the server refused', async () => {
+    const collection = useCollection('persons')
+    await collection.init()
+    calls.save = async () => { throw new ApiError('unreachable') }
+    expect(await collection.add({ lastName: 'A' })).toBeNull()
+    expect(collection.items.value).toEqual([])
+  })
+})
+
+describe('somebody else saved in between', () => {
+  const conflict = () => new ApiError('conflict', { status: 409, code: 'conflict', params: { version: 'v9' } })
+
+  it('never writes stale data under the newer version', async () => {
+    // Another counter recorded a key on v1 while this one was still on v0.
+    let server = { data: [{ id: 'v1', holder: null }, { id: 'v2', holder: null }], version: 'v0' }
+    calls.load = async () => structuredClone(server)
+    const collection = useCollection('vehicles')
+    await collection.init()
+    server = { data: [{ id: 'v1', holder: 'Favre' }, { id: 'v2', holder: null }], version: 'v1' }
+
+    const sent = []
+    calls.save = async (_entity, data, version) => {
+      sent.push({ data: JSON.parse(JSON.stringify(data)), version })
+      if (version !== server.version) throw conflict()
+      server = { data: JSON.parse(JSON.stringify(data)), version: `${version}+` }
+      return { version: server.version }
+    }
+
+    expect(await collection.mutate('v2', vehicle => { vehicle.holder = 'Rossier' })).toBe(true)
+    // Replayed once on what the server holds: both movements survive.
+    expect(sent.at(-1).version).toBe('v1')
+    expect(server.data).toEqual([{ id: 'v1', holder: 'Favre' }, { id: 'v2', holder: 'Rossier' }])
+    expect(collection.items.value).toEqual(server.data)
+  })
+
+  it('does not replay a mission, which the other change may have invalidated', async () => {
+    let loads = 0
+    calls.load = async () => ({ data: [{ id: 'm', title: loads++ ? 'Theirs' : 'Mine' }], version: `v${loads}` })
+    let saves = 0
+    calls.save = async () => { saves++; throw conflict() }
+    const collection = useCollection('missions', data => data, { replay: false })
+    await collection.init()
+
+    expect(await collection.update('m', { title: 'Edited' })).toBe(false)
+    expect(saves).toBe(1)
+    // What is shown is now the server's, and the user is told.
+    expect(collection.items.value).toEqual([{ id: 'm', title: 'Theirs' }])
+    expect(sync.error.value.key).toBe('errors.conflict')
+  })
+
+  it('keeps the conflict in view when the next save on the same data also fails', async () => {
+    calls.save = async () => { throw conflict() }
+    const collection = useCollection('persons')
+    await collection.init()
+    expect(await collection.add({ lastName: 'A' })).toBeNull()
+    expect(sync.conflict.value).toBe(true)
+  })
+})
+
+describe('one failure is not hidden by another success', () => {
+  it('keeps a mission error in view when a key movement then saves', async () => {
+    const missions = useCollection('missions')
+    const vehicles = useCollection('vehicles')
+    calls.load = async () => ({ data: [{ id: 'x' }], version: 'v1' })
+    await missions.init()
+    await vehicles.init()
+
+    calls.save = async entity => {
+      if (entity === 'missions') throw new ApiError('unreachable')
+      return { version: 'v2' }
+    }
+    await missions.update('x', { title: 'Lost' })
+    await vehicles.mutate('x', vehicle => { vehicle.holder = 'Favre' })
+    expect(sync.error.value?.key).toBe('errors.saveFailed')
+  })
+})
+
+describe('rejected resource deletion', () => {
+  it('restores the record and reports the actual blocker rather than a version conflict', async () => {
+    calls.load = async () => ({ data: [{ id: 'a', name: 'Duro' }], version: 'v1' })
+    calls.save = async () => { throw new ApiError('blocked', { status: 409, code: 'deletion.keys', params: { vehicles: 'M1' } }) }
+    const collection = useCollection('vehicles')
+    await collection.init()
+    expect(await collection.remove('a')).toBe(false)
+    expect(collection.items.value).toEqual([{ id: 'a', name: 'Duro' }])
+    expect(sync.error.value.key).toBe('server.deletion.keys')
+    expect(sync.conflict.value).toBe(false)
+  })
+  it('restores a mission if cancellation fails to save', async () => {
+    calls.load = async () => ({ data: [{ id: 'a', title: 'Transport' }], version: 'v1' })
+    calls.save = async () => { throw new ApiError('unreachable') }
+    const collection = useCollection('missions')
+    await collection.init()
+    expect(await collection.update('a', { cancelled: true })).toBe(false)
+    expect(collection.items.value[0].cancelled).toBeUndefined()
   })
 })

@@ -23,8 +23,8 @@ export const useRequestsStore = defineStore('requests', () => {
 
   function handleError(error, key) {
     if (error.status === 401) return reportAuthRequired()
-    if (error.code) return reportError(`server.${error.code}`, error.params ?? {})
-    reportError(key, { reason: error.message })
+    if (error.code) return reportError(`server.${error.code}`, error.params ?? {}, { source: 'requests' })
+    reportError(key, { reason: error.message }, { source: 'requests' })
   }
 
   async function init() {
@@ -60,7 +60,7 @@ export const useRequestsStore = defineStore('requests', () => {
   async function refresh() {
     try {
       requests.value = await api.loadRequests()
-      clearError()
+      clearError('requests')
     } catch (error) {
       handleError(error, 'requests.loadFailed')
     }
@@ -82,7 +82,7 @@ export const useRequestsStore = defineStore('requests', () => {
         request.decidedAt = decidedAt
         request.decisionReason = status === 'pending' ? '' : reason.trim()
       }
-      clearError()
+      clearError('requests')
     } catch (error) {
       if (request && previous) Object.assign(request, previous)
       handleError(error, 'requests.updateFailed')
@@ -94,7 +94,7 @@ export const useRequestsStore = defineStore('requests', () => {
     requests.value = requests.value.filter(r => r.id !== id)
     try {
       await api.deleteRequest(id)
-      clearError()
+      clearError('requests')
     } catch (error) {
       requests.value = snapshot
       handleError(error, 'requests.deleteFailed')

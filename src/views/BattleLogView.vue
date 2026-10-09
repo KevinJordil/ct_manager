@@ -1,10 +1,12 @@
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useVehiclesStore } from '../stores/vehicles.js'
-import { usePersonsStore } from '../stores/persons.js'
 import { useClock } from '../stores/clock.js'
-import { keyMovements } from '../keys.js'
+import { api } from '../api.js'
+import { useAuthStore } from '../stores/auth.js'
+import { useRouter } from 'vue-router'
+import { journalCsv } from '../journal-export.js'
+import BaseModal from '../components/common/BaseModal.vue'
 import { parseLocal, addDays, elapsedSince } from '../datetime.js'
 import { formatLongDate, formatClock } from '../i18n/formats.js'
 import { localeTag } from '../i18n/index.js'
@@ -12,15 +14,61 @@ import { filterBySearch } from '../search.js'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 import SearchField from '../components/common/SearchField.vue'
 
-const vehiclesStore = useVehiclesStore()
-const personsStore = usePersonsStore()
 const { t, te, locale } = useI18n()
 const { todayString: today, nowString } = useClock()
 
-onMounted(() => {
-  vehiclesStore.init()
-  personsStore.init()
-})
+const auth = useAuthStore()
+const router = useRouter()
+const journal = ref({ entries: [], archives: [] })
+const journalVersion = ref('')
+const selectedArchive = ref('')
+const loading = ref(true)
+const error = ref('')
+const archiveOpen = ref(false)
+const archiveName = ref('')
+const archiving = ref(false)
+const archive = computed(() => journal.value.archives.find(item => item.id === selectedArchive.value))
+const movements = computed(() => [...(archive.value?.entries ?? journal.value.entries)]
+  .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? '') || (b.sequence ?? 0) - (a.sequence ?? 0)))
+
+function errorText(err) { return err.code ? t(`server.${err.code}`, err.params) : t('errors.loadFailed', { entity: t('log.title'), reason: err.message }) }
+async function loadJournal() {
+  loading.value = true
+  error.value = ''
+  try {
+    const result = await api.journal()
+    journal.value = result.data
+    journalVersion.value = result.version
+  } catch (err) { error.value = errorText(err) }
+  finally { loading.value = false }
+}
+onMounted(loadJournal)
+watch(selectedArchive, () => { search.value = ''; outstandingOnly.value = false })
+
+async function archiveJournal() {
+  if (archiving.value) return
+  archiving.value = true
+  error.value = ''
+  try {
+    await api.archiveJournal(archiveName.value, journalVersion.value)
+    archiveOpen.value = false
+    archiveName.value = ''
+    selectedArchive.value = ''
+    await loadJournal()
+  } catch (err) { error.value = errorText(err) }
+  finally { archiving.value = false }
+}
+function downloadCsv() {
+  const url = URL.createObjectURL(new Blob([journalCsv(movements.value, t)], { type: 'text/csv;charset=utf-8' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `journal-${(archive.value?.name ?? t('log.current')).replace(/[^\p{L}\p{N}_-]+/gu, '-')}.csv`
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+function printJournal() {
+  router.push({ path: '/print', query: { doc: 'journal', archive: selectedArchive.value || undefined } })
+}
 
 const search = ref('')
 const tag = computed(() => localeTag(locale.value))
@@ -60,7 +108,7 @@ function holderLabel(entry) {
 }
 
 const rows = computed(() =>
-  filterBySearch(keyMovements(vehiclesStore.vehicles), search.value, entry => [
+  filterBySearch(movements.value, search.value, entry => [
     entry.vehiclePlate, entry.vehicleName, categoryLabel(entry.vehicleCategory),
     entry.name, entry.from, entry.recordedBy,
     t(`log.actions.${entry.action}`),
@@ -87,11 +135,11 @@ function dayLabel(date) {
  * handed the key over, and that movement points forward at the return, so
  * the log can be read from either end.
  */
-const byId = computed(() => new Map(rows.value.map(entry => [entry.id, entry])))
+const byId = computed(() => new Map(movements.value.map(entry => [entry.id, entry])))
 
 /** Counted on the whole fleet, not on what the filters leave visible. */
 const outstandingCount = computed(() =>
-  keyMovements(vehiclesStore.vehicles).filter(stillOut).length
+  movements.value.filter(stillOut).length
 )
 
 const highlighted = ref('')
@@ -129,6 +177,20 @@ const ACTION_COLOR = {
     <h1 class="page-title">{{ $t('log.title') }}</h1>
     <p class="-mt-2 mb-4 text-sm text-stone-500">{{ $t('log.subtitle') }}</p>
 
+    <p v-if="error" role="alert" class="mb-4 text-red-700">{{ error }}</p>
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <label class="text-sm">{{ $t('log.journalLabel') }}
+        <select v-model="selectedArchive" class="ml-2 border rounded px-3 py-2">
+          <option value="">{{ $t('log.current') }}</option>
+          <option v-for="item in [...journal.archives].reverse()" :key="item.id" :value="item.id">{{ item.name }} · {{ item.archivedAt.replace('T', ' ') }}</option>
+        </select>
+      </label>
+      <button class="btn-secondary" :disabled="loading || archiving" @click="loadJournal">{{ $t('log.refresh') }}</button>
+      <button class="btn-secondary" :disabled="loading || Boolean(error) || !movements.length" @click="downloadCsv">{{ $t('log.exportCsv') }}</button>
+      <button class="btn-secondary" :disabled="loading || Boolean(error) || !movements.length" @click="printJournal">{{ $t('printing.print') }}</button>
+      <button v-if="auth.isAdmin && !selectedArchive" class="btn-primary" :disabled="loading || Boolean(error) || !movements.length" @click="archiveOpen = true">{{ $t('log.archive') }}</button>
+    </div>
+    <p v-if="archive" class="mb-4 text-sm text-stone-500">{{ $t('log.archivedBy', { name: archive.archivedBy, date: archive.archivedAt.replace('T', ' ') }) }}</p>
     <div class="mb-4 flex flex-wrap items-center gap-3">
       <SearchField v-model="search" class="max-w-md flex-1 min-w-[12rem]" :placeholder="$t('log.searchPlaceholder')" />
       <button type="button" @click="outstandingOnly = !outstandingOnly"
@@ -198,7 +260,20 @@ const ACTION_COLOR = {
     </div>
 
     <ListPlaceholder v-else
-      :loading="!vehiclesStore.loaded"
+      :loading="loading"
       :message="search ? $t('common.noMatch', { query: search }) : $t('log.empty')" />
+    <BaseModal v-if="archiveOpen" :title="$t('log.archive')" @close="!archiving && (archiveOpen = false)">
+      <form @submit.prevent="archiveJournal">
+        <p class="mb-4 text-sm text-stone-600">{{ $t('log.archiveConfirm') }}</p>
+        <label class="block text-sm">{{ $t('log.archiveName') }}
+          <input v-model="archiveName" required maxlength="120" class="mt-2 w-full border rounded px-3 py-2" :disabled="archiving" />
+        </label>
+        <p v-if="error" role="alert" class="mt-3 text-red-700">{{ error }}</p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" class="btn-secondary" :disabled="archiving" @click="archiveOpen = false">{{ $t('actions.cancel') }}</button>
+          <button class="btn-primary" :disabled="archiving || !archiveName.trim()">{{ $t('log.archive') }}</button>
+        </div>
+      </form>
+    </BaseModal>
   </div>
 </template>

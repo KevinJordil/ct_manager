@@ -21,11 +21,17 @@ export const useConfigStore = defineStore('config', () => {
   const licenses = computed(() => config.value.licenses)
   const licensesByCategory = computed(() => config.value.licensesByCategory)
   const trailerLicensesByCategory = computed(() => config.value.trailerLicensesByCategory)
+  const vehicleTypes = computed(() => config.value.vehicleTypes)
+
+  /** The name of a vehicle model, or its id when it was removed from the list. */
+  function vehicleTypeLabel(id) {
+    return vehicleTypes.value.find(type => type.id === id)?.label ?? id ?? ''
+  }
 
   function handleError(error, key) {
     if (error.status === 401) return reportAuthRequired()
-    if (error.code) return reportError(`server.${error.code}`, error.params ?? {})
-    reportError(key, { reason: error.message })
+    if (error.code) return reportError(`server.${error.code}`, error.params ?? {}, { source: 'config' })
+    reportError(key, { reason: error.message }, { source: 'config' })
   }
 
   async function init() {
@@ -51,7 +57,7 @@ export const useConfigStore = defineStore('config', () => {
     try {
       await api.saveConfig(candidate)
       config.value = candidate
-      clearError()
+      clearError('config')
       return true
     } catch (error) {
       handleError(error, 'config.saveFailed')
@@ -80,6 +86,7 @@ export const useConfigStore = defineStore('config', () => {
     licenses,
     licensesByCategory,
     trailerLicensesByCategory,
-    init, save, reset, requestTypeLabel,
+    vehicleTypes,
+    init, save, reset, requestTypeLabel, vehicleTypeLabel,
   }
 })

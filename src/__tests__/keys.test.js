@@ -214,26 +214,33 @@ describe('the vehicles store', () => {
   beforeEach(async () => {
     setActivePinia(createPinia())
     vi.resetModules()
+    // A loaded store over a server that accepts every save: only the local
+    // state matters here.
+    vi.doMock('../api.js', () => ({
+      api: {
+        load: async () => ({ data: [{ id: 'v1', name: 'Duro', keyHolder: null, keyHistory: [] }], version: 'v1' }),
+        save: async () => ({ version: 'v2' }),
+      },
+    }))
     const { useVehiclesStore } = await import('../stores/vehicles.js')
     store = useVehiclesStore()
-    // The store saves through the collection; here only the local state matters.
-    store.vehicles.push({ id: 'v1', name: 'Duro', keyHolder: null, keyHistory: [] })
+    await store.init()
   })
 
   const vehicle = () => store.vehicles.find(v => v.id === 'v1')
 
-  it('links a return to the movement that handed the key over', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
-    store.returnKey('v1', { recordedBy: 'favre' })
+  it('links a return to the movement that handed the key over', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    await store.returnKey('v1', { recordedBy: 'favre' })
     const [taken, returned] = vehicle().keyHistory
     expect(returned.closes).toBe(taken.id)
     expect(taken.closedBy).toBe(returned.id)
   })
 
-  it('links both ends of a transfer, which closes one holding and opens another', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
-    store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
-    store.returnKey('v1')
+  it('links both ends of a transfer, which closes one holding and opens another', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    await store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
+    await store.returnKey('v1')
     const [taken, transferred, returned] = vehicle().keyHistory
 
     expect(taken.closedBy).toBe(transferred.id)
@@ -244,32 +251,32 @@ describe('the vehicles store', () => {
     expect(taken.closes).toBe('')
   })
 
-  it('leaves a holding still open unlinked at its far end', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+  it('leaves a holding still open unlinked at its far end', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
     expect(vehicle().keyHistory[0].closedBy).toBeUndefined()
   })
 
-  it('starts a fresh pair after the key came back', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
-    store.returnKey('v1')
-    store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
-    store.returnKey('v1')
+  it('starts a fresh pair after the key came back', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    await store.returnKey('v1')
+    await store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
+    await store.returnKey('v1')
     const [firstTake, firstReturn, secondTake, secondReturn] = vehicle().keyHistory
     expect(firstReturn.closes).toBe(firstTake.id)
     expect(secondReturn.closes).toBe(secondTake.id)
     expect(secondTake.closes).toBe('')
   })
 
-  it('records who took the key', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre', recordedBy: 'admin' })
+  it('records who took the key', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre', recordedBy: 'admin' })
     expect(vehicle().keyHolder).toMatchObject({ personId: 'p1', name: 'Sgt Favre', recordedBy: 'admin' })
     expect(vehicle().keyHistory).toHaveLength(1)
     expect(vehicle().keyHistory[0]).toMatchObject({ action: 'taken', name: 'Sgt Favre', from: '' })
   })
 
-  it('records a transfer, naming the previous holder', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
-    store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi', recordedBy: 'favre' })
+  it('records a transfer, naming the previous holder', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    await store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi', recordedBy: 'favre' })
     expect(vehicle().keyHolder.personId).toBe('p2')
     expect(vehicle().keyHistory).toHaveLength(2)
     expect(vehicle().keyHistory[1]).toMatchObject({
@@ -277,35 +284,35 @@ describe('the vehicles store', () => {
     })
   })
 
-  it('lends a key to somebody outside the application', () => {
-    store.takeKey('v1', { personId: null, name: 'Garage Dupont' })
+  it('lends a key to somebody outside the application', async () => {
+    await store.takeKey('v1', { personId: null, name: 'Garage Dupont' })
     expect(vehicle().keyHolder).toMatchObject({ personId: null, name: 'Garage Dupont' })
   })
 
-  it('puts the key back on the board', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
-    store.returnKey('v1', { recordedBy: 'bernasconi' })
+  it('puts the key back on the board', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    await store.returnKey('v1', { recordedBy: 'bernasconi' })
     expect(vehicle().keyHolder).toBe(null)
     expect(vehicle().keyHistory.at(-1)).toMatchObject({
       action: 'returned', name: 'Sgt Favre', recordedBy: 'bernasconi',
     })
   })
 
-  it('ignores a return on a key already on the board', () => {
-    store.returnKey('v1')
+  it('ignores a return on a key already on the board', async () => {
+    await store.returnKey('v1')
     expect(vehicle().keyHolder).toBe(null)
     expect(vehicle().keyHistory).toEqual([])
   })
 
-  it('keeps the key out when the holder is deleted, under their name', () => {
-    store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
-    store.forgetPersonKeys('p1')
+  it('keeps the key out when the holder is deleted, under their name', async () => {
+    await store.takeKey('v1', { personId: 'p1', name: 'Sgt Favre' })
+    await store.forgetPersonKeys('p1')
     expect(vehicle().keyHolder).toMatchObject({ personId: null, name: 'Sgt Favre' })
   })
 
-  it('leaves other holders alone when a person is deleted', () => {
-    store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
-    store.forgetPersonKeys('p1')
+  it('leaves other holders alone when a person is deleted', async () => {
+    await store.takeKey('v1', { personId: 'p2', name: 'Sdt Bernasconi' })
+    await store.forgetPersonKeys('p1')
     expect(vehicle().keyHolder.personId).toBe('p2')
   })
 })

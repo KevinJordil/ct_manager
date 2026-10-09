@@ -63,6 +63,12 @@ export const INTERACTION_FIELDS = {
   vehicles: ['keyHolder', 'keyHistory', 'checks'],
   persons: [],
   missions: [],
+  trailers: [],
+}
+
+/** The right that manages a collection. Trailers belong with the vehicles. */
+export function managePermission(entity) {
+  return entity === 'trailers' ? 'vehicles.manage' : `${entity}.manage`
 }
 
 function sameValue(a, b) {

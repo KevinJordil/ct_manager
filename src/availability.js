@@ -9,12 +9,13 @@
  */
 
 import { nowString, overlaps } from './datetime.js'
-import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS } from './constants.js'
+import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS, AWAY_STATUSES } from './constants.js'
 
 // ── Missions ──
 
 /** Mission status, derived from its dates */
 export function getMissionStatus(mission, now = nowString()) {
+  if (mission?.cancelled) return MISSION_STATUS.CANCELLED
   if (!mission?.startDate || !mission?.endDate) return MISSION_STATUS.PLANNED
   if (mission.endDate < now) return MISSION_STATUS.COMPLETED
   if (mission.startDate <= now) return MISSION_STATUS.ONGOING
@@ -65,7 +66,7 @@ export function getPersonStatus(person, now = nowString()) {
  */
 export function missionsOverlapping(missions, startDate, endDate, { excludeMissionId = null } = {}) {
   return missions.filter(m =>
-    m.id !== excludeMissionId && overlaps(m.startDate, m.endDate, startDate, endDate)
+    !m.cancelled && m.id !== excludeMissionId && overlaps(m.startDate, m.endDate, startDate, endDate)
   )
 }
 
@@ -102,9 +103,9 @@ export function getDisplayedPersonStatus(person, missions, now = nowString()) {
     : PERSON_STATUS.AVAILABLE
 }
 
-/** free | on-mission | on-loan */
+/** free | on-mission | on-loan | maintenance | broken */
 export function getVehicleStatus(vehicle, missions, now = nowString()) {
-  if (vehicle.status === VEHICLE_STATUS.ON_LOAN) return VEHICLE_STATUS.ON_LOAN
+  if (AWAY_STATUSES.includes(vehicle.status)) return vehicle.status
   return currentMissionOfVehicle(vehicle.id, missions, now)
     ? VEHICLE_STATUS.ON_MISSION
     : VEHICLE_STATUS.FREE
@@ -127,10 +128,57 @@ export function isPersonAvailable(person, missions, startDate, endDate, options 
   return !isPersonCommitted(person.id, relevant, startDate, endDate, { excludeMissionId })
 }
 
+/**
+ * Is the vehicle away over the period — lent out, or out of service?
+ * It is expected back at the end of its return day; without a date it stays
+ * away until somebody brings it back.
+ */
+export function isVehicleAwayDuring(vehicle, startDate) {
+  const until = awayUntil(vehicle)
+  if (until === null) return false
+  if (!until || !startDate) return true
+  return startDate.slice(0, 10) <= until
+}
+
+/** The return day of a vehicle that is away, '' when unknown, null when it is here. */
+function awayUntil(vehicle) {
+  if (AWAY_STATUSES.includes(vehicle.status)) return vehicle.loanUntil ?? ''
+  return null
+}
+
+// ── Trailers ──
+
+/** Does the mission hitch this trailer to one of its vehicles? */
+export function missionInvolvesTrailer(mission, trailerId) {
+  return Boolean(mission.vehicles?.some(v => v.trailerId === trailerId))
+}
+
+/** free | on-mission | on-loan | maintenance | broken — as for a vehicle */
+export function getTrailerStatus(trailer, missions, now = nowString()) {
+  if (AWAY_STATUSES.includes(trailer.status)) return trailer.status
+  return ongoingMissions(missions, now).some(m => missionInvolvesTrailer(m, trailer.id))
+    ? VEHICLE_STATUS.ON_MISSION
+    : VEHICLE_STATUS.FREE
+}
+
+/** Is the trailer already hitched on a mission overlapping the period? */
+export function isTrailerCommitted(trailerId, missions, startDate, endDate, options = {}) {
+  return missionsOverlapping(missions, startDate, endDate, options)
+    .some(m => missionInvolvesTrailer(m, trailerId))
+}
+
+/**
+ * Can this trailer be hitched to this vehicle? It lists the vehicle models
+ * it fits; a vehicle whose model is not recorded cannot be checked.
+ */
+export function trailerFits(trailer, vehicle) {
+  return Boolean(vehicle?.type) && (trailer.compatibleTypes ?? []).includes(vehicle.type)
+}
+
 /** Can the vehicle be assigned to a mission over this period? */
 export function isVehicleAvailable(vehicle, missions, startDate, endDate, options = {}) {
   const { excludeMissionId = null, now = nowString() } = options
-  if (vehicle.status === VEHICLE_STATUS.ON_LOAN) return false
+  if (isVehicleAwayDuring(vehicle, startDate)) return false
   if (!startDate || !endDate) return true
   const relevant = missions.filter(m => getMissionStatus(m, now) !== MISSION_STATUS.COMPLETED)
   return !isVehicleCommitted(vehicle.id, relevant, startDate, endDate, { excludeMissionId })

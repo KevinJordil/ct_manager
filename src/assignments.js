@@ -16,6 +16,7 @@ export function roleInMission(mission, personId) {
     driving: driven.map(entry => ({
       vehicleId: entry.vehicleId,
       withTrailer: Boolean(entry.withTrailer),
+      trailerId: entry.trailerId ?? null,
     })),
     // Somebody can drive one vehicle and be listed as crew as well.
     staff: (mission.staffIds ?? []).includes(personId),

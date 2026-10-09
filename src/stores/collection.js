@@ -11,8 +11,11 @@ import {
  *
  * @param entity  collection name on the API side
  * @param migrate transformation applied to the loaded data
+ * @param replay  replay a change on fresh data after a conflict; off where
+ *                the other writer's change may invalidate this one (two
+ *                missions booking the same vehicle must be looked at again)
  */
-export function useCollection(entity, migrate = data => data) {
+export function useCollection(entity, migrate = data => data, { replay = true } = {}) {
   const items = ref([])
   const loading = ref(false)
   const loaded = ref(false)
@@ -22,17 +25,29 @@ export function useCollection(entity, migrate = data => data) {
   let version = null
   let initPromise = null
 
+  function isVersionConflict(err) {
+    return err.status === 409 && (!err.code || err.code === 'conflict')
+  }
+
   function handleError(err, context) {
     if (err.status === 401) return reportAuthRequired()
-    if (err.status === 409) {
-      version = err.params?.version ?? version
-      return reportError('errors.conflict', { entity }, { isConflict: true, context })
+    // The data shown has already been refreshed from the server (see
+    // commit): the version is never adopted without the data that goes with
+    // it, or the next save would overwrite the other writer's work.
+    if (isVersionConflict(err)) {
+      return reportError('errors.conflict', { entity }, { isConflict: true, context, source: entity })
     }
     // A coded server error is rendered directly; anything else falls back to
     // a generic message carrying the raw reason.
-    if (err.code) return reportError(`server.${err.code}`, { ...err.params, entity }, { context })
+    if (err.code) return reportError(`server.${err.code}`, { ...err.params, entity }, { context, source: entity })
     reportError(context === 'save' ? 'errors.saveFailed' : 'errors.loadFailed',
-      { entity, reason: err.message }, { context })
+      { entity, reason: err.message }, { context, source: entity })
+  }
+
+  async function fetchCurrent() {
+    const { data, version: loadedVersion } = await api.load(entity)
+    items.value = migrate(data)
+    version = loadedVersion
   }
 
   async function init() {
@@ -40,9 +55,7 @@ export function useCollection(entity, migrate = data => data) {
     loading.value = true
     initPromise = (async () => {
       try {
-        const { data, version: loadedVersion } = await api.load(entity)
-        items.value = migrate(data)
-        version = loadedVersion
+        await fetchCurrent()
         loadError.value = null
       } catch (err) {
         loadError.value = err.message
@@ -62,54 +75,110 @@ export function useCollection(entity, migrate = data => data) {
   async function reload() {
     initPromise = null
     loaded.value = false
-    clearError()
+    clearError(entity)
     return init()
   }
 
-  async function persist() {
+  // Changes are saved one after the other: each one starts from the version
+  // the previous one left, instead of racing it into a conflict.
+  let queue = Promise.resolve()
+  let pending = 0
+
+  /**
+   * Applies a change and saves the collection.
+   *
+   * `apply` changes `items` and returns false when its target is gone. If
+   * somebody else saved in between, the data is read again and the change
+   * replayed once on top of it: two key movements at the counter both land,
+   * rather than the second one writing over the first. Whatever fails, the
+   * change is undone, so the screen never shows what the server refused.
+   *
+   * @returns {Promise<boolean>} true once the server has stored the change
+   */
+  function commit(apply) {
+    // With nothing in flight the change shows at once; otherwise it waits
+    // its turn.
+    const run = pending === 0 ? commitNow(apply) : queue.then(() => commitNow(apply))
+    pending++
+    queue = run.catch(() => {}).finally(() => { pending-- })
+    return run
+  }
+
+  async function commitNow(apply) {
     // Without a successful load the collection is empty in memory: saving it
     // would replace the server's file with an empty array.
     if (!version) {
-      return reportError('errors.notLoaded', { entity }, { context: 'save' })
+      reportError('errors.notLoaded', { entity }, { context: 'save', source: entity })
+      return false
     }
     startSaving()
     try {
-      const { version: newVersion } = await api.save(entity, items.value, version)
-      version = newVersion
-      clearError()
-    } catch (err) {
-      handleError(err, 'save')
+      for (let attempt = 0; ; attempt++) {
+        const before = JSON.parse(JSON.stringify(items.value))
+        if (apply() === false) {
+          if (attempt > 0) reportError('errors.conflict', { entity }, { isConflict: true, context: 'save', source: entity })
+          return false
+        }
+        try {
+          const { version: newVersion } = await api.save(entity, items.value, version)
+          version = newVersion
+          clearError(entity)
+          return true
+        } catch (err) {
+          items.value = before
+          if (isVersionConflict(err)) {
+            try {
+              await fetchCurrent()
+            } catch (loadErr) {
+              handleError(loadErr, 'load')
+              return false
+            }
+            if (attempt === 0 && replay) continue
+          }
+          handleError(err, 'save')
+          return false
+        }
+      }
     } finally {
       endSaving()
     }
   }
 
-  function add(data) {
+  /** Saves the collection as it stands. */
+  function persist() {
+    return commit(() => true)
+  }
+
+  /** @returns {Promise<object|null>} the stored item, or null if refused */
+  async function add(data) {
     const item = { ...data, id: newId() }
-    items.value.push(item)
-    persist()
-    return item
+    const saved = await commit(() => { items.value.push({ ...item }) })
+    return saved ? items.value.find(i => i.id === item.id) : null
   }
 
   function update(id, data) {
-    const index = items.value.findIndex(i => i.id === id)
-    if (index === -1) return
     const { id: _ignored, ...rest } = data
-    items.value[index] = { ...items.value[index], ...rest }
-    persist()
+    return commit(() => {
+      const index = items.value.findIndex(i => i.id === id)
+      if (index === -1) return false
+      items.value[index] = { ...items.value[index], ...rest }
+    })
   }
 
   function remove(id) {
-    items.value = items.value.filter(i => i.id !== id)
-    persist()
+    return commit(() => {
+      if (!items.value.some(i => i.id === id)) return false
+      items.value = items.value.filter(i => i.id !== id)
+    })
   }
 
   /** Mutates one item then saves, if it exists */
   function mutate(id, fn) {
-    const item = items.value.find(i => i.id === id)
-    if (!item) return
-    fn(item)
-    persist()
+    return commit(() => {
+      const item = items.value.find(i => i.id === id)
+      if (!item) return false
+      fn(item)
+    })
   }
 
   return {

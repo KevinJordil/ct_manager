@@ -36,7 +36,9 @@ export function daysSinceLastCheck(vehicle, today = todayString()) {
   const last = lastCheck(vehicle)
   if (!last) return null
   const elapsed = parseLocal(today) - parseLocal(last.date)
-  return Math.floor(elapsed / DAY_MS)
+  // Rounded, not floored: across the spring clock change a week is one hour
+  // short of seven days, and the check would come due a day late.
+  return Math.round(elapsed / DAY_MS)
 }
 
 /** never | ok | due | overdue */

@@ -40,13 +40,31 @@ function datePart(dt) {
   return dt ? dt.split('T')[0] : ''
 }
 
-function primaryEventOn(rowId, day) {
+function coveringOn(rowId, day) {
   const dateStr = dateStringOf(day)
-  const covering = props.events.filter(event =>
+  return props.events.filter(event =>
     event.rowId === rowId && datePart(event.start) <= dateStr && datePart(event.end) >= dateStr
   )
+}
+
+function primaryEventOn(rowId, day) {
+  const covering = coveringOn(rowId, day)
   // Leave takes precedence over missions.
   return covering.find(event => event.type === 'leave') ?? covering[0] ?? null
+}
+
+/**
+ * The other events sharing a segment's days. A cell shows one event; the
+ * rest — a double booking, a leave during a mission — must not vanish.
+ */
+function othersIn(rowId, segment) {
+  const others = new Map()
+  for (let day = segment.day; day < segment.day + segment.span; day++) {
+    for (const event of coveringOn(rowId, day)) {
+      if (event.id !== segment.event?.id) others.set(event.id, event.label)
+    }
+  }
+  return [...others.values()]
 }
 
 /** Merges consecutive days covered by the same event into one cell */
@@ -74,7 +92,10 @@ function rowSegmentsOf(rowId) {
 }
 
 const rowSegments = computed(() =>
-  props.rows.map(row => ({ row, segments: rowSegmentsOf(row.id) }))
+  props.rows.map(row => ({
+    row,
+    segments: rowSegmentsOf(row.id).map(segment => ({ ...segment, others: segment.event ? othersIn(row.id, segment) : [] })),
+  }))
 )
 </script>
 
@@ -113,10 +134,14 @@ const rowSegments = computed(() =>
             :colspan="segment.span"
             :class="['p-0.5', !segment.event && days[segment.day - 1]?.isWeekend ? 'bg-stone-50' : '']">
             <div v-if="segment.event"
-              :class="['h-7 rounded flex items-center px-2 overflow-hidden', segment.event.colorClass]"
-              :title="segment.event.label">
+              :class="['h-7 rounded flex items-center gap-1 px-2 overflow-hidden', segment.event.colorClass,
+                segment.others.length ? 'ring-2 ring-inset ring-red-600' : '']"
+              :title="segment.others.length
+                ? $t('calendar.conflict', { list: [segment.event.label, ...segment.others].join(', ') })
+                : segment.event.label">
+              <span v-if="segment.others.length" class="font-bold text-red-700 shrink-0" style="font-size: 11px;">!</span>
               <span v-if="segment.span >= 2" class="truncate font-medium" style="font-size: 11px;">
-                {{ segment.event.label }}
+                {{ segment.event.label }}<template v-if="segment.others.length"> +{{ segment.others.length }}</template>
               </span>
             </div>
             <div v-else class="h-7" />

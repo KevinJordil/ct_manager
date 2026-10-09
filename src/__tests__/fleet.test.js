@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { fleetByCategory, unavailableReason, suggestVehiclesForRequest } from '../fleet.js'
 
 const NOW = '2026-09-04T09:00'
@@ -85,6 +85,8 @@ describe('the fleet read by type', () => {
 })
 
 describe('serving a request with actual vehicles', () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 8, 9, 12)) })
+  afterEach(() => vi.useRealTimers())
   const fleet = [
     { id: 'car1', plate: 'M1', category: 'light-road', seats: 4, status: 'free' },
     { id: 'van1', plate: 'M2', category: 'light-road', seats: 9, status: 'free' },

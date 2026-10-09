@@ -2,7 +2,14 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { newId } from '../../id.js'
 
-defineProps({ title: String })
+const props = defineProps({
+  title: String,
+  /**
+   * A form holding typed input: a click beside it on a tablet must not
+   * throw the input away. The cross, Cancel and Escape still close it.
+   */
+  persistent: { type: Boolean, default: false },
+})
 const emit = defineEmits(['close'])
 
 const panel = ref(null)
@@ -61,7 +68,7 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <Transition name="modal" appear>
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/50" @click="$emit('close')" />
+        <div class="absolute inset-0 bg-black/50" @click="props.persistent || $emit('close')" />
         <div ref="panel" role="dialog" aria-modal="true" :aria-labelledby="titleId" tabindex="-1"
           class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col focus:outline-none">
           <div class="flex items-center justify-between px-6 py-4 border-b border-stone-200">

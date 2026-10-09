@@ -22,8 +22,8 @@ export const useParkStore = defineStore('park', () => {
 
   function handleError(error, key) {
     if (error.status === 401) return reportAuthRequired()
-    if (error.code) return reportError(`server.${error.code}`, error.params ?? {})
-    reportError(key, { reason: error.message })
+    if (error.code) return reportError(`server.${error.code}`, error.params ?? {}, { source: 'park' })
+    reportError(key, { reason: error.message }, { source: 'park' })
   }
 
   /** Replaces the object URL, releasing the previous one. */
@@ -59,7 +59,7 @@ export const useParkStore = defineStore('park', () => {
         zones: zones.value,
         colorLabels: colorLabels.value,
       })
-      clearError()
+      clearError('park')
     } catch (error) {
       handleError(error, 'park.saveFailed')
     }

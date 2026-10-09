@@ -121,9 +121,14 @@ describe('overlaps', () => {
                     '2026-09-03T08:00', '2026-09-04T17:00')).toBe(false)
   })
 
-  it('treats bounds as inclusive', () => {
-    expect(overlaps('2026-09-01T08:00', '2026-09-02T17:00',
-                    '2026-09-02T17:00', '2026-09-03T08:00')).toBe(true)
+  it('lets one range start when the other ends', () => {
+    expect(overlaps('2026-09-01T08:00', '2026-09-02T12:00',
+                    '2026-09-02T12:00', '2026-09-03T08:00')).toBe(false)
+  })
+
+  it('still sees a one-minute overlap', () => {
+    expect(overlaps('2026-09-01T08:00', '2026-09-02T12:01',
+                    '2026-09-02T12:00', '2026-09-03T08:00')).toBe(true)
   })
 
   it('returns false when a bound is missing', () => {

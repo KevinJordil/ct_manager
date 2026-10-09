@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useVehiclesStore } from '../stores/vehicles.js'
+import { useTrailersStore } from '../stores/trailers.js'
 import { usePersonsStore } from '../stores/persons.js'
 import { useMissionsStore } from '../stores/missions.js'
 import { useClock } from '../stores/clock.js'
@@ -16,6 +17,7 @@ import CalendarGrid from '../components/calendar/CalendarGrid.vue'
 import CalendarTimeline from '../components/calendar/CalendarTimeline.vue'
 
 const vehiclesStore = useVehiclesStore()
+const trailersStore = useTrailersStore()
 const personsStore = usePersonsStore()
 const missionsStore = useMissionsStore()
 const { nowString } = useClock()
@@ -33,6 +35,7 @@ onMounted(() => {
   vehiclesStore.init()
   personsStore.init()
   missionsStore.init()
+  trailersStore.init()
 })
 
 // ── State ──
@@ -42,7 +45,7 @@ const viewMode = ref('week') // 'day' | 'week' | 'month'
 const activeTab = ref('vehicles')
 
 const VIEW_MODES = ['day', 'week', 'month']
-const TABS = ['vehicles', 'persons']
+const TABS = ['vehicles', 'trailers', 'persons']
 
 // ── Navigation ──
 
@@ -116,12 +119,38 @@ const vehicleRows = computed(() =>
 )
 
 const vehicleEvents = computed(() =>
-  missionsStore.missions.flatMap(mission =>
+  missionsStore.missions.filter(m => !m.cancelled).flatMap(mission =>
     (mission.vehicles ?? [])
       .filter(entry => entry.vehicleId)
       .map(entry => ({
         id: `${mission.id}-${entry.vehicleId}`,
         rowId: entry.vehicleId,
+        label: mission.title,
+        start: mission.startDate,
+        end: mission.endDate,
+        type: 'mission',
+        colorClass: missionColor(mission),
+      }))
+  )
+)
+
+// ── Trailer rows and events ──
+
+const trailerRows = computed(() =>
+  trailersStore.trailers.map(trailer => ({
+    id: trailer.id,
+    label: trailer.plate,
+    sublabel: trailer.name || t('trailers.title'),
+  }))
+)
+
+const trailerEvents = computed(() =>
+  missionsStore.missions.filter(m => !m.cancelled).flatMap(mission =>
+    (mission.vehicles ?? [])
+      .filter(entry => entry.trailerId)
+      .map(entry => ({
+        id: `${mission.id}-${entry.trailerId}`,
+        rowId: entry.trailerId,
         label: mission.title,
         start: mission.startDate,
         end: mission.endDate,
@@ -146,7 +175,7 @@ const personRows = computed(() =>
 const personEvents = computed(() => {
   const events = []
 
-  for (const mission of missionsStore.missions) {
+  for (const mission of missionsStore.missions.filter(m => !m.cancelled)) {
     const colorClass = missionColor(mission)
     for (const entry of mission.vehicles ?? []) {
       if (!entry.driverId) continue
@@ -190,8 +219,10 @@ const personEvents = computed(() => {
   return events
 })
 
-const activeRows = computed(() => activeTab.value === 'vehicles' ? vehicleRows.value : personRows.value)
-const activeEvents = computed(() => activeTab.value === 'vehicles' ? vehicleEvents.value : personEvents.value)
+const ROWS = { vehicles: vehicleRows, trailers: trailerRows, persons: personRows }
+const EVENTS = { vehicles: vehicleEvents, trailers: trailerEvents, persons: personEvents }
+const activeRows = computed(() => ROWS[activeTab.value].value)
+const activeEvents = computed(() => EVENTS[activeTab.value].value)
 </script>
 
 <template>

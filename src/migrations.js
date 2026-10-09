@@ -8,7 +8,7 @@
  */
 
 import { withDefaultTime } from './datetime.js'
-import { VEHICLE_CATEGORY, VEHICLE_STATUS } from './constants.js'
+import { VEHICLE_CATEGORY, VEHICLE_STATUS, AWAY_STATUSES } from './constants.js'
 
 // ── Value maps from the French schema ──
 
@@ -100,7 +100,7 @@ function migrateVehicle(raw) {
       ...rest,
       name: rest.name ?? '',
       plate: rest.plate ?? '',
-      status: rest.status === VEHICLE_STATUS.ON_LOAN ? VEHICLE_STATUS.ON_LOAN : VEHICLE_STATUS.FREE,
+      status: AWAY_STATUSES.includes(rest.status) ? rest.status : VEHICLE_STATUS.FREE,
       loanNote: rest.loanNote ?? '',
       loanUntil: rest.loanUntil ?? '',
       seats: rest.seats ?? 4,
@@ -174,8 +174,24 @@ export function migrateMissions(data) {
   return data.map(migrateMission)
 }
 
+// ── Trailers ──
+
+export function migrateTrailers(data) {
+  return data.map(raw => ({
+    ...raw,
+    plate: raw.plate ?? '',
+    name: raw.name ?? '',
+    notes: raw.notes ?? '',
+    compatibleTypes: raw.compatibleTypes ?? [],
+    status: AWAY_STATUSES.includes(raw.status) ? raw.status : VEHICLE_STATUS.FREE,
+    loanNote: raw.loanNote ?? '',
+    loanUntil: raw.loanUntil ?? '',
+  }))
+}
+
 export const MIGRATIONS = {
   persons: migratePersons,
   vehicles: migrateVehicles,
   missions: migrateMissions,
+  trailers: migrateTrailers,
 }

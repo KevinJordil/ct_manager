@@ -22,8 +22,8 @@ const saving = ref(0)
  * @param context 'load' | 'save' — a save failure also warns that the last
  *                changes are not stored
  */
-export function reportError(key, params = {}, { isConflict = false, context = null } = {}) {
-  error.value = { key, params, context }
+export function reportError(key, params = {}, { isConflict = false, context = null, source = null } = {}) {
+  error.value = { key, params, context, source }
   if (isConflict) conflict.value = true
 }
 
@@ -32,7 +32,12 @@ export function reportAuthRequired() {
   error.value = { key: 'auth.sessionExpired', params: {}, context: null }
 }
 
-export function clearError() {
+/**
+ * @param source when given, only an error raised by that source is cleared:
+ *               a key movement that saves must not hide a mission that did not
+ */
+export function clearError(source = null) {
+  if (source !== null && error.value && error.value.source !== source) return
   error.value = null
   conflict.value = false
   authRequired.value = false

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { deletionBlocker } from '../../journal.js'
 import { useI18n } from 'vue-i18n'
 import { useVehiclesStore } from '../stores/vehicles.js'
 import { useMissionsStore } from '../stores/missions.js'
@@ -54,6 +55,7 @@ function summaryOf(group) {
   const parts = []
   if (group.onMission) parts.push(t('vehicles.onMissionCount', group.onMission, { count: group.onMission }))
   if (group.onLoan) parts.push(t('vehicles.onLoanCount', group.onLoan, { count: group.onLoan }))
+  if (group.outOfService) parts.push(t('vehicles.outOfServiceCount', group.outOfService, { count: group.outOfService }))
   if (group.keyOut) parts.push(t('vehicles.keyOutCount', group.keyOut, { count: group.keyOut }))
   return parts.join(' · ')
 }
@@ -84,28 +86,31 @@ function openEdit(vehicle) {
   showForm.value = true
 }
 
-function onSave(data) {
-  if (editedVehicle.value) store.update(editedVehicle.value.id, data)
-  else store.add(data)
-  showForm.value = false
+/** The form stays open until the server has the vehicle: a refusal keeps what was typed. */
+async function onSave(data) {
+  const saved = editedVehicle.value
+    ? await store.update(editedVehicle.value.id, data)
+    : Boolean(await store.add(data))
+  if (saved) showForm.value = false
 }
 
-const impactedMissions = computed(() =>
-  deletedId.value ? missionsStore.missionsWithVehicle(deletedId.value).length : 0
-)
+const deleting = ref(false)
+const blockedDeletion = computed(() => deletionBlocker('vehicles', [{ id: deletedId.value }],
+  store.vehicles, missionsStore.missions, nowString.value))
+const deleteMessage = computed(() => blockedDeletion.value
+  ? t(`server.${blockedDeletion.value.code}`, blockedDeletion.value.params)
+  : t('vehicles.deleteConfirm'))
 
-const deleteMessage = computed(() => {
-  const base = t('vehicles.deleteConfirm')
-  if (!impactedMissions.value) return base
-  return `${base} ${t('vehicles.deleteImpact', impactedMissions.value, { count: impactedMissions.value })}`
-})
-
-function onDelete() {
-  // Clear the references first: a mission must never point at a vehicle that
-  // no longer exists.
-  missionsStore.forgetVehicle(deletedId.value)
-  store.remove(deletedId.value)
-  deletedId.value = null
+async function onDelete() {
+  if (blockedDeletion.value || deleting.value) return
+  deleting.value = true
+  const id = deletedId.value
+  try {
+    if (!await store.remove(id)) return
+    await missionsStore.reload()
+    deletedId.value = null
+  } catch { /* errors are reported by the store */ }
+  finally { deleting.value = false }
 }
 
 // Who did it, as a reader of the log would name them — anybody may move
@@ -139,14 +144,20 @@ function returnKey() {
   returningVehicle.value = null
 }
 
+/** Ending a loan and putting a vehicle back into service read differently. */
+const releaseTexts = computed(() =>
+  releasingVehicle.value?.status === 'on-loan' ? 'vehicles.loan' : 'vehicles.outOfService')
+
 function release() {
   store.release(releasingVehicle.value.id)
   releasingVehicle.value = null
 }
 
-function confirmLoan(loan) {
-  store.lend(lentVehicle.value.id, loan)
-  lentVehicle.value = null
+/** Which absence is being declared: a loan, or out of service. */
+const awayKind = ref('on-loan')
+
+async function confirmLoan(absence) {
+  if (await store.lend(lentVehicle.value.id, absence)) lentVehicle.value = null
 }
 </script>
 
@@ -165,7 +176,7 @@ function confirmLoan(loan) {
     <SearchField v-model="search" class="mb-4 max-w-md" />
 
     <!-- One button per type: the count is the answer to "can I take one?" -->
-    <div v-if="groups.length > 1" class="mb-4 flex flex-wrap gap-2">
+    <div v-if="groups.length > 1 || category" class="mb-4 flex flex-wrap gap-2">
       <button type="button" @click="category = ''"
         :class="['btn-action', category === '' ? 'border-olive-400 bg-olive-50 text-olive-800' : '']">
         {{ $t('vehicles.allTypes') }}
@@ -185,7 +196,7 @@ function confirmLoan(loan) {
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
         <h2 class="section-title mb-0">{{ $t(`vehicles.categories.${group.category}`) }}</h2>
         <p :class="['text-sm font-medium', group.available ? 'text-green-800' : 'text-red-800']">
-          {{ $t('vehicles.availableOf', { available: group.available, total: group.total }) }}
+          {{ $t('vehicles.availableOf', group.available, { available: group.available, total: group.total }) }}
         </p>
         <p v-if="summaryOf(group)" class="text-xs text-stone-500">{{ summaryOf(group) }}</p>
       </div>
@@ -197,7 +208,8 @@ function confirmLoan(loan) {
           :vehicle="vehicle"
           @edit="openEdit(vehicle)"
           @delete="deletedId = vehicle.id"
-          @lend="lentVehicle = vehicle"
+          @lend="lentVehicle = vehicle; awayKind = 'on-loan'"
+          @out-of-service="lentVehicle = vehicle; awayKind = 'out-of-service'"
           @release="releasingVehicle = vehicle"
           @key-take="keyVehicle = vehicle"
           @key-return="returningVehicle = vehicle"
@@ -207,13 +219,13 @@ function confirmLoan(loan) {
       </TransitionGroup>
     </section>
 
-    <ListPlaceholder v-if="visibleVehicles.length === 0"
+    <ListPlaceholder v-if="shownGroups.length === 0"
       :loading="!store.loaded"
       :message="search ? $t('common.noMatch', { query: search }) : $t('vehicles.empty')" />
 
     <VehicleForm v-if="showForm" :vehicle="editedVehicle" @save="onSave" @close="showForm = false" />
 
-    <LoanModal v-if="lentVehicle" :vehicle="lentVehicle"
+    <LoanModal v-if="lentVehicle" :vehicle="lentVehicle" :kind="awayKind"
       @confirm="confirmLoan" @close="lentVehicle = null" />
 
     <KeyModal v-if="keyVehicle" :vehicle="keyVehicle"
@@ -234,9 +246,9 @@ function confirmLoan(loan) {
 
     <ConfirmModal
       v-if="releasingVehicle"
-      :title="$t('vehicles.loan.release')"
-      :message="$t('vehicles.loan.releaseConfirm', { plate: releasingVehicle.plate })"
-      :confirm-label="$t('vehicles.loan.release')"
+      :title="$t(releaseTexts + '.release')"
+      :message="$t(releaseTexts + '.releaseConfirm', { plate: releasingVehicle.plate })"
+      :confirm-label="$t(releaseTexts + '.release')"
       tone="primary"
       @confirm="release"
       @cancel="releasingVehicle = null"
@@ -246,6 +258,7 @@ function confirmLoan(loan) {
       v-if="deletedId"
       :title="$t('vehicles.deleteTitle')"
       :message="deleteMessage"
+      :disabled="Boolean(blockedDeletion) || deleting"
       @confirm="onDelete"
       @cancel="deletedId = null"
     />

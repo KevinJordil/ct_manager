@@ -6,7 +6,7 @@ import { usePersonsStore } from '../../stores/persons.js'
 import { useClock } from '../../stores/clock.js'
 import { getVehicleStatus, currentMissionOfVehicle } from '../../availability.js'
 import { formatDateTime, elapsedSince } from '../../datetime.js'
-import { VEHICLE_STATUS } from '../../constants.js'
+import { VEHICLE_STATUS, AWAY_STATUSES } from '../../constants.js'
 import { holderName } from '../../keys.js'
 import { vehiclePlate, vehicleModel } from '../../labels.js'
 import StatusBadge from '../common/StatusBadge.vue'
@@ -16,7 +16,7 @@ const props = defineProps({
   // Using a vehicle is everybody's business; changing its record is granted.
   canManage: { type: Boolean, default: false },
 })
-defineEmits(['edit', 'delete', 'lend', 'release', 'key-take', 'key-return', 'key-history'])
+defineEmits(['edit', 'delete', 'lend', 'out-of-service', 'release', 'key-take', 'key-return', 'key-history'])
 
 const router = useRouter()
 const missionsStore = useMissionsStore()
@@ -32,6 +32,8 @@ const status = computed(() =>
 )
 
 const isOnLoan = computed(() => props.vehicle.status === VEHICLE_STATUS.ON_LOAN)
+/** Lent out or out of service: either way, not in the fleet until it is back. */
+const isAway = computed(() => AWAY_STATUSES.includes(props.vehicle.status))
 const isFree = computed(() => status.value === VEHICLE_STATUS.FREE)
 const isOnMission = computed(() => status.value === VEHICLE_STATUS.ON_MISSION)
 
@@ -41,9 +43,9 @@ const keyElapsed = computed(() =>
   keyHolder.value ? elapsedSince(keyHolder.value.since ?? '', nowString.value) : null
 )
 
-/** A loan whose expected return date has passed. */
+/** An absence whose expected return date has passed. */
 const loanOverdue = computed(() =>
-  isOnLoan.value && props.vehicle.loanUntil && props.vehicle.loanUntil < todayString.value
+  isAway.value && props.vehicle.loanUntil && props.vehicle.loanUntil < todayString.value
 )
 </script>
 
@@ -88,7 +90,7 @@ const loanOverdue = computed(() =>
           </button>
         </div>
 
-        <div v-if="isOnLoan" class="mt-2 space-y-1">
+        <div v-if="isAway" class="mt-2 space-y-1">
           <p v-if="vehicle.loanNote" class="text-sm text-red-600 italic">{{ vehicle.loanNote }}</p>
           <p v-if="vehicle.loanUntil"
             :class="['text-xs inline-flex items-center gap-1.5 rounded px-2 py-1 border',
@@ -112,7 +114,10 @@ const loanOverdue = computed(() =>
           {{ $t('keys.returnShort') }}
         </button>
         <button v-if="canManage && isFree" @click="$emit('lend')" class="btn-action">{{ $t('vehicles.loan.lend') }}</button>
-        <button v-if="canManage && isOnLoan" @click="$emit('release')" class="btn-action">{{ $t('vehicles.loan.release') }}</button>
+        <button v-if="canManage && !isAway" @click="$emit('out-of-service')" class="btn-action">{{ $t('vehicles.outOfService.action') }}</button>
+        <button v-if="canManage && isAway" @click="$emit('release')" class="btn-action">
+          {{ isOnLoan ? $t('vehicles.loan.release') : $t('vehicles.outOfService.release') }}
+        </button>
         <button v-if="canManage" @click="$emit('edit')" class="btn-action">{{ $t('actions.edit') }}</button>
         <button v-if="canManage" @click="$emit('delete')" class="btn-action btn-action-danger">{{ $t('actions.delete') }}</button>
       </div>

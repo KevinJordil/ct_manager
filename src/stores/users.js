@@ -17,8 +17,8 @@ export const useUsersStore = defineStore('users', () => {
 
   function handleError(error, key) {
     if (error.status === 401) return reportAuthRequired()
-    if (error.code) return reportError(`server.${error.code}`, error.params ?? {})
-    reportError(key, { reason: error.message })
+    if (error.code) return reportError(`server.${error.code}`, error.params ?? {}, { source: 'users' })
+    reportError(key, { reason: error.message }, { source: 'users' })
   }
 
   async function init() {
@@ -42,7 +42,7 @@ export const useUsersStore = defineStore('users', () => {
   async function create(payload) {
     const user = await api.createUser(payload)
     users.value.push(user)
-    clearError()
+    clearError('users')
     return user
   }
 
@@ -50,7 +50,7 @@ export const useUsersStore = defineStore('users', () => {
     const user = await api.updateUser(id, payload)
     const index = users.value.findIndex(candidate => candidate.id === id)
     if (index !== -1) users.value[index] = user
-    clearError()
+    clearError('users')
     return user
   }
 
@@ -58,7 +58,7 @@ export const useUsersStore = defineStore('users', () => {
     try {
       await api.deleteUser(id)
       users.value = users.value.filter(user => user.id !== id)
-      clearError()
+      clearError('users')
     } catch (error) {
       handleError(error, 'users.saveFailed')
     }

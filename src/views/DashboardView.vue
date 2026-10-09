@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePersonsStore } from '../stores/persons.js'
 import { useVehiclesStore } from '../stores/vehicles.js'
+import { useTrailersStore } from '../stores/trailers.js'
 import { useMissionsStore } from '../stores/missions.js'
 import { useRequestsStore } from '../stores/requests.js'
 import { useClock } from '../stores/clock.js'
@@ -12,7 +13,7 @@ import {
   getPersonStatus, getVehicleStatus, isOnLeaveDuring,
   missionInvolvesPerson, ongoingMissions,
 } from '../availability.js'
-import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS, REQUEST_STATUS } from '../constants.js'
+import { MISSION_STATUS, PERSON_STATUS, VEHICLE_STATUS, REQUEST_STATUS, AWAY_STATUSES, OUT_OF_SERVICE_STATUSES } from '../constants.js'
 import { needsCheck } from '../checks.js'
 import { personName, vehiclePlate, vehicleModel } from '../labels.js'
 import { holderName, vehiclesWithKeyIn, vehiclesWithKeyOut } from '../keys.js'
@@ -21,6 +22,7 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 
 const personsStore = usePersonsStore()
 const vehiclesStore = useVehiclesStore()
+const trailersStore = useTrailersStore()
 const missionsStore = useMissionsStore()
 const requestsStore = useRequestsStore()
 const { nowString, todayString } = useClock()
@@ -29,6 +31,7 @@ const { t } = useI18n()
 onMounted(() => {
   personsStore.init()
   vehiclesStore.init()
+  trailersStore.init()
   missionsStore.init()
   requestsStore.init()
 })
@@ -64,7 +67,7 @@ const attention = computed(() => [
     key: 'overdueLoans',
     to: '/vehicles',
     count: vehiclesStore.vehicles.filter(vehicle =>
-      vehicle.status === VEHICLE_STATUS.ON_LOAN &&
+      AWAY_STATUSES.includes(vehicle.status) &&
       vehicle.loanUntil &&
       vehicle.loanUntil < todayString.value).length,
     frame: 'bg-orange-50 border-orange-200 text-orange-800 hover:border-orange-400',
@@ -104,7 +107,8 @@ const stats = computed(() => {
     personsUnavailable: byPerson[PERSON_STATUS.UNAVAILABLE] ?? 0,
     vehiclesFree: byVehicle[VEHICLE_STATUS.FREE] ?? 0,
     vehiclesOnMission: byVehicle[VEHICLE_STATUS.ON_MISSION] ?? 0,
-    vehiclesOnLoan: byVehicle[VEHICLE_STATUS.ON_LOAN] ?? 0,
+    vehiclesOnLoan: (byVehicle[VEHICLE_STATUS.ON_LOAN] ?? 0) +
+      OUT_OF_SERVICE_STATUSES.reduce((total, status) => total + (byVehicle[status] ?? 0), 0),
   }
 })
 
@@ -159,6 +163,16 @@ const alerts = computed(() => {
       if (vehicle?.status === VEHICLE_STATUS.ON_LOAN) {
         list.push(t('dashboard.alerts.vehicleOnLoan', {
           mission: mission.title, vehicle: vehiclePlate(vehicle),
+        }))
+      } else if (OUT_OF_SERVICE_STATUSES.includes(vehicle?.status)) {
+        list.push(t('dashboard.alerts.vehicleOutOfService', {
+          mission: mission.title, vehicle: vehiclePlate(vehicle), status: t(`status.${vehicle.status}`),
+        }))
+      }
+      const trailer = entry.trailerId ? trailersStore.trailers.find(candidate => candidate.id === entry.trailerId) : null
+      if (AWAY_STATUSES.includes(trailer?.status)) {
+        list.push(t('dashboard.alerts.vehicleOutOfService', {
+          mission: mission.title, vehicle: trailer.plate, status: t(`status.${trailer.status}`),
         }))
       }
     }

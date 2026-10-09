@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
 import DateTimeField from '../common/DateTimeField.vue'
 import { usePersonsStore } from '../../stores/persons.js'
@@ -25,8 +25,11 @@ function addLeave() {
   form.endDate = ''
 }
 
-function removeLeave(id) {
-  store.removeLeave(props.person.id, id)
+/** A leave is removed after a second click on its own line. */
+const removingId = ref(null)
+
+async function removeLeave(id) {
+  if (await store.removeLeave(props.person.id, id)) removingId.value = null
 }
 
 /** past | current | upcoming */
@@ -66,8 +69,14 @@ const sortedLeaves = computed(() =>
               <span class="font-medium">{{ formatDateTime(leave.endDate) }}</span>
               <span class="text-xs opacity-60">({{ $t(`persons.leaves.${leaveState(leave)}`) }})</span>
             </div>
-            <button @click="removeLeave(leave.id)" :aria-label="$t('actions.delete')"
-              class="hover:opacity-70 transition-opacity ml-2 shrink-0">
+            <span v-if="removingId === leave.id" class="flex items-center gap-1.5 ml-2 shrink-0">
+              <button type="button" @click="removeLeave(leave.id)" class="btn-action btn-action-danger">
+                {{ $t('persons.leaves.remove') }}
+              </button>
+              <button type="button" @click="removingId = null" class="btn-action">{{ $t('persons.leaves.keep') }}</button>
+            </span>
+            <button v-else @click="removingId = leave.id" :aria-label="$t('persons.leaves.remove')"
+              class="hover:opacity-70 transition-opacity ml-2 shrink-0 inline-flex items-center justify-center min-w-[44px] min-h-[44px] -my-2 -mr-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -79,7 +88,7 @@ const sortedLeaves = computed(() =>
 
       <div class="border-t border-stone-100 pt-4">
         <p class="text-sm font-medium text-stone-700 mb-3">{{ $t('persons.leaves.addPeriod') }}</p>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="label" for="leave-start">{{ $t('missions.start') }}</label>
             <DateTimeField id="leave-start" v-model="form.startDate" default-time="00:00" />

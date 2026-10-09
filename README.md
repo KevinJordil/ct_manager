@@ -66,6 +66,25 @@ mois du calendrier.
 - Fiche par véhicule avec nom, immatriculation, catégorie (léger / moyen / lourd)
 - Statut dynamique : *libre*, *en mission* (calculé depuis les missions actives), *en prêt* (manuel, avec commentaire et date de retour prévue signalée en cas de dépassement)
 - Mise en prêt et libération depuis la fiche véhicule
+- **Hors service** : un véhicule peut être mis *en maintenance* ou déclaré
+  *en panne*, avec ce qui se passe et une date de retour en service
+  optionnelle. Comme un prêt, il n'est alors plus proposé sur les missions —
+  jusqu'au soir de sa date de retour, ou jusqu'à ce qu'on le remette en
+  service — et le tableau de bord signale une mission en cours qui l'utilise
+- **Modèle** (Class G, Duro, Camion 6x6…) : il dit quelles remorques le
+  véhicule peut tracter. La liste des modèles se règle dans la Configuration
+
+### Remorques
+- Chaque remorque a sa **plaque**, une désignation et la liste des **modèles
+  de véhicule derrière lesquels elle se met** — plusieurs à la fois : une
+  remorque 1 t va derrière un Class G comme derrière un Duro, une citerne
+  derrière un Camion 6x6 mais pas derrière un Camion 4x4
+- Elle se gère comme un véhicule — prêt, maintenance, panne, calendrier,
+  conflits de planning — mais sans clé ni SPH. Elle relève du droit
+  `vehicles.manage`
+- Sur une mission, cocher *avec remorque* exige le permis correspondant et
+  propose les remorques compatibles et libres ; les autres restent
+  choisissables, avec la raison (incompatible, prise, hors service)
 
 ### Clés
 Le tableau des clés répond à la question posée au guichet : *puis-je prendre ce
@@ -85,8 +104,9 @@ véhicule ?* Il se lit indépendamment du planning.
   noms : qui tenait la clé, et qui a fait le geste
 - Chaque mouvement est horodaté et garde le compte qui l'a saisi ; les
   cinquante derniers sont consultables depuis la fiche véhicule
-- Supprimer une personne qui détient une clé ne remet pas la clé au tableau :
-  elle reste sortie, sous le nom enregistré
+- Une personne détenant une clé ne peut pas être supprimée : il faut d’abord
+  enregistrer le retour ou le transfert. Un véhicule dont la clé est sortie
+  ne peut pas être supprimé non plus.
 
 ### Journal de combat
 Les mouvements de clés de toute la flotte, en tableau, du plus récent au plus
@@ -108,6 +128,23 @@ restent dans l'ordre où ils ont eu lieu. La recherche porte sur le véhicule
 comme sur les noms — la catégorie reste cherchable (« lourd » sort toutes les
 lignes des véhicules lourds) même si elle n'a plus sa colonne. La page est accessible à tous les comptes.
 
+#### Archives par cours
+
+Le journal est conservé dans `data/journal.json`, indépendamment des véhicules :
+la suppression d’un véhicule ne supprime plus ses mouvements. Les 50 derniers
+mouvements restent affichés dans sa fiche ; le journal conserve tous les
+mouvements enregistrés depuis cette mise à jour. Au premier accès, les historiques
+encore présents sont repris ; les mouvements déjà supprimés ou tronqués ne peuvent
+pas être reconstitués.
+
+Un administrateur peut **Archiver et ouvrir un nouveau journal**, en donnant un
+nom au cours. Toutes les clés doivent être revenues au tableau. L’archive est
+conservée sur le serveur, avec son auteur et sa date ; le journal courant devient
+vide. Les missions et les fiches restent conservées. Le sélecteur du journal permet
+de consulter les archives, de télécharger leur CSV et de les imprimer en PDF
+via le navigateur. Les exports portent sur le journal sélectionné entier,
+indépendamment du filtre de recherche. Sauvegarder le dossier `data/` inclut les archives.
+
 ### Mes missions
 Un compte rattaché à une fiche de personne voit **« Mes missions »** en tête
 du menu, avec le nombre de missions en cours ou à venir. La page les groupe
@@ -126,10 +163,34 @@ Un compte de service, rattaché à aucune fiche, n'a pas ce raccourci.
 - Titre, description, dates de début et fin avec précision à l'heure
 - Affectation de **plusieurs véhicules** par mission, chacun avec ou sans chauffeur
 - Affectation de **personnel sans véhicule** (personnel libre)
-- Statut **automatique** calculé depuis les dates : *planifiée*, *en cours*, *terminée* — aucune saisie manuelle
+- Statut **automatique** calculé depuis les dates : *planifiée*, *en cours*, *terminée*
+- **Annuler la mission** conserve la fiche, la marque *annulée* et libère ses
+  ressources dans les disponibilités et le calendrier. Une mission vide affiche
+  un avertissement pour inviter à la vérifier ou à l’annuler.
+- Supprimer une personne ou un véhicule affecté à une mission en cours ou à venir
+  est bloqué, avec les titres des missions concernées. Réaffecter la ressource ou
+  annuler les missions avant la suppression. Ces contrôles sont aussi appliqués
+  par le serveur ; les missions passées et annulées restent conservées, et
+  continuent de nommer la plaque, le modèle et la personne supprimés : le
+  serveur en garde une copie figée dans chaque mission concernée.
 - Filtrage par statut, compteurs en temps réel
-- Les personnes en congé, indisponibles ou déjà affectées sont exclues des listes de sélection
-- Les véhicules en prêt ou déjà engagés sur la même période sont exclus
+- Les personnes, véhicules et remorques libres sont proposés en premier ;
+  ceux qui ne le sont pas — en congé, indisponible, déjà engagé, en prêt, hors
+  service, sans le permis requis, remorque incompatible — restent
+  choisissables dans un groupe à part, avec leur raison
+- Une affectation en conflit est listée avant l'enregistrement, qui demande
+  alors une confirmation (**Enregistrer quand même**) : celui qui planifie
+  peut en savoir plus que l'application, mais il le décide en connaissance
+  de cause
+- Deux missions qui se touchent ne sont pas en conflit : un véhicule rentré
+  à 12:00 peut repartir à 12:00. Un prêt ou une mise hors service avec date
+  de retour libère le véhicule le lendemain de cette date
+- Changer les dates d'une mission retire les chauffeurs, le personnel, les
+  véhicules et les remorques qui ne sont plus libres, et le dit
+- Une mission doit finir après avoir commencé ; le serveur refuse aussi une
+  date qui n'existe pas, un titre vide et une affectation qui désigne un
+  véhicule, une remorque ou une personne inconnus
+- **Rouvrir** une mission annulée la remet au planning, après confirmation
 
 ### Dates et heures
 
@@ -188,7 +249,23 @@ navigateur — aucune bibliothèque PDF n'est embarquée :
 | **Calendrier de la période** | bouton de la page Calendrier — rendu en tableau, la timeline en pixels étant illisible sur papier |
 | **État des SPH** | bouton de la page SPH |
 
+### Export de fin de cours
+
+Le cours terminé, l'application s'arrête ; ce qu'elle a enregistré doit rester
+lisible sans elle. La page **Export** (administrateurs) produit :
+
+- un **fichier ZIP de tableaux CSV** qui s'ouvrent directement dans Excel —
+  missions, affectations (une ligne par véhicule), véhicules, remorques,
+  personnes, congés, SPH, journal des clés (archives comprises) et demandes ;
+- le **même contenu en rapport imprimable**, à imprimer ou à enregistrer en
+  PDF depuis le navigateur.
+
+Les noms et les plaques y sont écrits en toutes lettres, y compris ceux des
+fiches supprimées en cours de route. Ces fichiers contiennent toutes les
+données de l'unité : ils se conservent sur un support protégé.
+
 ### Configuration
+- **Modèles de véhicule** (Class G, Duro, Camion 6x6…) : chaque véhicule en reçoit un, et chaque remorque dit derrière lesquels elle se met
 - **Types de véhicules** proposés sur le formulaire public : réordonnables, supprimables, et extensibles par des types propres à l'unité
 - **Permis** et **matrice permis/catégorie** (avec et sans remorque) modifiables ; ce sont ces règles qui déterminent quels chauffeurs sont proposés pour un véhicule
 - Les catégories de véhicules ne sont pas modifiables : elles suivent la réglementation et toute la logique de disponibilité repose sur elles
@@ -454,7 +531,7 @@ de **tenir le registre** — créer, modifier ou supprimer une ressource :
 | Droit | Ouvre |
 |-------|-------|
 | `persons.manage` | Créer, modifier et supprimer des personnes, leur donner un mot de passe, déclarer une indisponibilité ou un congé |
-| `vehicles.manage` | Créer, modifier et supprimer des véhicules, et gérer les prêts |
+| `vehicles.manage` | Créer, modifier et supprimer des véhicules et des remorques, gérer les prêts et les mises hors service |
 | `missions.manage` | Créer, modifier et supprimer des missions |
 | `requests.manage` | Approuver, refuser, remettre en attente et supprimer des demandes |
 | `park.manage` | Charger le plan de parc et disposer les zones |
@@ -473,6 +550,16 @@ est une décision et non un mouvement, ni aucun champ d'une personne : dire
 que quelqu'un est absent est une affirmation sur le service d'un autre. Une
 mission n'a aucun champ de ce genre non plus : elle est de la planification
 de bout en bout, donc la modifier, c'est la gérer.
+
+**L'heure et l'auteur d'un mouvement de clé ou d'un SPH sont fixés par le
+serveur**, pas par le navigateur : personne ne peut antidater un mouvement ni
+le signer du nom d'un autre, et un mouvement déjà enregistré ne se réécrit
+pas. Un SPH ne peut être retiré que par le compte qui l'a saisi — une faute
+de frappe reste corrigeable — ou par un compte qui gère les véhicules.
+
+Un compte qui gère les personnes donne un mot de passe aux comptes ordinaires
+seulement : celui d'un administrateur, ou d'un compte qui a reçu des droits,
+ne se change que depuis un compte administrateur.
 
 **Un militaire se connecte avec son nom de famille.** Le mot de passe se
 définit sur sa fiche, à la création ou plus tard : tant qu'il n'est pas
@@ -566,15 +653,33 @@ démarre pas. Deux précautions :
 - ne pas mettre `index.html` en cache longue durée — seuls les fichiers de
   `assets/`, dont le nom contient une empreinte, peuvent l'être.
 
+Le serveur envoie ses propres en-têtes de sécurité (CSP stricte, interdiction
+d'affichage dans un cadre, `nosniff`) ; l'application ne charge rien depuis
+une autre origine. `Strict-Transport-Security` n'est ajouté que si la
+requête arrive en HTTPS, ce qui suppose `TRUST_PROXY` correctement défini.
+
 Désactivez également **Rocket Loader** : il réécrit le chargement des scripts
 et se marie mal avec les modules ES d'une application Vue.
 
 ### Modifications concurrentes
 
 Chaque lecture renvoie une version (`ETag`) et chaque écriture doit la
-présenter (`If-Match`). Si deux onglets modifient la même collection, le
-second reçoit un `409` et l'interface propose de recharger, au lieu d'écraser
-silencieusement le travail du premier.
+présenter (`If-Match`). Si deux postes modifient la même collection, le
+second reçoit un `409` : l'interface relit alors les données du serveur au
+lieu d'écraser silencieusement le travail du premier.
+
+- Un mouvement de clé, un SPH, un congé ou une indisponibilité est **rejoué
+  une fois** sur les données fraîches : deux guichets qui sortent deux clés au
+  même moment voient tous deux leur mouvement enregistré.
+- Une mission n'est **pas** rejouée, car l'autre modification a pu prendre
+  le même véhicule ou le même chauffeur : la liste est actualisée, un bandeau
+  le signale et le formulaire reste ouvert avec la saisie, pour vérifier et
+  enregistrer à nouveau.
+
+Un formulaire ne se ferme qu'une fois l'enregistrement accepté par le
+serveur, et ce que le serveur refuse est retiré de l'écran. Une erreur reste
+affichée tant que l'action qui l'a causée n'a pas réussi, même si d'autres
+enregistrements réussissent entre-temps.
 
 ---
 
@@ -647,8 +752,9 @@ ct_manager/
 - **L'instant courant vient de `useClock()`**, jamais de `new Date()` dans un
   `computed` : Vue ne trace pas le temps comme dépendance, et les statuts
   cesseraient de se rafraîchir.
-- **Les statuts ne sont pas stockés** : mission (`planned` / `ongoing` /
-  `completed`) et véhicule (`free` / `on-mission`) se déduisent des dates.
+- **Les statuts temporels ne sont pas stockés** : mission (`planned` / `ongoing` /
+  `completed`) et véhicule (`free` / `on-mission`) se déduisent des dates. L’annulation est une exception explicite, stockée
+  dans le booléen `cancelled` de la mission.
 - **Les erreurs de l'API sont des codes**, pas des phrases : le serveur
   renvoie `{code, params}` et l'interface les rend dans la langue du lecteur.
 
@@ -659,8 +765,13 @@ Les fichiers JSON utilisent des clés anglaises :
 | Collection | Champs |
 |------------|--------|
 | `persons` | `id`, `rank`, `firstName`, `lastName`, `licenses[]`, `notes`, `leaves[{id, startDate, endDate}]`, `unavailable`, `unavailabilityNote` |
-| `vehicles` | `id`, `name`, `plate`, `category`, `status`, `loanNote`, `loanUntil`, `seats`, `checks[]`, `keyHolder`, `keyHistory[]` |
-| `missions` | `id`, `title`, `description`, `startDate`, `endDate`, `notes`, `vehicles[{id, vehicleId, driverId, withTrailer}]`, `staffIds[]` |
+| `vehicles` | `id`, `name`, `plate`, `category`, `type`, `status`, `loanNote`, `loanUntil`, `seats`, `checks[]`, `keyHolder`, `keyHistory[]` |
+| `trailers` | `id`, `plate`, `name`, `compatibleTypes[]`, `status`, `loanNote`, `loanUntil`, `notes` |
+| `missions` | `id`, `title`, `description`, `startDate`, `endDate`, `notes`, `vehicles[{id, vehicleId, driverId, withTrailer, trailerId}]`, `staffIds[]`, `cancelled`, `retiredVehicles{id: {plate, name, category}}`, `retiredTrailers{id: {plate, name}}`, `retiredPersons{id: {rank, firstName, lastName}}` |
+
+Pour un véhicule comme pour une remorque, `loanNote` et `loanUntil` portent
+le motif et la date de retour de toute absence — prêt, maintenance ou panne —
+selon `status`.
 
 `keyHolder` vaut `null` quand la clé est au tableau, sinon
 `{personId, name, since, recordedBy}` — `personId` est `null` pour un

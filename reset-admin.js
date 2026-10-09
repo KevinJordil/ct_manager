@@ -23,6 +23,12 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json')
 
 const [username = 'admin', chosen] = process.argv.slice(2)
 
+/** Local "YYYY-MM-DDTHH:mm", like every other date of the application. */
+function localDateTime(date = new Date()) {
+  const pad = n => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 async function readUsers() {
   try {
     return JSON.parse(await fs.readFile(USERS_FILE, 'utf-8'))
@@ -47,7 +53,7 @@ async function main() {
       username,
       role: ROLES.ADMIN,
       personId: null,
-      createdAt: new Date().toISOString().slice(0, 16),
+      createdAt: localDateTime(),
       ...hashPassword(password),
     })
     console.log(`Account "${username}" created as an administrator.`)

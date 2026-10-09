@@ -12,6 +12,8 @@ import { formatDateTime } from '../datetime.js'
 import { personName, vehiclePlate, vehicleModel } from '../labels.js'
 import StatusBadge from '../components/common/StatusBadge.vue'
 import ListPlaceholder from '../components/common/ListPlaceholder.vue'
+import { vehicleInMission, personInMission, trailerInMission } from '../retired.js'
+import { useTrailersStore } from '../stores/trailers.js'
 
 const missionsStore = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
@@ -51,7 +53,11 @@ const myKeys = computed(() =>
   auth.user?.personId ? keysHeldBy(auth.user.personId, vehiclesStore.vehicles) : []
 )
 
-const vehicleOf = id => vehiclesStore.vehicles.find(vehicle => vehicle.id === id) ?? null
+const trailersStore = useTrailersStore()
+trailersStore.init()
+const trailerOf = (mission, id) => trailerInMission(mission, id, trailersStore.trailers)
+
+const vehicleOf = (mission, id) => vehicleInMission(mission, id, vehiclesStore.vehicles) ?? null
 
 /** Everybody else on the mission, so one knows who to look for. */
 function othersOn(mission) {
@@ -60,7 +66,7 @@ function othersOn(mission) {
     ...(mission.staffIds ?? []),
   ])
   ids.delete(auth.user?.personId)
-  return [...ids].map(id => personsStore.persons.find(person => person.id === id)).filter(Boolean)
+  return [...ids].map(id => personInMission(mission, id, personsStore.persons)).filter(Boolean)
 }
 
 /** Open by default while it matters: a running mission is read, not browsed. */
@@ -128,9 +134,11 @@ function printOrder(mission) {
                 <template v-for="drive in mission.role.driving" :key="drive.vehicleId">
                   <span class="inline-flex items-baseline gap-1.5 rounded bg-olive-50 border border-olive-200 px-2 py-0.5">
                     <span class="text-xs text-olive-800">{{ $t('mine.asDriver') }}</span>
-                    <span class="plate">{{ vehiclePlate(vehicleOf(drive.vehicleId)) }}</span>
-                    <span class="text-xs text-stone-500">{{ vehicleModel(vehicleOf(drive.vehicleId)) }}</span>
-                    <span v-if="drive.withTrailer" class="text-xs text-amber-700">{{ $t('missions.trailerBadge') }}</span>
+                    <span class="plate">{{ vehiclePlate(vehicleOf(mission, drive.vehicleId)) }}</span>
+                    <span class="text-xs text-stone-500">{{ vehicleModel(vehicleOf(mission, drive.vehicleId)) }}</span>
+                    <span v-if="drive.withTrailer" class="text-xs text-amber-700">
+                      {{ trailerOf(mission, drive.trailerId) ? `+ ${trailerOf(mission, drive.trailerId).plate}` : $t('missions.trailerBadge') }}
+                    </span>
                   </span>
                 </template>
                 <span v-if="mission.role.staff" class="badge-gray">{{ $t('mine.asStaff') }}</span>

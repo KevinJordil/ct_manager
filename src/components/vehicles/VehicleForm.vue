@@ -1,16 +1,21 @@
 <script setup>
 import { reactive, watch } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
-import { VEHICLE_CATEGORIES, VEHICLE_CATEGORY, VEHICLE_STATUS, STORED_VEHICLE_STATUSES } from '../../constants.js'
+import { VEHICLE_CATEGORIES, VEHICLE_CATEGORY, VEHICLE_STATUS, STORED_VEHICLE_STATUSES, AWAY_STATUSES } from '../../constants.js'
+import { useConfigStore } from '../../stores/config.js'
 
 const props = defineProps({ vehicle: { type: Object, default: null } })
 const emit = defineEmits(['save', 'close'])
+
+const configStore = useConfigStore()
+configStore.init()
 
 const form = reactive({
   name: '',
   plate: '',
   seats: 4,
   category: VEHICLE_CATEGORY.LIGHT_ROAD,
+  type: '',
   status: VEHICLE_STATUS.FREE,
   loanNote: '',
 })
@@ -20,22 +25,25 @@ watch(() => props.vehicle, vehicle => {
   form.plate = vehicle?.plate ?? ''
   form.seats = vehicle?.seats ?? 4
   form.category = vehicle?.category ?? VEHICLE_CATEGORY.LIGHT_ROAD
+  form.type = vehicle?.type ?? ''
   form.status = vehicle?.status ?? VEHICLE_STATUS.FREE
   form.loanNote = vehicle?.loanNote ?? ''
 }, { immediate: true })
 
 function submit() {
   if (!form.name.trim()) return
-  if (form.status === VEHICLE_STATUS.ON_LOAN && !form.loanNote.trim()) return
+  const away = AWAY_STATUSES.includes(form.status)
+  if (away && !form.loanNote.trim()) return
   emit('save', {
     ...form,
-    loanNote: form.status === VEHICLE_STATUS.ON_LOAN ? form.loanNote : '',
+    loanNote: away ? form.loanNote : '',
+    ...(away ? {} : { loanUntil: '' }),
   })
 }
 </script>
 
 <template>
-  <BaseModal :title="vehicle ? $t('vehicles.edit') : $t('vehicles.new')" @close="$emit('close')">
+  <BaseModal persistent :title="vehicle ? $t('vehicles.edit') : $t('vehicles.new')" @close="$emit('close')">
     <form @submit.prevent="submit" class="space-y-4">
       <div>
         <label class="label" for="vehicle-name">{{ $t('vehicles.name') }} *</label>
@@ -63,6 +71,15 @@ function submit() {
       </div>
 
       <div>
+        <label class="label" for="vehicle-type">{{ $t('vehicles.type') }}</label>
+        <select id="vehicle-type" v-model="form.type" class="input">
+          <option value="">{{ $t('vehicles.typeNone') }}</option>
+          <option v-for="type in configStore.vehicleTypes" :key="type.id" :value="type.id">{{ type.label }}</option>
+        </select>
+        <p class="mt-1 text-xs text-stone-500">{{ $t('vehicles.typeHint') }}</p>
+      </div>
+
+      <div>
         <label class="label" for="vehicle-status">{{ $t('vehicles.status') }}</label>
         <select id="vehicle-status" v-model="form.status" class="input">
           <option v-for="status in STORED_VEHICLE_STATUSES" :key="status" :value="status">
@@ -71,7 +88,7 @@ function submit() {
         </select>
       </div>
 
-      <div v-if="form.status === 'on-loan'">
+      <div v-if="AWAY_STATUSES.includes(form.status)">
         <label class="label" for="vehicle-loan-note">{{ $t('vehicles.loan.note') }} *</label>
         <textarea id="vehicle-loan-note" v-model="form.loanNote" class="input" rows="2"
           :placeholder="$t('vehicles.loan.notePlaceholder')" required />

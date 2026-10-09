@@ -25,7 +25,7 @@ const missions = [
 describe('the part somebody plays', () => {
   it('names the vehicles they drive, trailer included', () => {
     expect(roleInMission(missions[0], 'p1')).toEqual({
-      driving: [{ vehicleId: 'v1', withTrailer: true }],
+      driving: [{ vehicleId: 'v1', withTrailer: true, trailerId: null }],
       staff: false,
     })
   })
@@ -67,7 +67,7 @@ describe('the missions of one person', () => {
   })
 
   it('carries the part played, so the list answers without opening anything', () => {
-    expect(groups.ongoing[0].role.driving[0]).toEqual({ vehicleId: 'v1', withTrailer: true })
+    expect(groups.ongoing[0].role.driving[0]).toEqual({ vehicleId: 'v1', withTrailer: true, trailerId: null })
     expect(groups.upcoming[0].role.staff).toBe(true)
   })
 

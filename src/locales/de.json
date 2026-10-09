@@ -19,7 +19,9 @@
     "users": "Konten",
     "log": "Gefechtsjournal",
     "permissions": "Rechte",
-    "mine": "Meine Aufträge"
+    "mine": "Meine Aufträge",
+    "trailers": "Anhänger",
+    "export": "Export"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -48,7 +50,8 @@
   "entities": {
     "persons": "Personen",
     "vehicles": "Fahrzeuge",
-    "missions": "Einsätze"
+    "missions": "Einsätze",
+    "trailers": "Anhänger"
   },
   "status": {
     "available": "verfügbar",
@@ -63,7 +66,10 @@
     "leave": "Urlaub",
     "pending": "ausstehend",
     "approved": "genehmigt",
-    "rejected": "abgelehnt"
+    "rejected": "abgelehnt",
+    "cancelled": "Abgesagt",
+    "maintenance": "in Wartung",
+    "broken": "defekt"
   },
   "dashboard": {
     "title": "Übersicht",
@@ -79,7 +85,8 @@
     "alerts": {
       "driverOnLeave": "Einsatz «{mission}»: {person} (Fahrer) ist während des Einsatzes im Urlaub",
       "staffOnLeave": "Einsatz «{mission}»: {person} ist während des Einsatzes im Urlaub",
-      "vehicleOnLoan": "Einsatz «{mission}»: Fahrzeug {vehicle} ist als «ausgeliehen» markiert"
+      "vehicleOnLoan": "Einsatz «{mission}»: Fahrzeug {vehicle} ist als «ausgeliehen» markiert",
+      "vehicleOutOfService": "Einsatz «{mission}»: Das Fahrzeug {vehicle} ist {status}"
     },
     "attention": "Zu erledigen",
     "pendingRequests": "ausstehende Anfragen | ausstehende Anfrage | ausstehende Anfragen",
@@ -115,7 +122,9 @@
       "upcoming": "Bevorstehend",
       "past": "Vergangen",
       "addLeave": "Urlaub hinzufügen",
-      "short": "Urlaub"
+      "short": "Urlaub",
+      "remove": "Diesen Urlaub löschen",
+      "keep": "Behalten"
     },
     "unavailability": {
       "title": "Nichtverfügbarkeit — {name}",
@@ -130,7 +139,7 @@
     "phone": "Telefon",
     "phonePlaceholder": "+41 79 000 00 00",
     "password": "Passwort",
-    "passwordHint": "Die Person meldet sich mit ihrem Familiennamen und diesem Passwort an.",
+    "passwordHint": "Die Person meldet sich mit ihrem Familiennamen und diesem Passwort an. Ohne Passwort besteht der Eintrag, kann sich aber nicht anmelden.",
     "passwordOptional": "Neues Passwort (leer lassen, um es zu behalten)",
     "accountActive": "Konto aktiv",
     "noAccount": "kein Konto",
@@ -184,10 +193,25 @@
     "loanOverdue": "Rückgabe überfällig seit dem {date}",
     "loanUntilLabel": "Rückgabe geplant am {date}",
     "allTypes": "Alle Typen",
-    "availableOf": "{available} von {total} verfügbar",
+    "availableOf": "{available} von {total} verfügbar | {available} von {total} verfügbar | {available} von {total} verfügbar",
     "keyOutCount": "Schlüssel ausgegeben | 1 Schlüssel ausgegeben | {count} Schlüssel ausgegeben",
     "onMissionCount": "im Einsatz | 1 im Einsatz | {count} im Einsatz",
-    "onLoanCount": "ausgeliehen | 1 ausgeliehen | {count} ausgeliehen"
+    "onLoanCount": "ausgeliehen | 1 ausgeliehen | {count} ausgeliehen",
+    "outOfService": {
+      "action": "Ausser Betrieb setzen",
+      "title": "Ausser Betrieb setzen",
+      "reason": "Grund",
+      "note": "Was los ist",
+      "notePlaceholder": "Werkstatt, Ersatzteil erwartet, festgestellte Panne…",
+      "untilOptional": "Voraussichtlich wieder in Betrieb (optional)",
+      "confirm": "Ausser Betrieb setzen",
+      "release": "Wieder in Betrieb nehmen",
+      "releaseConfirm": "{plate} wieder in Betrieb nehmen und verfügbar machen?"
+    },
+    "outOfServiceCount": "ausser Betrieb | 1 ausser Betrieb | {count} ausser Betrieb",
+    "type": "Modell",
+    "typeNone": "Nicht erfasst",
+    "typeHint": "Bestimmt, welche Anhänger es ziehen kann."
   },
   "keys": {
     "dashboardTitle": "Fahrzeugschlüssel",
@@ -256,7 +280,16 @@
       "minutes": "seit weniger als einer Minute | seit 1 Min. | seit {count} Min.",
       "hours": "seit 1 Std. | seit 1 Std. | seit {count} Std.",
       "days": "seit 1 Tag | seit 1 Tag | seit {count} Tagen"
-    }
+    },
+    "journalLabel": "Journal",
+    "current": "Aktuelles Journal",
+    "refresh": "Aktualisieren",
+    "exportCsv": "CSV herunterladen",
+    "archive": "Archivieren und neues Journal öffnen",
+    "archivedBy": "Am {date} von {name} archiviert.",
+    "archiveName": "Kurs- / Archivname",
+    "archiveConfirm": "Das aktuelle Journal wird archiviert und ein neues, leeres Journal geöffnet. Alle Schlüssel müssen am Brett sein. Aufträge und Stammdaten bleiben erhalten.",
+    "archiveMissing": "Archiv nicht gefunden."
   },
   "missions": {
     "title": "Einsätze",
@@ -264,7 +297,7 @@
     "new": "Neuer Einsatz",
     "edit": "Einsatz bearbeiten",
     "deleteTitle": "Einsatz löschen",
-    "deleteConfirm": "Möchten Sie diesen Einsatz wirklich löschen?",
+    "deleteConfirm": "Den Einsatz «{title}» endgültig löschen? Um ihn in der Geschichte zu behalten, sagen Sie ihn besser ab.",
     "missionTitle": "Titel",
     "titlePlaceholder": "Titel des Einsatzes",
     "description": "Beschreibung",
@@ -277,7 +310,8 @@
       "all": "Alle",
       "planned": "Geplant",
       "ongoing": "Laufend",
-      "completed": "Abgeschlossen"
+      "completed": "Abgeschlossen",
+      "cancelled": "Abgesagt"
     },
     "vehiclesSection": "Eingesetzte Fahrzeuge",
     "staffSection": "Personal ohne Fahrzeug",
@@ -300,7 +334,28 @@
     "proposedAvailable": "Verfügbar",
     "randomDriver": "Zufällig",
     "fillDrivers": "Fahrer ergänzen",
-    "pickVehicleFirst": "Zuerst ein Fahrzeug wählen: davon hängt der nötige Ausweis ab."
+    "pickVehicleFirst": "Zuerst ein Fahrzeug wählen: davon hängt der nötige Ausweis ab.",
+    "cancelMission": "Auftrag absagen",
+    "cancelConfirm": "Den Einsatz «{title}» absagen? Er bleibt einsehbar und seine Ressourcen werden freigegeben.",
+    "emptyWarning": "Dieser Auftrag enthält keine vorhandenen Ressourcen mehr. Bitte prüfen oder absagen.",
+    "problems": {
+      "away": "ausgeliehen oder ausser Betrieb",
+      "busy": "bereits für einen anderen Einsatz eingeteilt",
+      "unavailable": "nicht verfügbar",
+      "onLeave": "im Urlaub",
+      "noLicense": "ohne den erforderlichen Führerausweis",
+      "incompatible": "passt nicht hinter dieses Fahrzeug"
+    },
+    "unavailableGroup": "Nicht verfügbar — zu bestätigen",
+    "conflictsTitle": "Einteilungen mit Konflikt:",
+    "forceHint": "Prüfen Sie diese Konflikte. Um sie beizubehalten, erneut speichern.",
+    "forceSave": "Trotzdem speichern",
+    "endBeforeStart": "Das Ende muss nach dem Beginn liegen.",
+    "reopen": "Wieder öffnen",
+    "keepMission": "Einsatz behalten",
+    "reopenConfirm": "Den Einsatz «{title}» wieder öffnen? Seine Fahrzeuge und sein Personal gelten wieder als eingeteilt.",
+    "trailer": "Anhänger",
+    "trailerUnspecified": "Anhänger nicht angegeben"
   },
   "mine": {
     "title": "Meine Aufträge",
@@ -330,9 +385,11 @@
     },
     "tabs": {
       "vehicles": "Fahrzeuge",
-      "persons": "Personen"
+      "persons": "Personen",
+      "trailers": "Anhänger"
     },
-    "noResource": "Keine Ressource anzuzeigen"
+    "noResource": "Keine Ressource anzuzeigen",
+    "conflict": "Mehrere Ereignisse am selben Tag: {list}"
   },
   "fields": {
     "id": "Identifikator",
@@ -362,7 +419,7 @@
   "errors": {
     "loadFailed": "Laden nicht möglich ({entity}): {reason}",
     "saveFailed": "Speichern nicht möglich ({entity}): {reason}",
-    "conflict": "Die {entity} wurden anderswo geändert. Laden Sie die Seite neu, um mit der Serverversion weiterzuarbeiten.",
+    "conflict": "Jemand anders hat die Daten ({entity}) gleichzeitig geändert; die Anzeige wurde aktualisiert. Prüfen Sie die Änderung und wiederholen Sie sie bei Bedarf.",
     "notLoaded": "Daten nicht geladen ({entity}): Speichern abgebrochen, um den Server nicht zu überschreiben.",
     "unsavedSuffix": "Ihre letzten Änderungen sind nicht gespeichert."
   },
@@ -396,7 +453,8 @@
       "invalidImage": "Ungültiges Bild. Verwenden Sie JPEG, PNG oder WebP.",
       "imageTooLarge": "Bild zu gross (maximal {max} MB).",
       "emptyList": "Die Liste «{field}» darf nicht leer sein",
-      "unknownLicense": "Unbekannter Ausweis für die Kategorie «{field}»"
+      "unknownLicense": "Unbekannter Ausweis für die Kategorie «{field}»",
+      "unknownReference": "Der Einsatz «{title}» verweist auf ein Fahrzeug oder eine Person, die es nicht gibt ({field}). Laden Sie die Seite neu und prüfen Sie die Einteilungen."
     },
     "tooManyRequests": "Zu viele Anfragen gesendet. Versuchen Sie es in einigen Minuten erneut.",
     "requestsFull": "Die Anfrageliste ist voll. Wenden Sie sich an die Verwaltung.",
@@ -408,13 +466,25 @@
       "passwordEmpty": "Ein Passwort ist erforderlich",
       "lastAdmin": "Es muss mindestens ein Administrator bleiben",
       "selfDelete": "Sie können Ihr eigenes Konto nicht löschen",
-      "invalidLastName": "Aus dem Familiennamen lässt sich keine Kennung bilden (mindestens drei Buchstaben)"
+      "invalidLastName": "Aus dem Familiennamen lässt sich keine Kennung bilden (mindestens drei Buchstaben)",
+      "privilegedAccount": "Dieses Konto hat erweiterte Rechte: Nur ein Administrator kann sein Passwort ändern oder es löschen."
     },
     "permissions": {
       "denied": "Dieses Konto darf das nicht.",
       "created": "Eine Ressource zu erstellen verlangt das Verwaltungsrecht.",
       "edited": "Eine Ressource zu ändern verlangt das Verwaltungsrecht.",
-      "deleted": "Eine Ressource zu löschen verlangt das Verwaltungsrecht."
+      "deleted": "Eine Ressource zu löschen verlangt das Verwaltungsrecht.",
+      "checkRemoval": "Dieser SPH von {plate} wurde von einem anderen Konto erfasst: Nur sein Urheber oder ein Konto mit Fahrzeugverwaltung kann ihn löschen."
+    },
+    "deletion": {
+      "keys": "Löschen nicht möglich: Ein Schlüssel ist noch ausgegeben ({vehicles}). Zuerst Rückgabe oder Übergabe erfassen.",
+      "missions": "Löschen nicht möglich: Diese Ressource ist folgenden Aufträgen zugeteilt: {missions}. Zuerst neu zuweisen oder die Aufträge absagen."
+    },
+    "journal": {
+      "changed": "Das Journal wurde geändert. Dieses Fenster schließen, das Journal aktualisieren und erneut versuchen.",
+      "nameRequired": "Archivnamen eingeben (maximal 120 Zeichen).",
+      "keysOut": "Es sind noch Schlüssel ausgegeben. Vor dem Archivieren die Rückgabe erfassen.",
+      "empty": "Das aktuelle Journal ist leer."
     }
   },
   "auth": {
@@ -589,7 +659,14 @@
     "reset": "Standardwerte wiederherstellen",
     "resetConfirm": "Die gesamte Konfiguration auf die Standardwerte zurücksetzen?",
     "loadFailed": "Konfiguration konnte nicht geladen werden: {reason}",
-    "saveFailed": "Konfiguration konnte nicht gespeichert werden: {reason}"
+    "saveFailed": "Konfiguration konnte nicht gespeichert werden: {reason}",
+    "vehicleTypes": "Fahrzeugmodelle",
+    "vehicleTypesHint": "Die Modelle der Flotte (Class G, Duro, Lastwagen…). Jedes Fahrzeug erhält eines, und jeder Anhänger gibt an, hinter welchen er gehen kann.",
+    "vehicleTypeLabel": "Neues Modell",
+    "addVehicleType": "Modell hinzufügen",
+    "typeIdPlaceholder": "minibus",
+    "typeLabelPlaceholder": "Kleinbus 20 Plätze",
+    "licensePlaceholder": "940"
   },
   "users": {
     "title": "Konten",
@@ -604,7 +681,7 @@
     "roleAdmin": "Administrator",
     "roleUser": "Benutzer",
     "roleAdminHint": "Verwaltet Konten und Konfiguration, zusätzlich zu allem Übrigen.",
-    "roleUserHint": "Verwaltet Personen, Fahrzeuge, Einsätze, Anfragen, Park und SPH. Weder Konten noch Konfiguration.",
+    "roleUserHint": "Kann mit der Flotte arbeiten: Schlüssel, SPH, Einsicht. Was es zusätzlich verwalten darf, wird auf der Seite Rechte gewährt.",
     "person": "Zugeordnete Person",
     "noPerson": "— Keine —",
     "createdOn": "Erstellt am {date}",
@@ -651,7 +728,8 @@
       "mission": "Einsatzbefehl",
       "missions": "Einsatzliste",
       "calendar": "Kalender",
-      "checks": "SPH-Stand"
+      "checks": "SPH-Stand",
+      "report": "Bericht zum Kursende"
     },
     "generatedOn": "Erstellt am {date}",
     "page": "TK-Verwaltung",
@@ -666,6 +744,91 @@
     "status": "Status",
     "resource": "Ressource",
     "driver": "Fahrer",
-    "short": "Marschbefehl"
+    "short": "Marschbefehl",
+    "trailers": "Anhänger"
+  },
+  "trailers": {
+    "title": "Anhänger",
+    "intro": "Jeder Anhänger gibt an, hinter welchen Fahrzeugmodellen er gehen kann. Für einen Einsatz werden nur passende und freie Anhänger vorgeschlagen; die anderen bleiben wählbar, mit einer Warnung.",
+    "new": "Neuer Anhänger",
+    "edit": "Anhänger bearbeiten",
+    "plate": "Kennzeichen",
+    "platePlaceholder": "M 12345",
+    "name": "Bezeichnung",
+    "namePlaceholder": "Anhänger 1 t, Tank…",
+    "compatibleTypes": "Passt hinter",
+    "compatibleHint": "Kreuzen Sie alle Fahrzeugmodelle an, die ihn ziehen können. Die Modellliste wird in der Konfiguration verwaltet.",
+    "noTypes": "Kein Fahrzeugmodell definiert: Fügen Sie welche in der Konfiguration hinzu.",
+    "noCompatible": "Kein passendes Fahrzeug erfasst",
+    "notes": "Bemerkungen",
+    "empty": "Keine Anhänger.",
+    "delete": "Anhänger löschen",
+    "deleteConfirm": "Den Anhänger {plate} löschen? Vergangene Einsätze behalten sein Kennzeichen."
+  },
+  "export": {
+    "title": "Export zum Kursende",
+    "intro": "Alles, was der Kurs erfasst hat, zum Aufbewahren nach dem Abschalten der Anwendung: eine Tabelle pro Thema in einer ZIP-Datei, und derselbe Inhalt als Bericht zum Drucken oder als PDF. Namen und Kennzeichen sind ausgeschrieben.",
+    "contents": "Inhalt",
+    "downloadZip": "Tabellen herunterladen (.zip)",
+    "openReport": "Druckbaren Bericht öffnen",
+    "sensitive": "Diese Dateien enthalten alle Daten der Einheit (Namen, Telefonnummern, Zeiten, Orte): Bewahren Sie sie auf einem geschützten Datenträger auf.",
+    "journalMissing": "Das Schlüsseljournal konnte nicht gelesen werden: Es fehlt im Export.",
+    "noRows": "Nichts zu melden.",
+    "trailer": "Anhänger",
+    "currentJournal": "Aktuelles Journal",
+    "columns": {
+      "title": "Titel",
+      "start": "Beginn",
+      "end": "Ende",
+      "status": "Status",
+      "vehicles": "Fahrzeuge",
+      "drivers": "Fahrer",
+      "staff": "Personal",
+      "description": "Beschreibung",
+      "notes": "Bemerkungen",
+      "mission": "Einsatz",
+      "plate": "Kennzeichen",
+      "model": "Modell",
+      "trailer": "Anhänger",
+      "driver": "Fahrer",
+      "category": "Kategorie",
+      "type": "Modell (Anhängen)",
+      "seats": "Plätze",
+      "reason": "Grund",
+      "until": "Rückkehr geplant",
+      "keyHolder": "Schlüssel bei",
+      "designation": "Bezeichnung",
+      "fits": "Passt hinter",
+      "rank": "Grad",
+      "firstName": "Vorname",
+      "lastName": "Name",
+      "phone": "Telefon",
+      "licenses": "Ausweise",
+      "unavailable": "Nicht verfügbar",
+      "person": "Person",
+      "date": "Datum",
+      "doneBy": "Durchgeführt von",
+      "recordedBy": "Erfasst von",
+      "course": "Journal",
+      "when": "Datum und Zeit",
+      "movement": "Bewegung",
+      "holder": "Inhaber",
+      "received": "Eingegangen am",
+      "requester": "Antragsteller",
+      "unit": "Einheit",
+      "meetingPoint": "Treffpunkt",
+      "decidedBy": "Entschieden von"
+    },
+    "tables": {
+      "missions": "Einsätze",
+      "assignments": "Einteilungen (eine Zeile pro Fahrzeug)",
+      "vehicles": "Fahrzeuge",
+      "trailers": "Anhänger",
+      "persons": "Personen",
+      "leaves": "Urlaube",
+      "checks": "SPH",
+      "keys": "Schlüsseljournal",
+      "requests": "Fahrzeuganfragen"
+    }
   }
 }

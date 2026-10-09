@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validateCollection, ENTITIES } from '../../validation.js'
+import { validateCollection, ENTITIES, unknownReference } from '../../validation.js'
 
 const person = (over = {}) => ({
   id: 'p1', lastName: 'Müller', firstName: 'Andreas', licenses: ['930'],
@@ -14,8 +14,8 @@ const mission = (over = {}) => ({
 })
 
 describe('ENTITIES', () => {
-  it('covers the three collections', () => {
-    expect(ENTITIES).toEqual(['persons', 'vehicles', 'missions'])
+  it('covers the four collections', () => {
+    expect(ENTITIES).toEqual(['persons', 'vehicles', 'missions', 'trailers'])
   })
 })
 
@@ -180,5 +180,78 @@ describe('error shape', () => {
     const error = validateCollection('persons', [person({ lastName: 42 })])
     expect(typeof error.code).toBe('string')
     expect(typeof error.params).toBe('object')
+  })
+})
+
+describe('missions that cannot be', () => {
+  const base = { id: 'm1', title: 'Transport', startDate: '2026-09-20T08:00', endDate: '2026-09-20T17:00' }
+
+  it('refuses a date that is not on the calendar', () => {
+    expect(validateCollection('missions', [{ ...base, startDate: '2026-13-45T99:99' }]))
+      .toMatchObject({ code: 'invalidDates' })
+    expect(validateCollection('missions', [{ ...base, startDate: '2026-02-30T08:00' }]))
+      .toMatchObject({ code: 'invalidDates' })
+  })
+
+  it('refuses a mission that ends before it starts', () => {
+    expect(validateCollection('missions', [{ ...base, endDate: '2026-09-20T07:00' }]))
+      .toMatchObject({ code: 'endBeforeStart' })
+  })
+
+  it('refuses an empty title', () => {
+    expect(validateCollection('missions', [{ ...base, title: '   ' }])).toMatchObject({ code: 'invalidField' })
+  })
+
+  it('refuses a leave that ends before it starts', () => {
+    const person = { id: 'p1', lastName: 'A', firstName: 'B',
+      leaves: [{ id: 'l', startDate: '2026-09-20T08:00', endDate: '2026-09-19T08:00' }] }
+    expect(validateCollection('persons', [person])).toMatchObject({ code: 'endBeforeStart' })
+  })
+})
+
+describe('references named by a mission', () => {
+  const persons = [{ id: 'p1' }]
+  const vehicles = [{ id: 'v1' }]
+  const mission = over => ({ id: 'm', title: 'T', vehicles: [{ vehicleId: 'v1', driverId: 'p1' }], staffIds: [], ...over })
+
+  it('accepts what exists', () => {
+    expect(unknownReference([mission()], persons, vehicles)).toBeNull()
+  })
+
+  it('refuses a vehicle or a person that never existed', () => {
+    expect(unknownReference([mission({ vehicles: [{ vehicleId: 'ghost' }] })], persons, vehicles))
+      .toMatchObject({ code: 'unknownReference', params: { field: 'vehicleId' } })
+    expect(unknownReference([mission({ staffIds: ['nobody'] })], persons, vehicles))
+      .toMatchObject({ params: { field: 'staffIds' } })
+  })
+
+  it('accepts a deleted one that the mission still remembers', () => {
+    const past = mission({ vehicles: [{ vehicleId: 'old', driverId: 'left' }],
+      retiredVehicles: { old: { plate: 'M1' } }, retiredPersons: { left: { lastName: 'X' } } })
+    expect(unknownReference([past], persons, vehicles)).toBeNull()
+  })
+})
+
+describe('vehicle statuses', () => {
+  it('accepts a vehicle in maintenance or broken down', () => {
+    expect(validateCollection('vehicles', [vehicle({ status: 'maintenance' }), vehicle({ id: 'v2', status: 'broken' })])).toBeNull()
+  })
+})
+
+describe('trailers', () => {
+  const trailer = (over = {}) => ({ id: 't1', plate: 'M 1234', name: 'Remorque 1 t', compatibleTypes: ['class-g', 'duro'], status: 'free', ...over })
+
+  it('accepts a trailer fitting several vehicle models', () => {
+    expect(validateCollection('trailers', [trailer()])).toBeNull()
+  })
+
+  it('needs a plate', () => {
+    expect(validateCollection('trailers', [trailer({ plate: ' ' })])).toMatchObject({ code: 'invalidField', params: { field: 'plate' } })
+  })
+
+  it('refuses a mission hitching a trailer that does not exist', () => {
+    const mission = { id: 'm', title: 'T', vehicles: [{ vehicleId: 'v1', trailerId: 'ghost' }], staffIds: [] }
+    expect(unknownReference([mission], [], [{ id: 'v1' }], [trailer()])).toMatchObject({ params: { field: 'trailerId' } })
+    expect(unknownReference([{ ...mission, vehicles: [{ vehicleId: 'v1', trailerId: 't1' }] }], [], [{ id: 'v1' }], [trailer()])).toBeNull()
   })
 })

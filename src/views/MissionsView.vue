@@ -15,6 +15,7 @@ import ListPlaceholder from '../components/common/ListPlaceholder.vue'
 import SearchField from '../components/common/SearchField.vue'
 import { filterBySearch } from '../search.js'
 import { personName } from '../labels.js'
+import { vehicleInMission, personInMission } from '../retired.js'
 
 const store = useMissionsStore()
 const vehiclesStore = useVehiclesStore()
@@ -40,12 +41,29 @@ onMounted(() => {
 const showForm = ref(false)
 const editedMission = ref(null)
 const deletedId = ref(null)
+const cancelledId = ref(null)
+const cancelling = ref(false)
+async function cancelMission() {
+  if (cancelling.value) return
+  cancelling.value = true
+  try { if (await store.update(cancelledId.value, { cancelled: true })) cancelledId.value = null }
+  finally { cancelling.value = false }
+}
+/** A cancelled mission can be taken up again; its resources count as engaged once more. */
+const reopenedId = ref(null)
+async function reopenMission() {
+  if (await store.update(reopenedId.value, { cancelled: false })) reopenedId.value = null
+}
+
+/** Confirmations name the mission at stake, so a misplaced click reads as such. */
+const titleOf = id => store.missions.find(mission => mission.id === id)?.title ?? ''
+
 const statusFilter = ref('all')
 
-const FILTERS = ['all', MISSION_STATUS.PLANNED, MISSION_STATUS.ONGOING, MISSION_STATUS.COMPLETED]
+const FILTERS = ['all', MISSION_STATUS.PLANNED, MISSION_STATUS.ONGOING, MISSION_STATUS.COMPLETED, MISSION_STATUS.CANCELLED]
 
 const counts = computed(() => {
-  const totals = { all: store.missions.length, planned: 0, ongoing: 0, completed: 0 }
+  const totals = { all: store.missions.length, planned: 0, ongoing: 0, completed: 0, cancelled: 0 }
   for (const mission of store.missions) totals[getMissionStatus(mission, nowString.value)]++
   return totals
 })
@@ -57,10 +75,10 @@ function searchableFields(mission) {
   const people = [
     ...(mission.vehicles ?? []).map(entry => entry.driverId),
     ...(mission.staffIds ?? []),
-  ].map(id => personName(personsStore.persons.find(person => person.id === id)))
+  ].map(id => personName(personInMission(mission, id, personsStore.persons)))
 
   const vehicles = (mission.vehicles ?? [])
-    .map(entry => vehiclesStore.vehicles.find(vehicle => vehicle.id === entry.vehicleId))
+    .map(entry => vehicleInMission(mission, entry.vehicleId, vehiclesStore.vehicles))
     .filter(Boolean)
     .flatMap(vehicle => [vehicle.name, vehicle.plate])
 
@@ -71,8 +89,25 @@ const filteredMissions = computed(() => {
   const byStatus = statusFilter.value === 'all'
     ? store.missions
     : store.missions.filter(m => getMissionStatus(m, nowString.value) === statusFilter.value)
-  return filterBySearch(byStatus, search.value, searchableFields)
+  return sortForPlanning(filterBySearch(byStatus, search.value, searchableFields))
 })
+
+/**
+ * What still lies ahead first, the soonest on top; then what is over or
+ * cancelled, the most recent on top. Insertion order answers nothing.
+ */
+function sortForPlanning(missions) {
+  const now = nowString.value
+  const ahead = mission => {
+    const status = getMissionStatus(mission, now)
+    return status === MISSION_STATUS.ONGOING || status === MISSION_STATUS.PLANNED
+  }
+  return [...missions].sort((a, b) => {
+    if (ahead(a) !== ahead(b)) return ahead(a) ? -1 : 1
+    const order = (a.startDate ?? '').localeCompare(b.startDate ?? '')
+    return ahead(a) ? order : -order
+  })
+}
 
 function openCreate() {
   editedMission.value = null
@@ -84,10 +119,12 @@ function openEdit(mission) {
   showForm.value = true
 }
 
-function onSave(data) {
-  if (editedMission.value) store.update(editedMission.value.id, data)
-  else store.add(data)
-  showForm.value = false
+/** The form stays open until the server has the mission: a refusal keeps what was typed. */
+async function onSave(data) {
+  const saved = editedMission.value
+    ? await store.update(editedMission.value.id, data)
+    : Boolean(await store.add(data))
+  if (saved) showForm.value = false
 }
 
 function onDelete() {
@@ -130,6 +167,8 @@ function onDelete() {
         :mission="mission"
         @edit="openEdit(mission)"
         @delete="deletedId = mission.id"
+        @cancel="cancelledId = mission.id"
+        @reopen="reopenedId = mission.id"
         :can-manage="auth.can('missions.manage')"
         @print="printMission(mission)"
       />
@@ -141,10 +180,19 @@ function onDelete() {
 
     <MissionForm v-if="showForm" :mission="editedMission" @save="onSave" @close="showForm = false" />
 
+    <ConfirmModal v-if="cancelledId" :title="$t('missions.cancelMission')"
+      :message="$t('missions.cancelConfirm', { title: titleOf(cancelledId) })"
+      :confirm-label="$t('missions.cancelMission')" :cancel-label="$t('missions.keepMission')"
+      :disabled="cancelling" @confirm="cancelMission" @cancel="cancelledId = null" />
+    <ConfirmModal v-if="reopenedId" :title="$t('missions.reopen')"
+      :message="$t('missions.reopenConfirm', { title: titleOf(reopenedId) })"
+      :confirm-label="$t('missions.reopen')" tone="primary"
+      @confirm="reopenMission" @cancel="reopenedId = null" />
     <ConfirmModal
       v-if="deletedId"
       :title="$t('missions.deleteTitle')"
-      :message="$t('missions.deleteConfirm')"
+      :message="$t('missions.deleteConfirm', { title: titleOf(deletedId) })"
+      :confirm-label="$t('missions.deleteTitle')"
       @confirm="onDelete"
       @cancel="deletedId = null"
     />

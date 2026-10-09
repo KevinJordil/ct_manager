@@ -1,0 +1,66 @@
+[
+  {
+    "id": "3101001",
+    "plate": "M70101",
+    "name": "Remorque 1 t",
+    "compatibleTypes": [
+      "class-g",
+      "duro"
+    ],
+    "status": "free",
+    "loanNote": "",
+    "loanUntil": "",
+    "notes": ""
+  },
+  {
+    "id": "3101002",
+    "plate": "M70102",
+    "name": "Remorque 1 t",
+    "compatibleTypes": [
+      "class-g",
+      "duro"
+    ],
+    "status": "free",
+    "loanNote": "",
+    "loanUntil": "",
+    "notes": ""
+  },
+  {
+    "id": "3101003",
+    "plate": "M70203",
+    "name": "Remorque 2 essieux 6 t",
+    "compatibleTypes": [
+      "truck-4x4",
+      "truck-6x6"
+    ],
+    "status": "free",
+    "loanNote": "",
+    "loanUntil": "",
+    "notes": ""
+  },
+  {
+    "id": "3101004",
+    "plate": "M70304",
+    "name": "Remorque citerne",
+    "compatibleTypes": [
+      "truck-6x6"
+    ],
+    "status": "free",
+    "loanNote": "",
+    "loanUntil": "",
+    "notes": "Attelage incompatible avec le Camion 4x4."
+  },
+  {
+    "id": "3101005",
+    "plate": "M70405",
+    "name": "Remorque légère",
+    "compatibleTypes": [
+      "car",
+      "class-g"
+    ],
+    "status": "maintenance",
+    "loanNote": "Pneu à changer",
+    "loanUntil": "",
+    "notes": ""
+  }
+]
