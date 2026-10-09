@@ -168,11 +168,40 @@ export function isTrailerCommitted(trailerId, missions, startDate, endDate, opti
 }
 
 /**
- * Can this trailer be hitched to this vehicle? It lists the vehicle models
- * it fits; a vehicle whose model is not recorded cannot be checked.
+ * A vehicle model as compared: "IVECO 6x6", "Iveco 6X6" and "iveco  6x6" are
+ * the same model.
  */
-export function trailerFits(trailer, vehicle) {
-  return Boolean(vehicle?.type) && (trailer.compatibleTypes ?? []).includes(vehicle.type)
+export function modelKey(name = '') {
+  return String(name ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * The vehicle models of the fleet, once each. A vehicle's name is its model
+ * (VW, MBG, IVECO 6x6…): that is what a trailer is said to fit behind, so
+ * nothing has to be declared twice.
+ */
+export function fleetModels(vehicles) {
+  const models = new Map()
+  for (const vehicle of vehicles) {
+    const key = modelKey(vehicle.name)
+    if (key && !models.has(key)) models.set(key, vehicle.name.trim())
+  }
+  return [...models.values()].sort((a, b) => a.localeCompare(b))
+}
+
+/**
+ * Can this trailer be hitched to this vehicle? It lists the models it fits
+ * behind (`compatibleTypes`). A trailer that lists none has simply not been
+ * described yet: that is "unknown", not "no".
+ *
+ * @returns {'fits'|'no'|'unknown'}
+ */
+export function trailerFit(trailer, vehicle) {
+  const models = trailer?.compatibleTypes ?? []
+  if (!models.length) return 'unknown'
+  const model = modelKey(vehicle?.name)
+  return models.some(name => modelKey(name) === model) ? 'fits' : 'no'
 }
 
 /** Can the vehicle be assigned to a mission over this period? */

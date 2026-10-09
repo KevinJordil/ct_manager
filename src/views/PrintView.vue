@@ -42,7 +42,6 @@ const reportTables = computed(() => document_.value === 'report' ? buildTables({
   persons: personsStore.persons, vehicles: vehiclesStore.vehicles, trailers: trailersStore.trailers,
   missions: missionsStore.missions, requests: requestsStore.requests, journal: journal.value,
   now: nowString.value, t,
-  vehicleTypeLabel: configStore.vehicleTypeLabel,
   requestTypeLabel: type => configStore.requestTypeLabel(type, t),
 }) : [])
 const { nowString, todayString } = useClock()

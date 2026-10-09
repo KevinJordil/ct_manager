@@ -208,10 +208,7 @@
       "release": "Wieder in Betrieb nehmen",
       "releaseConfirm": "{plate} wieder in Betrieb nehmen und verfügbar machen?"
     },
-    "outOfServiceCount": "ausser Betrieb | 1 ausser Betrieb | {count} ausser Betrieb",
-    "type": "Modell",
-    "typeNone": "Nicht erfasst",
-    "typeHint": "Bestimmt, welche Anhänger es ziehen kann."
+    "outOfServiceCount": "ausser Betrieb | 1 ausser Betrieb | {count} ausser Betrieb"
   },
   "keys": {
     "dashboardTitle": "Fahrzeugschlüssel",
@@ -355,7 +352,8 @@
     "keepMission": "Einsatz behalten",
     "reopenConfirm": "Den Einsatz «{title}» wieder öffnen? Seine Fahrzeuge und sein Personal gelten wieder als eingeteilt.",
     "trailer": "Anhänger",
-    "trailerUnspecified": "Anhänger nicht angegeben"
+    "trailerUnspecified": "Anhänger nicht angegeben",
+    "trailerUnverified": "Hinter welchen Fahrzeugen dieser Anhänger geht, ist nicht erfasst: Prüfen Sie die Kupplung, oder ergänzen Sie seinen Eintrag unter Anhänger."
   },
   "mine": {
     "title": "Meine Aufträge",
@@ -665,10 +663,6 @@
     "resetConfirm": "Die gesamte Konfiguration auf die Standardwerte zurücksetzen?",
     "loadFailed": "Konfiguration konnte nicht geladen werden: {reason}",
     "saveFailed": "Konfiguration konnte nicht gespeichert werden: {reason}",
-    "vehicleTypes": "Fahrzeugmodelle",
-    "vehicleTypesHint": "Die Modelle der Flotte (Class G, Duro, Lastwagen…). Jedes Fahrzeug erhält eines, und jeder Anhänger gibt an, hinter welchen er gehen kann.",
-    "vehicleTypeLabel": "Neues Modell",
-    "addVehicleType": "Modell hinzufügen",
     "typeIdPlaceholder": "minibus",
     "typeLabelPlaceholder": "Kleinbus 20 Plätze",
     "licensePlaceholder": "940"
@@ -762,13 +756,14 @@
     "name": "Bezeichnung",
     "namePlaceholder": "Anhänger 1 t, Tank…",
     "compatibleTypes": "Passt hinter",
-    "compatibleHint": "Kreuzen Sie alle Fahrzeugmodelle an, die ihn ziehen können. Die Modellliste wird in der Konfiguration verwaltet.",
-    "noTypes": "Kein Fahrzeugmodell definiert: Fügen Sie welche in der Konfiguration hinzu.",
+    "compatibleHint": "Kreuzen Sie die Fahrzeugmodelle an, die ihn ziehen können, so wie sie unter Fahrzeuge heissen. Ohne Auswahl wird der Anhänger überall vorgeschlagen, mit einem Hinweis.",
+    "noTypes": "Noch keine Fahrzeuge in der Flotte.",
     "noCompatible": "Kein passendes Fahrzeug erfasst",
     "notes": "Bemerkungen",
     "empty": "Keine Anhänger.",
     "delete": "Anhänger löschen",
-    "deleteConfirm": "Den Anhänger {plate} löschen? Vergangene Einsätze behalten sein Kennzeichen."
+    "deleteConfirm": "Den Anhänger {plate} löschen? Vergangene Einsätze behalten sein Kennzeichen.",
+    "notInFleet": "(nicht mehr in der Flotte)"
   },
   "export": {
     "title": "Export zum Kursende",
@@ -797,7 +792,6 @@
       "trailer": "Anhänger",
       "driver": "Fahrer",
       "category": "Kategorie",
-      "type": "Modell (Anhängen)",
       "seats": "Plätze",
       "reason": "Grund",
       "until": "Rückkehr geplant",

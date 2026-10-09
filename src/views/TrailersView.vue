@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTrailersStore } from '../stores/trailers.js'
 import { useMissionsStore } from '../stores/missions.js'
-import { useConfigStore } from '../stores/config.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useClock } from '../stores/clock.js'
 import { getTrailerStatus, ongoingMissions, missionInvolvesTrailer } from '../availability.js'
@@ -18,14 +17,12 @@ import TrailerForm from '../components/trailers/TrailerForm.vue'
 
 const store = useTrailersStore()
 const missionsStore = useMissionsStore()
-const configStore = useConfigStore()
 const auth = useAuthStore()
 const { nowString, todayString } = useClock()
 
 onMounted(() => {
   store.init()
   missionsStore.init()
-  configStore.init()
 })
 
 const canManage = computed(() => auth.can('vehicles.manage'))
@@ -34,7 +31,7 @@ const search = ref('')
 const rows = computed(() => {
   const running = ongoingMissions(missionsStore.missions, nowString.value)
   return filterBySearch(store.trailers, search.value, trailer => [trailer.plate, trailer.name, trailer.notes,
-    ...(trailer.compatibleTypes ?? []).map(configStore.vehicleTypeLabel)])
+    ...(trailer.compatibleTypes ?? [])])
     .sort((a, b) => (a.plate ?? '').localeCompare(b.plate ?? ''))
     .map(trailer => ({
       trailer,
@@ -114,7 +111,7 @@ async function onDelete() {
             <div class="mt-1.5 flex flex-wrap gap-1 items-center">
               <StatusBadge :status="row.status" />
               <span v-for="type in row.trailer.compatibleTypes" :key="type" class="badge-gray">
-                {{ configStore.vehicleTypeLabel(type) }}
+                {{ type }}
               </span>
               <span v-if="!row.trailer.compatibleTypes?.length" class="text-xs text-amber-700">
                 {{ $t('trailers.noCompatible') }}

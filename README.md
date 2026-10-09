@@ -71,14 +71,16 @@ mois du calendrier.
   optionnelle. Comme un prêt, il n'est alors plus proposé sur les missions —
   jusqu'au soir de sa date de retour, ou jusqu'à ce qu'on le remette en
   service — et le tableau de bord signale une mission en cours qui l'utilise
-- **Modèle** (Class G, Duro, Camion 6x6…) : il dit quelles remorques le
-  véhicule peut tracter. La liste des modèles se règle dans la Configuration
 
 ### Remorques
 - Chaque remorque a sa **plaque**, une désignation et la liste des **modèles
   de véhicule derrière lesquels elle se met** — plusieurs à la fois : une
-  remorque 1 t va derrière un Class G comme derrière un Duro, une citerne
-  derrière un Camion 6x6 mais pas derrière un Camion 4x4
+  remorque 1 t va derrière un MBG comme derrière un DURO, une citerne
+  derrière un IVECO 6x6 mais pas derrière un IVECO 4x4. Les modèles proposés
+  sont ceux de la flotte, tels que les véhicules sont nommés : rien à
+  déclarer deux fois, et la casse ou les espaces ne comptent pas
+- Une remorque dont rien n'est coché n'est pas « incompatible » : elle est
+  proposée partout, avec un rappel de vérifier l'attelage
 - Elle se gère comme un véhicule — prêt, maintenance, panne, calendrier,
   conflits de planning — mais sans clé ni SPH. Elle relève du droit
   `vehicles.manage`
@@ -270,7 +272,6 @@ fiches supprimées en cours de route. Ces fichiers contiennent toutes les
 données de l'unité : ils se conservent sur un support protégé.
 
 ### Configuration
-- **Modèles de véhicule** (Class G, Duro, Camion 6x6…) : chaque véhicule en reçoit un, et chaque remorque dit derrière lesquels elle se met
 - **Types de véhicules** proposés sur le formulaire public : réordonnables, supprimables, et extensibles par des types propres à l'unité
 - **Permis** et **matrice permis/catégorie** (avec et sans remorque) modifiables ; ce sont ces règles qui déterminent quels chauffeurs sont proposés pour un véhicule
 - Les catégories de véhicules ne sont pas modifiables : elles suivent la réglementation et toute la logique de disponibilité repose sur elles
@@ -783,8 +784,8 @@ Les fichiers JSON utilisent des clés anglaises :
 | Collection | Champs |
 |------------|--------|
 | `persons` | `id`, `rank`, `firstName`, `lastName`, `licenses[]`, `notes`, `leaves[{id, startDate, endDate}]`, `unavailable`, `unavailabilityNote` |
-| `vehicles` | `id`, `name`, `plate`, `category`, `type`, `status`, `loanNote`, `loanUntil`, `seats`, `checks[]`, `keyHolder`, `keyHistory[]` |
-| `trailers` | `id`, `plate`, `name`, `compatibleTypes[]`, `status`, `loanNote`, `loanUntil`, `notes` |
+| `vehicles` | `id`, `name`, `plate`, `category`, `status`, `loanNote`, `loanUntil`, `seats`, `checks[]`, `keyHolder`, `keyHistory[]` |
+| `trailers` | `id`, `plate`, `name`, `compatibleTypes[]` (noms de modèles de la flotte), `status`, `loanNote`, `loanUntil`, `notes` |
 | `missions` | `id`, `title`, `description`, `startDate`, `endDate`, `notes`, `vehicles[{id, vehicleId, driverId, withTrailer, trailerId}]`, `staffIds[]`, `cancelled`, `retiredVehicles{id: {plate, name, category}}`, `retiredTrailers{id: {plate, name}}`, `retiredPersons{id: {rank, firstName, lastName}}` |
 
 Pour un véhicule comme pour une remorque, `loanNote` et `loanUntil` portent

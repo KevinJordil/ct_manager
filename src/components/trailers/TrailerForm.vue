@@ -1,7 +1,8 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, watch, computed } from 'vue'
 import BaseModal from '../common/BaseModal.vue'
-import { useConfigStore } from '../../stores/config.js'
+import { useVehiclesStore } from '../../stores/vehicles.js'
+import { fleetModels, modelKey } from '../../availability.js'
 
 /**
  * A trailer: its plate, what it is, and the vehicle models it can be hitched
@@ -11,8 +12,8 @@ import { useConfigStore } from '../../stores/config.js'
 const props = defineProps({ trailer: { type: Object, default: null } })
 const emit = defineEmits(['save', 'close'])
 
-const configStore = useConfigStore()
-configStore.init()
+const vehiclesStore = useVehiclesStore()
+vehiclesStore.init()
 
 const form = reactive({ plate: '', name: '', compatibleTypes: [], notes: '' })
 
@@ -23,10 +24,24 @@ watch(() => props.trailer, trailer => {
   form.notes = trailer?.notes ?? ''
 }, { immediate: true })
 
-function toggle(typeId) {
-  const index = form.compatibleTypes.indexOf(typeId)
-  if (index === -1) form.compatibleTypes.push(typeId)
-  else form.compatibleTypes.splice(index, 1)
+/**
+ * The models to tick: those of the fleet, named as the vehicles are, plus any
+ * the trailer still lists although no vehicle bears that name any more — so
+ * it can be seen, and unticked.
+ */
+const models = computed(() => {
+  const fleet = fleetModels(vehiclesStore.vehicles)
+  const known = new Set(fleet.map(modelKey))
+  const gone = form.compatibleTypes.filter(name => !known.has(modelKey(name)))
+  return [...fleet.map(name => ({ name, gone: false })), ...gone.map(name => ({ name, gone: true }))]
+})
+
+const ticked = name => form.compatibleTypes.some(item => modelKey(item) === modelKey(name))
+
+function toggle(name) {
+  form.compatibleTypes = ticked(name)
+    ? form.compatibleTypes.filter(item => modelKey(item) !== modelKey(name))
+    : [...form.compatibleTypes, name]
 }
 
 function submit() {
@@ -54,14 +69,15 @@ function submit() {
         <legend class="label">{{ $t('trailers.compatibleTypes') }}</legend>
         <p class="text-xs text-stone-500 mb-2">{{ $t('trailers.compatibleHint') }}</p>
         <div class="flex flex-wrap gap-2">
-          <label v-for="type in configStore.vehicleTypes" :key="type.id"
+          <label v-for="model in models" :key="model.name"
             :class="['inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm min-h-[44px] cursor-pointer',
-              form.compatibleTypes.includes(type.id) ? 'border-olive-500 bg-olive-50 text-olive-800 font-medium' : 'border-stone-300']">
-            <input type="checkbox" :checked="form.compatibleTypes.includes(type.id)" @change="toggle(type.id)" />
-            {{ type.label }}
+              ticked(model.name) ? 'border-olive-500 bg-olive-50 text-olive-800 font-medium' : 'border-stone-300']">
+            <input type="checkbox" :checked="ticked(model.name)" @change="toggle(model.name)" />
+            {{ model.name }}
+            <span v-if="model.gone" class="text-xs text-stone-500 font-normal">{{ $t('trailers.notInFleet') }}</span>
           </label>
         </div>
-        <p v-if="!configStore.vehicleTypes.length" class="text-sm text-amber-700">{{ $t('trailers.noTypes') }}</p>
+        <p v-if="!models.length" class="text-sm text-amber-700">{{ $t('trailers.noTypes') }}</p>
       </fieldset>
 
       <div>

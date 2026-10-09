@@ -252,3 +252,11 @@ describe('weekly checks read back', () => {
     expect(vehicle.checks[0]).toMatchObject({ recordedBy: 'clerk', recordedById: 'u1', note: 'x' })
   })
 })
+
+describe('trailers described with the retired model list', () => {
+  it('read as not yet described, not as fitting nothing', async () => {
+    const { migrateTrailers } = await import('../migrations.js')
+    const [trailer] = migrateTrailers([{ id: 't', plate: 'M1', compatibleTypes: ['class-g', 'duro', 'MBG'] }])
+    expect(trailer.compatibleTypes).toEqual(['MBG'])
+  })
+})

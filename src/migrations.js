@@ -177,13 +177,21 @@ export function migrateMissions(data) {
 
 // ── Trailers ──
 
+/**
+ * Identifiers of a list of vehicle models that briefly lived in the
+ * configuration. A trailer now names the models it fits as the fleet names
+ * its vehicles; these ids match no vehicle, so they are let go and the
+ * trailer reads as not yet described rather than as fitting nothing.
+ */
+const RETIRED_MODEL_IDS = ['class-g', 'duro', 'truck-4x4', 'truck-6x6', 'car']
+
 export function migrateTrailers(data) {
   return data.map(raw => ({
     ...raw,
     plate: raw.plate ?? '',
     name: raw.name ?? '',
     notes: raw.notes ?? '',
-    compatibleTypes: raw.compatibleTypes ?? [],
+    compatibleTypes: (raw.compatibleTypes ?? []).filter(model => !RETIRED_MODEL_IDS.includes(model)),
     status: AWAY_STATUSES.includes(raw.status) ? raw.status : VEHICLE_STATUS.FREE,
     loanNote: raw.loanNote ?? '',
     loanUntil: raw.loanUntil ?? '',

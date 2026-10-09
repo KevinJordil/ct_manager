@@ -43,7 +43,6 @@ const tables = computed(() => buildTables({
   persons: stores.persons.persons, vehicles: stores.vehicles.vehicles, trailers: stores.trailers.trailers,
   missions: stores.missions.missions, requests: stores.requests.requests, journal: journal.value,
   now: nowString.value, t,
-  vehicleTypeLabel: stores.config.vehicleTypeLabel,
   requestTypeLabel: type => stores.config.requestTypeLabel(type, t),
 }))
 

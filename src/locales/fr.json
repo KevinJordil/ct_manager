@@ -208,10 +208,7 @@
       "release": "Remettre en service",
       "releaseConfirm": "Remettre {plate} en service et le rendre disponible ?"
     },
-    "outOfServiceCount": "hors service | 1 hors service | {count} hors service",
-    "type": "Modèle",
-    "typeNone": "Non renseigné",
-    "typeHint": "Sert à savoir quelles remorques il peut tracter."
+    "outOfServiceCount": "hors service | 1 hors service | {count} hors service"
   },
   "keys": {
     "dashboardTitle": "Clés des véhicules",
@@ -355,7 +352,8 @@
     "keepMission": "Garder la mission",
     "reopenConfirm": "Rouvrir la mission « {title} » ? Ses véhicules et son personnel compteront à nouveau comme engagés.",
     "trailer": "Remorque",
-    "trailerUnspecified": "Remorque non précisée"
+    "trailerUnspecified": "Remorque non précisée",
+    "trailerUnverified": "Les véhicules derrière lesquels va cette remorque ne sont pas renseignés : vérifiez l'attelage, ou complétez sa fiche dans Remorques."
   },
   "mine": {
     "title": "Mes missions",
@@ -665,10 +663,6 @@
     "resetConfirm": "Rétablir toute la configuration par défaut ?",
     "loadFailed": "Chargement de la configuration impossible : {reason}",
     "saveFailed": "Enregistrement de la configuration impossible : {reason}",
-    "vehicleTypes": "Modèles de véhicule",
-    "vehicleTypesHint": "Les modèles de la flotte (Class G, Duro, camion…). Chaque véhicule en reçoit un, et chaque remorque dit derrière lesquels elle peut aller.",
-    "vehicleTypeLabel": "Nouveau modèle",
-    "addVehicleType": "Ajouter le modèle",
     "typeIdPlaceholder": "minibus",
     "typeLabelPlaceholder": "Minibus 20 places",
     "licensePlaceholder": "940"
@@ -762,13 +756,14 @@
     "name": "Désignation",
     "namePlaceholder": "Remorque 1 t, citerne…",
     "compatibleTypes": "Se met derrière",
-    "compatibleHint": "Cochez tous les modèles de véhicule qui peuvent la tracter. La liste des modèles se règle dans la Configuration.",
-    "noTypes": "Aucun modèle de véhicule n'est défini : ajoutez-en dans la Configuration.",
+    "compatibleHint": "Cochez les modèles de véhicule qui peuvent la tracter, tels qu'ils sont nommés dans Véhicules. Sans rien de coché, la remorque est proposée partout, avec un rappel.",
+    "noTypes": "Aucun véhicule dans la flotte pour l'instant.",
     "noCompatible": "Aucun véhicule compatible renseigné",
     "notes": "Remarques",
     "empty": "Aucune remorque.",
     "delete": "Supprimer la remorque",
-    "deleteConfirm": "Supprimer la remorque {plate} ? Les missions passées garderont sa plaque."
+    "deleteConfirm": "Supprimer la remorque {plate} ? Les missions passées garderont sa plaque.",
+    "notInFleet": "(plus dans la flotte)"
   },
   "export": {
     "title": "Export de fin de cours",
@@ -797,7 +792,6 @@
       "trailer": "Remorque",
       "driver": "Chauffeur",
       "category": "Catégorie",
-      "type": "Modèle (attelage)",
       "seats": "Places",
       "reason": "Motif",
       "until": "Retour prévu",

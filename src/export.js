@@ -21,7 +21,7 @@ const join = list => list.filter(Boolean).join(', ')
  */
 export function buildTables({
   persons = [], vehicles = [], trailers = [], missions = [], requests = [], journal = null,
-  now, t, vehicleTypeLabel = id => id, requestTypeLabel = type => type.id,
+  now, t, requestTypeLabel = type => type.id,
 }) {
   const h = keys => keys.map(key => t(`export.columns.${key}`))
   const status = value => value ? t(`status.${value}`) : ''
@@ -79,7 +79,6 @@ export function buildTables({
     .map(vehicle => [
       vehicle.plate ?? '', vehicle.name ?? '',
       vehicle.category ? t(`vehicles.categories.${vehicle.category}`) : '',
-      vehicle.type ? vehicleTypeLabel(vehicle.type) : '',
       vehicle.seats ?? '',
       status(vehicle.status),
       vehicle.status !== 'free' ? (vehicle.loanNote ?? '') : '',
@@ -91,7 +90,7 @@ export function buildTables({
     .sort((a, b) => (a.plate ?? '').localeCompare(b.plate ?? ''))
     .map(trailer => [
       trailer.plate ?? '', trailer.name ?? '',
-      join((trailer.compatibleTypes ?? []).map(vehicleTypeLabel)),
+      join(trailer.compatibleTypes ?? []),
       status(trailer.status),
       trailer.status !== 'free' ? (trailer.loanNote ?? '') : '',
       trailer.status !== 'free' ? formatDateTime(trailer.loanUntil) : '',
@@ -136,7 +135,7 @@ export function buildTables({
   return [
     { key: 'missions', headers: h(['title', 'start', 'end', 'status', 'vehicles', 'drivers', 'staff', 'description', 'notes']), rows: missionRows },
     { key: 'assignments', headers: h(['mission', 'start', 'end', 'status', 'plate', 'model', 'trailer', 'driver']), rows: assignmentRows },
-    { key: 'vehicles', headers: h(['plate', 'model', 'category', 'type', 'seats', 'status', 'reason', 'until', 'keyHolder']), rows: vehicleRows },
+    { key: 'vehicles', headers: h(['plate', 'model', 'category', 'seats', 'status', 'reason', 'until', 'keyHolder']), rows: vehicleRows },
     { key: 'trailers', headers: h(['plate', 'designation', 'fits', 'status', 'reason', 'until', 'notes']), rows: trailerRows },
     { key: 'persons', headers: h(['rank', 'firstName', 'lastName', 'phone', 'licenses', 'unavailable', 'notes']), rows: personRows },
     { key: 'leaves', headers: h(['person', 'start', 'end']), rows: leaveRows },

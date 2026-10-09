@@ -4,8 +4,8 @@
     "plate": "M70101",
     "name": "Remorque 1 t",
     "compatibleTypes": [
-      "class-g",
-      "duro"
+      "Class G",
+      "Duro"
     ],
     "status": "free",
     "loanNote": "",
@@ -17,8 +17,8 @@
     "plate": "M70102",
     "name": "Remorque 1 t",
     "compatibleTypes": [
-      "class-g",
-      "duro"
+      "Class G",
+      "Duro"
     ],
     "status": "free",
     "loanNote": "",
@@ -30,8 +30,8 @@
     "plate": "M70203",
     "name": "Remorque 2 essieux 6 t",
     "compatibleTypes": [
-      "truck-4x4",
-      "truck-6x6"
+      "Camion 4x4",
+      "Camion 6x6"
     ],
     "status": "free",
     "loanNote": "",
@@ -43,7 +43,7 @@
     "plate": "M70304",
     "name": "Remorque citerne",
     "compatibleTypes": [
-      "truck-6x6"
+      "Camion 6x6"
     ],
     "status": "free",
     "loanNote": "",
@@ -55,8 +55,8 @@
     "plate": "M70405",
     "name": "Remorque légère",
     "compatibleTypes": [
-      "car",
-      "class-g"
+      "Renault Mégane",
+      "Class G"
     ],
     "status": "maintenance",
     "loanNote": "Pneu à changer",

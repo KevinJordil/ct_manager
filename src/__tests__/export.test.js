@@ -5,8 +5,8 @@ const t = (key, params) => params ? `${key}:${JSON.stringify(params)}` : key
 
 const base = {
   persons: [{ id: 'p1', rank: 'Sgt', firstName: 'Caroline', lastName: 'Favre', licenses: ['930'], leaves: [] }],
-  vehicles: [{ id: 'v1', plate: 'M1', name: 'Duro', category: 'medium', type: 'duro', status: 'free', checks: [] }],
-  trailers: [{ id: 't1', plate: 'M70101', name: 'Remorque 1 t', compatibleTypes: ['duro', 'class-g'], status: 'free' }],
+  vehicles: [{ id: 'v1', plate: 'M1', name: 'Duro', category: 'medium', status: 'free', checks: [] }],
+  trailers: [{ id: 't1', plate: 'M70101', name: 'Remorque 1 t', compatibleTypes: ['Duro', 'Class G'], status: 'free' }],
   missions: [{
     id: 'm1', title: 'Transport', startDate: '2026-09-02T08:00', endDate: '2026-09-02T17:00',
     vehicles: [
@@ -18,7 +18,6 @@ const base = {
     retiredPersons: { left: { rank: 'Cpl', firstName: 'Marc', lastName: 'Ancien' } },
   }],
   now: '2026-09-10T00:00', t,
-  vehicleTypeLabel: id => ({ duro: 'Duro', 'class-g': 'Class G' })[id] ?? id,
 }
 
 describe('end-of-course tables', () => {

@@ -11,7 +11,7 @@ import { useConfigStore } from '../../stores/config.js'
 import {
   isPersonAvailable, isVehicleAvailable, isVehicleAwayDuring, isOnLeaveDuring,
   isPersonCommitted, isVehicleCommitted, getMissionStatus,
-  isTrailerCommitted, trailerFits,
+  isTrailerCommitted, trailerFit,
 } from '../../availability.js'
 import { useTrailersStore } from '../../stores/trailers.js'
 import { MISSION_STATUS } from '../../constants.js'
@@ -199,7 +199,7 @@ function trailersNotElsewhere(row) {
 function trailerProblems(trailer, row) {
   if (!trailer) return []
   const problems = []
-  if (!trailerFits(trailer, rowVehicle(row))) problems.push('incompatible')
+  if (trailerFit(trailer, rowVehicle(row)) === 'no') problems.push('incompatible')
   if (isVehicleAwayDuring(trailer, form.startDate)) problems.push('away')
   if (form.startDate && form.endDate && isTrailerCommitted(trailer.id, otherLiveMissions(),
     form.startDate, form.endDate, { excludeMissionId: props.mission?.id ?? null })) problems.push('busy')
@@ -551,6 +551,8 @@ function submit() {
                     </option>
                   </optgroup>
                 </select>
+                <p v-if="row.trailerId && trailerFit(trailersStore.trailers.find(t => t.id === row.trailerId), rowVehicle(row)) === 'unknown'"
+                  class="mt-1 text-xs text-stone-600">{{ $t('missions.trailerUnverified') }}</p>
               </div>
               <div class="flex gap-2">
                 <select v-model="row.driverId" class="input text-sm flex-1" :aria-label="$t('fields.driverId')">

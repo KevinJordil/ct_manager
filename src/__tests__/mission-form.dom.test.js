@@ -155,10 +155,11 @@ describe('MissionForm — assignments kept in step with the dates', () => {
 
 describe('MissionForm — trailers', () => {
   beforeEach(() => {
-    data.vehicles = [{ id: 'v1', name: 'Duro', plate: 'M1', category: 'medium', type: 'duro', status: 'free', seats: 8, checks: [] }]
+    data.vehicles = [{ id: 'v1', name: 'DURO PERS.', plate: 'M1', category: 'medium', status: 'free', seats: 8, checks: [] }]
     data.trailers = [
-      { id: 't1', plate: 'M70101', name: 'Remorque 1 t', compatibleTypes: ['class-g', 'duro'], status: 'free' },
-      { id: 't2', plate: 'M70304', name: 'Citerne', compatibleTypes: ['truck-6x6'], status: 'free' },
+      { id: 't1', plate: 'M70101', name: 'Remorque 1 t', compatibleTypes: ['MBG', 'Duro Pers.'], status: 'free' },
+      { id: 't2', plate: 'M70304', name: 'Citerne', compatibleTypes: ['IVECO 6x6'], status: 'free' },
+      { id: 't3', plate: 'M70405', name: 'Pas encore décrite', compatibleTypes: [], status: 'free' },
     ]
   })
 
@@ -167,7 +168,8 @@ describe('MissionForm — trailers', () => {
       endDate: '2026-10-01T17:00', vehicles: [{ id: 'r', vehicleId: 'v1', driverId: null, withTrailer: true }], staffIds: [] })
     await settle()
     const row = wrapper.vm.vehicleRows[0]
-    expect(wrapper.vm.availableTrailersFor(row).map(t => t.id)).toEqual(['t1'])
+    // A trailer nobody has described yet is offered, not refused.
+    expect(wrapper.vm.availableTrailersFor(row).map(t => t.id)).toEqual(['t1', 't3'])
     expect(wrapper.vm.unavailableTrailersFor(row).map(t => t.id)).toEqual(['t2'])
     expect(wrapper.text()).toContain(fr.missions.problems.incompatible)
   })

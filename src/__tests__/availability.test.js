@@ -3,7 +3,7 @@ import {
   getMissionStatus, ongoingMissions, missionInvolvesPerson, missionInvolvesVehicle,
   isOnLeaveAt, isOnLeaveDuring, getPersonStatus, getDisplayedPersonStatus,
   getVehicleStatus, missionsOverlapping, isPersonCommitted, isVehicleCommitted,
-  isPersonAvailable, isVehicleAvailable, trailerFits, isTrailerCommitted,
+  isPersonAvailable, isVehicleAvailable, trailerFit, fleetModels, isTrailerCommitted,
 } from '../availability.js'
 
 const NOW = '2026-09-02T10:00'
@@ -259,11 +259,20 @@ describe('vehicles out of service', () => {
 describe('trailers', () => {
   const trailer = { id: 't1', plate: 'M 1', compatibleTypes: ['class-g', 'duro'] }
 
-  it('fits only the vehicle models it lists', () => {
-    expect(trailerFits(trailer, { type: 'duro' })).toBe(true)
-    expect(trailerFits(trailer, { type: 'truck-6x6' })).toBe(false)
-    // A vehicle whose model is not recorded cannot be checked.
-    expect(trailerFits(trailer, { type: '' })).toBe(false)
+  it('fits behind the vehicle models it lists, named as the fleet names them', () => {
+    const light = { id: 't1', plate: 'M 1', compatibleTypes: ['MBG', 'DURO PERS.'] }
+    expect(trailerFit(light, { name: 'MBG' })).toBe('fits')
+    expect(trailerFit(light, { name: 'Duro Pers.' })).toBe('fits')
+    expect(trailerFit(light, { name: 'IVECO 6x6' })).toBe('no')
+  })
+
+  it('is not called incompatible before anybody said what it fits', () => {
+    expect(trailerFit({ id: 't2', compatibleTypes: [] }, { name: 'VW' })).toBe('unknown')
+  })
+
+  it('lists the fleet\'s models once each, as its vehicles name them', () => {
+    expect(fleetModels([{ name: 'MBG' }, { name: 'VW' }, { name: 'mbg ' }, { name: 'IVECO 6x6' }]))
+      .toEqual(['IVECO 6x6', 'MBG', 'VW'])
   })
 
   it('is booked by a mission that hitches it', () => {

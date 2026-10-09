@@ -208,10 +208,7 @@
       "release": "Rimettere in servizio",
       "releaseConfirm": "Rimettere {plate} in servizio e renderlo disponibile?"
     },
-    "outOfServiceCount": "fuori servizio | 1 fuori servizio | {count} fuori servizio",
-    "type": "Modello",
-    "typeNone": "Non indicato",
-    "typeHint": "Serve a sapere quali rimorchi può trainare."
+    "outOfServiceCount": "fuori servizio | 1 fuori servizio | {count} fuori servizio"
   },
   "keys": {
     "dashboardTitle": "Chiavi dei veicoli",
@@ -355,7 +352,8 @@
     "keepMission": "Mantenere la missione",
     "reopenConfirm": "Riaprire la missione «{title}»? I suoi veicoli e il suo personale saranno di nuovo considerati impegnati.",
     "trailer": "Rimorchio",
-    "trailerUnspecified": "Rimorchio non precisato"
+    "trailerUnspecified": "Rimorchio non precisato",
+    "trailerUnverified": "I veicoli dietro cui va questo rimorchio non sono indicati: verifica l'aggancio, o completa la sua scheda in Rimorchi."
   },
   "mine": {
     "title": "Le mie missioni",
@@ -665,10 +663,6 @@
     "resetConfirm": "Ripristinare tutta la configurazione ai valori predefiniti?",
     "loadFailed": "Impossibile caricare la configurazione: {reason}",
     "saveFailed": "Impossibile salvare la configurazione: {reason}",
-    "vehicleTypes": "Modelli di veicolo",
-    "vehicleTypesHint": "I modelli della flotta (Class G, Duro, autocarro…). Ogni veicolo ne riceve uno, e ogni rimorchio indica dietro quali può andare.",
-    "vehicleTypeLabel": "Nuovo modello",
-    "addVehicleType": "Aggiungere il modello",
     "typeIdPlaceholder": "minibus",
     "typeLabelPlaceholder": "Minibus 20 posti",
     "licensePlaceholder": "940"
@@ -762,13 +756,14 @@
     "name": "Designazione",
     "namePlaceholder": "Rimorchio 1 t, cisterna…",
     "compatibleTypes": "Va dietro a",
-    "compatibleHint": "Seleziona tutti i modelli di veicolo che possono trainarlo. L'elenco dei modelli si gestisce nella Configurazione.",
-    "noTypes": "Nessun modello di veicolo definito: aggiungine nella Configurazione.",
+    "compatibleHint": "Seleziona i modelli di veicolo che possono trainarlo, come si chiamano in Veicoli. Senza selezione il rimorchio è proposto ovunque, con un promemoria.",
+    "noTypes": "Ancora nessun veicolo nella flotta.",
     "noCompatible": "Nessun veicolo compatibile indicato",
     "notes": "Osservazioni",
     "empty": "Nessun rimorchio.",
     "delete": "Eliminare il rimorchio",
-    "deleteConfirm": "Eliminare il rimorchio {plate}? Le missioni passate manterranno la sua targa."
+    "deleteConfirm": "Eliminare il rimorchio {plate}? Le missioni passate manterranno la sua targa.",
+    "notInFleet": "(non più nella flotta)"
   },
   "export": {
     "title": "Esportazione di fine corso",
@@ -797,7 +792,6 @@
       "trailer": "Rimorchio",
       "driver": "Autista",
       "category": "Categoria",
-      "type": "Modello (aggancio)",
       "seats": "Posti",
       "reason": "Motivo",
       "until": "Rientro previsto",
